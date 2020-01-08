@@ -1,0 +1,21 @@
+kind: Cluster
+apiVersion: kind.sigs.k8s.io/v1alpha3
+{{- if not (eq .Cni "kindnet")}}
+networking:
+  disableDefaultCNI: true
+{{- end}}
+kubeadmConfigPatches:
+  - |
+    apiVersion: {{.KubeAdminAPIVersion}}
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    networking:
+      podSubnet: {{.PodSubnet}}
+      serviceSubnet: {{.ServiceSubnet}}
+      dnsDomain: {{.DNSDomain}}
+nodes:
+  - role: control-plane
+  {{- range $i := iterate 1 .NumWorkers }}
+  - role: worker
+  {{- end }}

@@ -1,0 +1,24 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: netshoot-host-net
+  namespace: default
+spec:
+  selector:
+    matchLabels:
+      app: netshoot-host-net
+  template:
+    metadata:
+      labels:
+        app: netshoot-host-net
+    spec:
+      hostNetwork: true
+      containers:
+        - name: netshoot-host-net
+          image: nicolaka/netshoot
+          imagePullPolicy: IfNotPresent
+          command:
+            - sleep
+            - "3600"
+      restartPolicy: Always

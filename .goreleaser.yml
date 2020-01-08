@@ -1,0 +1,24 @@
+before:
+  hooks:
+    - make build
+builds:
+  - main: main.go
+    binary: armada
+    goos:
+      - linux
+      - darwin
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
+    ldflags: -s -w -X github.com/submariner-io/armada/cmd/armada.Version={{.Version}} -X github.com/submariner-io/armada/cmd/armada.Build={{.FullCommit}}
+checksum:
+  name_template: 'checksums.txt'
+snapshot:
+  name_template: "{{ .Tag }}-next"
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^docs:'
+      - '^test:'

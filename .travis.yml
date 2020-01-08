@@ -1,0 +1,30 @@
+language: go
+go: '1.12.x'
+git:
+  depth: 1
+env:
+  global:
+    - GO111MODULE=on
+    - GOPROXY=https://proxy.golang.org
+    - TERM=dumb
+services:
+  - docker
+jobs:
+  include:
+    - stage: "Test"
+      script: make build && make test && make e2e
+      name: "local test"
+    - script: |
+        make docker-run ARGS="make build" && \
+        make docker-run ARGS="make test" && \
+        make docker-run ARGS="make e2e"
+      name: "docker test"
+    - stage: "Release"
+      script: skip
+      deploy:
+        provider: script
+        skip_cleanup: true
+        script: curl -sL https://git.io/goreleaser | bash
+        on:
+          tags: true
+          condition: $TRAVIS_OS_NAME = linux
