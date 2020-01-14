@@ -1,7 +1,7 @@
 # Armada
 
-Armada is a tool for creating multiple k8s clusters with [kind] (k8s in docker). This tool relies heavily on [kind] and 
-extends its functionality with automation to create clusters tailored for multi cluster/multi cni local development and testing.
+Armada is a tool for creating multiple K8s clusters with [kind](K8s in Docker). This tool relies heavily on [kind] and 
+extends its functionality with automation to create clusters tailored for multi-cluster/multi-CNI local development and testing.
 
 [![Build Status](https://travis-ci.com/submariner-io/armada.svg?branch=master)](https://travis-ci.com/submariner-io/armada)
 [![Go Report Card](https://goreportcard.com/badge/github.com/submariner-io/armada)](https://goreportcard.com/report/github.com/submariner-io/armada)
@@ -11,26 +11,27 @@ extends its functionality with automation to create clusters tailored for multi 
 - [go 1.12] with [$GOPATH configured]
 - [docker]
 
-#### Get the latest version from [Releases] page.
+## Armada releases
 
+Get the latest version from the [Releases] page.
 
-## Build the tool locally.
+## Build the tool locally
 
 ```bash
 make build
 ```
 
-## Build in docker.
+## Build in Docker
 
 ```bash
 make docker-build
 ```
 
-The **armada** binary will be placed under local **./bin** directory.
+The **armada** binary will be placed under the repository-local **./bin** directory.
 
 ## Create clusters
 
-In order to run more then 3 clusters, the following limits must be increased:
+In order to run more than three clusters, the following limits must be increased:
 
 ```bash
 echo fs.file-max=500000 | sudo tee -a /etc/sysctl.conf                                                                      
@@ -39,20 +40,20 @@ echo fs.inotify.max_user_watches=524288 | sudo tee -a /etc/sysctl.conf
 sudo sysctl -p 
 ```
 
-The tool will create 2 clusters by default with kindnet cni plugin.
+The tool will create two clusters by default, with the Kindnet CNI plugin.
 
 ```bash
 cd ./bin
 ./armada create clusters
 ``` 
 
-This command will create five clusters with default kindnet cni.
+This command will create five clusters with the Kindnet CNI.
 
 ```bash
 ./armada create clusters -n 5
 ```
 
-Create a total of four clusters, 2 with weave, one with flannel and one with calico.
+Create a total of four clusters, 2 with Weave, one with Flannel, and one with Calico.
 
 ```bash
 ./armada create clusters --weave
@@ -60,20 +61,20 @@ Create a total of four clusters, 2 with weave, one with flannel and one with cal
 ./armada create clusters -n 4 --calico
 ```
 
-Default kubernetes node image is kindest/node:v1.16.3. To use different image use **-i** or **--image** flag. This command will create three clusters with flannel cni and kubernetes 1.15.6.
+Default Kubernetes node image is kindest/node:v1.16.3. To use different image use the **-i** or **--image** flags. This command will create three clusters with the Flannel CNI and Kubernetes 1.15.6.
 
 ```bash
 ./armada create clusters -n 3 --flannel --image kindest/node:v1.15.6
 ```
 
-Full list of supported images can be found on [kind release page].
+The full list of supported images can be found on [kind release page].
 
-Example of running four clusters with multiple k8s versions and different cni plugins.
+Example of running four clusters with multiple K8s versions and different CNI plugins.
 
 ```bash
-./armada create clusters -n 2 --weave  # 2 clusters with weave, k8s version 1.16.3
-./armada create clusters -n 3 --flannel --image kindest/node:v1.15.6 # one clusters with flannel cni, k8s version 1.15.6
-./armada create clusters -n 4 --calico --image kindest/node:v1.14.9 # one clusters with calico cni, k8s version 1.14.9
+./armada create clusters -n 2 --weave  # 2 clusters with weave, K8s version 1.16.3
+./armada create clusters -n 3 --flannel --image kindest/node:v1.15.6 # one clusters with Flannel CNI, K8s version 1.15.6
+./armada create clusters -n 4 --calico --image kindest/node:v1.14.9 # one clusters with calico CNI, K8s version 1.14.9
 ```
 
 Create clusters command full usage.
@@ -102,19 +103,20 @@ Flags:
 
 ## Load images
 
-Load multiple images in to all active clusters. Please note that the images must exist locally.
+Load multiple images into all active clusters. Please note that the images must exist locally.
 
 ```bash
 ./armada load docker-images --images alpine:latest,nginx:alpine
 ```
 
-Load multiple images to specific clusters.
+Load multiple images into specific clusters.
 
 ```bash
 ./armada load docker-images --images alpine:latest,nginx:alpine --clusters cluster1,cluster3
 ```
 
 Load images command full usage.
+
 ```bash
 ./armada load docker-images -h
 Load docker images in to the cluster
@@ -131,12 +133,13 @@ Flags:
 
 ## Destroy clusters
 
-Destroy all clusters
+Destroy all clusters.
+
 ```bash
 ./armada destroy clusters
 ``` 
 
-Destroy specific clusters
+Destroy specific clusters.
 
 ```bash
 ./armada destroy clusters --clusters cl1,cl3
