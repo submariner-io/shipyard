@@ -14,16 +14,16 @@ import (
 	"github.com/submariner-io/armada/pkg/wait"
 )
 
-// NetshootDeployFlagpole is a list of cli flags for deploy nginx-demo command
-type NetshootDeployFlagpole struct {
-	HostNetwork bool
-	Debug       bool
-	Clusters    []string
+// deployFlagpole is a list of cli flags for deploy nginx-demo command
+type deployFlagpole struct {
+	hostNetwork bool
+	debug       bool
+	clusters    []string
 }
 
-// DeployNetshootCommand returns a new cobra.Command under deploy command for armada
-func DeployNetshootCommand(box *packr.Box) *cobra.Command {
-	flags := &NetshootDeployFlagpole{}
+// NewDeployCommand returns a new cobra.Command under deploy command for armada
+func NewDeployCommand(box *packr.Box) *cobra.Command {
+	flags := &deployFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "netshoot",
@@ -31,13 +31,13 @@ func DeployNetshootCommand(box *packr.Box) *cobra.Command {
 		Long:  "Deploy netshoot pods for debugging",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			if flags.Debug {
+			if flags.debug {
 				log.SetLevel(log.DebugLevel)
 			}
 
 			var netshootDeploymentFilePath string
 			var selector string
-			if flags.HostNetwork {
+			if flags.hostNetwork {
 				netshootDeploymentFilePath = "debug/netshoot-daemonset-host.yaml"
 				selector = "netshoot-host-net"
 			} else {
@@ -51,8 +51,8 @@ func DeployNetshootCommand(box *packr.Box) *cobra.Command {
 			}
 
 			var targetClusters []string
-			if len(flags.Clusters) > 0 {
-				targetClusters = append(targetClusters, flags.Clusters...)
+			if len(flags.clusters) > 0 {
+				targetClusters = append(targetClusters, flags.clusters...)
 			} else {
 				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 				if err != nil {
@@ -89,8 +89,8 @@ func DeployNetshootCommand(box *packr.Box) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().BoolVar(&flags.HostNetwork, "host-network", false, "deploy the pods in host network mode.")
-	cmd.Flags().BoolVarP(&flags.Debug, "debug", "v", false, "set log level to debug")
-	cmd.Flags().StringSliceVarP(&flags.Clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
+	cmd.Flags().BoolVar(&flags.hostNetwork, "host-network", false, "deploy the pods in host network mode.")
+	cmd.Flags().BoolVarP(&flags.debug, "debug", "v", false, "set log level to debug")
+	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
 	return cmd
 }

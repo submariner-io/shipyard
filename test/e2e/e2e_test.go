@@ -13,40 +13,29 @@ import (
 	"testing"
 	"time"
 
-	"github.com/submariner-io/armada/pkg/deploy"
-	"github.com/submariner-io/armada/pkg/image"
-	"github.com/submariner-io/armada/pkg/wait"
-	"sigs.k8s.io/kind/pkg/cluster/nodes"
-
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/gobuffalo/packr/v2"
-	log "github.com/sirupsen/logrus"
-	createclustercmd "github.com/submariner-io/armada/cmd/armada/create/cluster"
-	deploynginxcmd "github.com/submariner-io/armada/cmd/armada/deploy/nginx"
-	destroycmd "github.com/submariner-io/armada/cmd/armada/destroy/cluster"
-	exportlogscmd "github.com/submariner-io/armada/cmd/armada/export/logs"
-	loadimagecmd "github.com/submariner-io/armada/cmd/armada/load/image"
-	"github.com/submariner-io/armada/pkg/cluster"
-	"github.com/submariner-io/armada/pkg/defaults"
-	kind "sigs.k8s.io/kind/pkg/cluster"
-	kindcmd "sigs.k8s.io/kind/pkg/cmd"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	log "github.com/sirupsen/logrus"
+	clustercmd "github.com/submariner-io/armada/cmd/cluster"
+	"github.com/submariner-io/armada/pkg/cluster"
+	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/deploy"
+	"github.com/submariner-io/armada/pkg/image"
+	"github.com/submariner-io/armada/pkg/wait"
+	kind "sigs.k8s.io/kind/pkg/cluster"
+	"sigs.k8s.io/kind/pkg/cluster/nodes"
+	kindcmd "sigs.k8s.io/kind/pkg/cmd"
 )
 
-func CreateEnvironment(flags *createclustercmd.CreateClusterFlagpole, provider *kind.Provider) ([]*cluster.Config, error) {
-
-	if flags.Debug {
-		log.SetLevel(log.DebugLevel)
-	}
-
+func CreateEnvironment(flags *clustercmd.CreateFlagpole, provider *kind.Provider) ([]*cluster.Config, error) {
 	log.SetLevel(log.DebugLevel)
 	box := packr.New("configs", "../../configs")
 
-	targetClusters, err := createclustercmd.GetTargetClusters(provider, flags)
+	targetClusters, err := clustercmd.GetTargetClusters(provider, flags)
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -94,13 +83,12 @@ var _ = Describe("E2E Tests", func() {
 
 	Context("Config creation", func() {
 		It("Should create 2 clusters with flannel and overlapping cidrs", func() {
-			flags := &createclustercmd.CreateClusterFlagpole{
+			flags := &clustercmd.CreateFlagpole{
 				NumClusters: 2,
 				Overlap:     true,
 				Flannel:     true,
 				Retain:      false,
 				Wait:        5 * time.Minute,
-				Debug:       true,
 			}
 
 			clusters, err := CreateEnvironment(flags, provider)
@@ -140,15 +128,15 @@ var _ = Describe("E2E Tests", func() {
 				},
 			}))
 		})
+
 		It("Should create a third cluster with weave, kindest/node:v1.15.6 and tiller", func() {
-			flags := &createclustercmd.CreateClusterFlagpole{
+			flags := &clustercmd.CreateFlagpole{
 				NumClusters: 3,
 				Weave:       true,
 				Tiller:      true,
 				ImageName:   "kindest/node:v1.15.6",
 				Retain:      false,
 				Wait:        5 * time.Minute,
-				Debug:       true,
 			}
 
 			clusters, err := CreateEnvironment(flags, provider)
@@ -188,12 +176,10 @@ var _ = Describe("E2E Tests", func() {
 				},
 			}))
 		})
-		It("Should not create a new cluster", func() {
-			flags := &createclustercmd.CreateClusterFlagpole{
-				NumClusters: 3,
-			}
 
-			for i := 1; i <= flags.NumClusters; i++ {
+		It("Should not create a new cluster", func() {
+			numClusters := 3
+			for i := 1; i <= numClusters; i++ {
 				clName := defaults.ClusterNameBase + strconv.Itoa(i)
 				known, err := cluster.IsKnown(clName, provider)
 				Ω(err).ShouldNot(HaveOccurred())
@@ -205,23 +191,21 @@ var _ = Describe("E2E Tests", func() {
 			}
 		})
 	})
+
 	Context("Deployment", func() {
 		It("Should deploy nginx-demo to clusters 1 and 3", func() {
-			flags := &deploynginxcmd.NginxDeployFlagpole{
-				Clusters: []string{"cluster1", "cluster3"},
-				Debug:    true,
-			}
-
 			log.SetLevel(log.DebugLevel)
 
 			box := packr.New("configs", "../../configs")
 			nginxDeploymentFile, err := box.Resolve("debug/nginx-demo-daemonset.yaml")
 			Ω(err).ShouldNot(HaveOccurred())
 
+			clusters := []string{"cluster1", "cluster3"}
+
 			var activeDeployments []string
 			var wg sync.WaitGroup
-			wg.Add(len(flags.Clusters))
-			for _, clName := range flags.Clusters {
+			wg.Add(len(clusters))
+			for _, clName := range clusters {
 				go func(clName string) {
 					clientSet, err := cluster.GetClientSet(clName)
 					Ω(err).ShouldNot(HaveOccurred())
@@ -240,6 +224,7 @@ var _ = Describe("E2E Tests", func() {
 			Expect(len(activeDeployments)).Should(Equal(2))
 
 		})
+
 		It("Should deploy netshoot to all 3 clusters", func() {
 			log.SetLevel(log.DebugLevel)
 			box := packr.New("configs", "../../configs")
@@ -273,14 +258,12 @@ var _ = Describe("E2E Tests", func() {
 			Expect(len(activeDeployments)).Should(Equal(3))
 		})
 	})
+
 	Context("Logs export", func() {
 		It("Should export logs for clusters 1 and 2", func() {
-			flags := &exportlogscmd.ExportLogsFlagpole{
-				Clusters: []string{"cluster1", "cluster2"},
-			}
 			log.SetLevel(log.DebugLevel)
 
-			for _, clName := range flags.Clusters {
+			for _, clName := range []string{"cluster1", "cluster2"} {
 				err := provider.CollectLogs(clName, filepath.Join(defaults.KindLogsDir, clName))
 				Ω(err).ShouldNot(HaveOccurred())
 			}
@@ -292,6 +275,7 @@ var _ = Describe("E2E Tests", func() {
 
 		})
 	})
+
 	Context("Image loading", func() {
 		ctx := context.Background()
 		dockerCli, err := dockerclient.NewEnvClient()
@@ -315,11 +299,8 @@ var _ = Describe("E2E Tests", func() {
 			_, err = io.Copy(os.Stdout, reader)
 			Ω(err).ShouldNot(HaveOccurred())
 		})
+
 		It("Should load an image to all the clusters", func() {
-			flags := &loadimagecmd.LoadImagesFlagpole{
-				Debug:  true,
-				Images: []string{"alpine:edge"},
-			}
 			log.SetLevel(log.DebugLevel)
 
 			var targetClusters []string
@@ -330,8 +311,9 @@ var _ = Describe("E2E Tests", func() {
 				targetClusters = append(targetClusters, clName)
 			}
 
+			images := []string{"alpine:edge"}
 			var nodesWithImage []nodes.Node
-			for _, imageName := range flags.Images {
+			for _, imageName := range images {
 				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 				Ω(err).ShouldNot(HaveOccurred())
 
@@ -358,21 +340,20 @@ var _ = Describe("E2E Tests", func() {
 			Expect(len(nodesWithImage)).Should(Equal(9))
 		})
 		It("Should load multiple images to cluster 1 and 3 only", func() {
-			flags := &loadimagecmd.LoadImagesFlagpole{
-				Debug:  true,
-				Images: []string{"nginx:stable-alpine", "alpine:latest"},
-				Clusters: []string{
-					defaults.ClusterNameBase + strconv.Itoa(1),
-					defaults.ClusterNameBase + strconv.Itoa(3),
-				},
-			}
 			log.SetLevel(log.DebugLevel)
+
+			images := []string{"nginx:stable-alpine", "alpine:latest"}
+			clusters := []string{
+				defaults.ClusterNameBase + strconv.Itoa(1),
+				defaults.ClusterNameBase + strconv.Itoa(3),
+			}
+
 			var nodesWithImages []nodes.Node
-			for _, imageName := range flags.Images {
+			for _, imageName := range images {
 				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, flags.Clusters)
+				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				imageTarPath, err := image.Save(ctx, dockerCli, imageName)
@@ -396,11 +377,8 @@ var _ = Describe("E2E Tests", func() {
 	})
 	Context("Cluster deletion", func() {
 		It("Should destroy clusters 1 and 3 only", func() {
-			flags := destroycmd.DestroyClusterFlagpole{
-				Clusters: []string{defaults.ClusterNameBase + strconv.Itoa(1), defaults.ClusterNameBase + strconv.Itoa(3)},
-			}
-
-			for _, clName := range flags.Clusters {
+			clusters := []string{defaults.ClusterNameBase + strconv.Itoa(1), defaults.ClusterNameBase + strconv.Itoa(3)}
+			for _, clName := range clusters {
 				known, err := cluster.IsKnown(clName, provider)
 				Ω(err).ShouldNot(HaveOccurred())
 				if known {

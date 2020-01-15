@@ -16,14 +16,14 @@ import (
 )
 
 // NginxDeployFlagpole is a list of cli flags for deploy nginx-demo command
-type NginxDeployFlagpole struct {
-	Clusters []string
-	Debug    bool
+type deployFlagpole struct {
+	clusters []string
+	debug    bool
 }
 
-// DeployNginxDemoCommand returns a new cobra.Command under deploy command for armada
-func DeployNginxDemoCommand(box *packr.Box) *cobra.Command {
-	flags := &NginxDeployFlagpole{}
+// NewDeployCommand returns a new cobra.Command under deploy command for armada
+func NewDeployCommand(box *packr.Box) *cobra.Command {
+	flags := &deployFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "nginx-demo",
@@ -31,7 +31,7 @@ func DeployNginxDemoCommand(box *packr.Box) *cobra.Command {
 		Long:  "Deploy nginx demo application service and pods",
 		RunE: func(cmd *cobra.Command, args []string) error {
 
-			if flags.Debug {
+			if flags.debug {
 				log.SetLevel(log.DebugLevel)
 			}
 
@@ -41,8 +41,8 @@ func DeployNginxDemoCommand(box *packr.Box) *cobra.Command {
 			}
 
 			var targetClusters []string
-			if len(flags.Clusters) > 0 {
-				targetClusters = append(targetClusters, flags.Clusters...)
+			if len(flags.clusters) > 0 {
+				targetClusters = append(targetClusters, flags.clusters...)
 			} else {
 				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 				if err != nil {
@@ -79,7 +79,7 @@ func DeployNginxDemoCommand(box *packr.Box) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringSliceVarP(&flags.Clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
-	cmd.Flags().BoolVarP(&flags.Debug, "debug", "v", false, "set log level to debug")
+	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
+	cmd.Flags().BoolVarP(&flags.debug, "debug", "v", false, "set log level to debug")
 	return cmd
 }

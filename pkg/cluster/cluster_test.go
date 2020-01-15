@@ -9,17 +9,13 @@ import (
 	"path/filepath"
 	"testing"
 
-	createclustercmd "github.com/submariner-io/armada/cmd/armada/create/cluster"
-
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/submariner-io/armada/pkg/cluster"
 	kind "sigs.k8s.io/kind/pkg/cluster"
-
 	"github.com/gobuffalo/packr/v2"
-
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 )
@@ -62,6 +58,7 @@ var _ = Describe("cluster tests", func() {
 
 			_ = os.RemoveAll(configPath)
 		})
+
 		It("Should generate correct kind config for custom cni", func() {
 			currentDir, err := os.Getwd()
 			Ω(err).ShouldNot(HaveOccurred())
@@ -90,6 +87,7 @@ var _ = Describe("cluster tests", func() {
 
 			_ = os.RemoveAll(configPath)
 		})
+
 		It("Should generate correct kind config for cluster with 5 workers and custom cni", func() {
 			currentDir, err := os.Getwd()
 			Ω(err).ShouldNot(HaveOccurred())
@@ -118,18 +116,14 @@ var _ = Describe("cluster tests", func() {
 
 			_ = os.RemoveAll(configPath)
 		})
+
 		It("Should generate correct kind config for cluster with k8s version lower then 1.15", func() {
-
-			flags := &createclustercmd.CreateClusterFlagpole{
-				ImageName: "test/test:v1.13.2",
-				Kindnet:   true,
-			}
-
 			currentDir, err := os.Getwd()
 			Ω(err).ShouldNot(HaveOccurred())
 
-			cni := createclustercmd.GetCniFromFlags(flags)
-			cl, err := cluster.PopulateConfig(1, flags.ImageName, cni, true, true, false, 0)
+			imageName := "test/test:v1.13.2"
+			cni := "kindnet"
+			cl, err := cluster.PopulateConfig(1, imageName, cni, true, true, false, 0)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			configDir := filepath.Join(currentDir, "testdata/kind")
@@ -148,18 +142,14 @@ var _ = Describe("cluster tests", func() {
 
 			_ = os.RemoveAll(configPath)
 		})
+
 		It("Should generate correct kind config for cluster with k8s version higher then 1.15", func() {
-
-			flags := &createclustercmd.CreateClusterFlagpole{
-				ImageName: "test/test:v1.16.2",
-				Kindnet:   true,
-			}
-
 			currentDir, err := os.Getwd()
 			Ω(err).ShouldNot(HaveOccurred())
 
-			cni := createclustercmd.GetCniFromFlags(flags)
-			cl, err := cluster.PopulateConfig(1, flags.ImageName, cni, true, true, false, 0)
+			imageName := "test/test:v1.16.2"
+			cni := "kindnet"
+			cl, err := cluster.PopulateConfig(1, imageName, cni, true, true, false, 0)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			configDir := filepath.Join(currentDir, "testdata/kind")
@@ -179,8 +169,8 @@ var _ = Describe("cluster tests", func() {
 			_ = os.RemoveAll(configPath)
 		})
 	})
-	Context("Containers", func() {
 
+	Context("Containers", func() {
 		ctx := context.Background()
 		dockerCli, _ := dockerclient.NewEnvClient()
 
@@ -202,6 +192,7 @@ var _ = Describe("cluster tests", func() {
 			err = dockerCli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{})
 			Ω(err).ShouldNot(HaveOccurred())
 		})
+
 		AfterEach(func() {
 			containerFilter := filters.NewArgs()
 			containerFilter.Add("name", "cl2-control-plane")
@@ -217,6 +208,7 @@ var _ = Describe("cluster tests", func() {
 			})
 			Ω(err).ShouldNot(HaveOccurred())
 		})
+
 		It("Should return the correct ip of a master node by name", func() {
 			containerFilter := filters.NewArgs()
 			containerFilter.Add("name", "cl2-control-plane")
@@ -235,6 +227,7 @@ var _ = Describe("cluster tests", func() {
 
 			Expect(actual).Should(Equal(masterIP))
 		})
+
 		It("Should return that the cluster is known", func() {
 
 			provider := kind.NewProvider()

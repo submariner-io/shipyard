@@ -17,45 +17,45 @@ import (
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
-// CreateClusterFlagpole is a list of cli flags for create clusters command
-type CreateClusterFlagpole struct {
-	// ImageName is the node image used for cluster creation
+// CreateFlagpole is a list of cli flags for create clusters command
+type CreateFlagpole struct {
+	// The node image used for cluster creation
 	ImageName string
 
-	// Wait is a time duration to wait until cluster is ready
+	// Time duration to wait until cluster is ready
 	Wait time.Duration
 
-	// Retain if you keep clusters running even if error occurs
+	// Whether or not to keep clusters running even if error occurs
 	Retain bool
 
-	// Weave if to install weave cni
+	// weave if to install weave cni
 	Weave bool
 
-	// Flannel if to install flannel cni
+	// flannel if to install flannel cni
 	Flannel bool
 
-	// Calico if to install calico cni
+	// calico if to install calico cni
 	Calico bool
 
-	// Kindnet if to install kindnet default cni
+	// kindnet if to install kindnet default cni
 	Kindnet bool
 
-	// DeployTiller if to install tiller
+	// Whether or not to install tiller
 	Tiller bool
 
-	// Overlap if to create clusters with overlapping cidrs
+	// Whether or not to create clusters with overlapping cidrs
 	Overlap bool
 
-	// Debug sets log level to debug
+	// Log level to debug
 	Debug bool
 
-	// NumClusters is the number of clusters to create
+	// The number of clusters to create
 	NumClusters int
 }
 
 // CreateClustersCommand returns a new cobra.Command under create command for armada
-func CreateClustersCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
-	flags := &CreateClusterFlagpole{}
+func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
+	flags := &CreateFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "clusters",
@@ -152,7 +152,7 @@ func CreateClustersCommand(provider *kind.Provider, box *packr.Box) *cobra.Comma
 }
 
 // GetTargetClusters returns a list of clusters to create
-func GetTargetClusters(provider *kind.Provider, flags *CreateClusterFlagpole) ([]*cluster.Config, error) {
+func GetTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*cluster.Config, error) {
 	var targetClusters []*cluster.Config
 	for i := 1; i <= flags.NumClusters; i++ {
 		clName := defaults.ClusterNameBase + strconv.Itoa(i)
@@ -163,7 +163,7 @@ func GetTargetClusters(provider *kind.Provider, flags *CreateClusterFlagpole) ([
 		if known {
 			log.Infof("✔ Cluster with the name %q already exists.", clName)
 		} else {
-			cni := GetCniFromFlags(flags)
+			cni := getCniFromFlags(flags)
 			cl, err := cluster.PopulateConfig(i, flags.ImageName, cni, flags.Retain, flags.Tiller, flags.Overlap, flags.Wait)
 			if err != nil {
 				return nil, err
@@ -174,8 +174,8 @@ func GetTargetClusters(provider *kind.Provider, flags *CreateClusterFlagpole) ([
 	return targetClusters, nil
 }
 
-// GetCniFromFlags returns the cni name from flags
-func GetCniFromFlags(flags *CreateClusterFlagpole) string {
+// getCniFromFlags returns the cni name from flags
+func getCniFromFlags(flags *CreateFlagpole) string {
 	var cni string
 	if flags.Weave {
 		cni = "weave"

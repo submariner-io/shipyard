@@ -1,9 +1,9 @@
 package main
 
 import (
-	"github.com/submariner-io/armada/cmd/armada"
+	"github.com/submariner-io/armada/cmd"
 )
 
 func main() {
-	armada.Main()
+	cmd.Main()
 }

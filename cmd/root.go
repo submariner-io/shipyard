@@ -1,4 +1,4 @@
-package armada
+package cmd
 
 import (
 	"os"
@@ -6,12 +6,12 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/armada/cmd/armada/create"
-	"github.com/submariner-io/armada/cmd/armada/deploy"
-	"github.com/submariner-io/armada/cmd/armada/destroy"
-	"github.com/submariner-io/armada/cmd/armada/export"
-	"github.com/submariner-io/armada/cmd/armada/load"
-	"github.com/submariner-io/armada/cmd/armada/version"
+	"github.com/submariner-io/armada/cmd/create"
+	"github.com/submariner-io/armada/cmd/deploy"
+	"github.com/submariner-io/armada/cmd/destroy"
+	"github.com/submariner-io/armada/cmd/export"
+	"github.com/submariner-io/armada/cmd/load"
+	"github.com/submariner-io/armada/cmd/version"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 	kindcmd "sigs.k8s.io/kind/pkg/cmd"
 )
@@ -40,14 +40,14 @@ func NewRootCmd() *cobra.Command {
 		kind.ProviderWithLogger(kindcmd.NewLogger()),
 	)
 
-	box := packr.New("configs", "../../configs")
+	box := packr.New("configs", "../configs")
 
-	cmd.AddCommand(create.CreateCmd(provider, box))
-	cmd.AddCommand(destroy.DestroyCmd(provider))
-	cmd.AddCommand(export.ExportCmd(provider))
-	cmd.AddCommand(load.LoadCmd(provider))
-	cmd.AddCommand(deploy.DeployCmd(box))
-	cmd.AddCommand(version.VersionCmd(Version, Build))
+	cmd.AddCommand(create.NewCommand(provider, box))
+	cmd.AddCommand(destroy.NewCommand(provider))
+	cmd.AddCommand(export.NewCommand(provider))
+	cmd.AddCommand(load.NewCommand(provider))
+	cmd.AddCommand(deploy.NewCommand(box))
+	cmd.AddCommand(version.NewCommand(Version, Build))
 	return cmd
 }
 
