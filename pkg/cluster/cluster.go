@@ -114,18 +114,6 @@ func GetMasterDockerIP(clName string) (string, error) {
 	return containers[0].NetworkSettings.Networks["bridge"].IPAddress, nil
 }
 
-// iterate func map for config template
-func iterate(start, end int) (stream chan int) {
-	stream = make(chan int)
-	go func() {
-		for i := start; i <= end; i++ {
-			stream <- i
-		}
-		close(stream)
-	}()
-	return
-}
-
 // IsKnown returns bool if cluster exists
 func IsKnown(clName string, provider *kind.Provider) (bool, error) {
 	n, err := provider.ListNodes(clName)
