@@ -12,45 +12,45 @@ import (
 	"github.com/submariner-io/armada/pkg/defaults"
 )
 
-var _ = Describe("kubeconfig tests", func() {
-
+var _ = Describe("Kubeconfig tests", func() {
 	AfterSuite(func() {
 		_ = os.RemoveAll("./output")
 	})
 
-	Context("Kubeconfigs", func() {
-		It("Should generate correct kube configs for local and container based deployments", func() {
-			currentDir, err := os.Getwd()
-			Ω(err).ShouldNot(HaveOccurred())
+	It("Should generate correct kube configs for local and container based deployments", func() {
+		currentDir, err := os.Getwd()
+		Expect(err).To(Succeed())
 
-			cl := &cluster.Config{
-				Name: "cl1",
-			}
+		clusterName := "cl1"
 
-			configDir := filepath.Join(currentDir, "testdata/kube")
-			kindKubeFileName := strings.Join([]string{"kind-config", cl.Name}, "-")
-			newLocalKubeFilePath := filepath.Join(currentDir, defaults.LocalKubeConfigDir, kindKubeFileName)
-			newContainerKubeFilePath := filepath.Join(currentDir, defaults.ContainerKubeConfigDir, kindKubeFileName)
-			gfs := filepath.Join(configDir, "kubeconfig_source")
-			err = cluster.PrepareKubeConfigs(cl.Name, gfs, "172.17.0.3")
-			Ω(err).ShouldNot(HaveOccurred())
+		configDir := filepath.Join(currentDir, "testdata/kube")
+		kindKubeFileName := strings.Join([]string{"kind-config", clusterName}, "-")
+		newLocalKubeFilePath := filepath.Join(currentDir, defaults.LocalKubeConfigDir, kindKubeFileName)
+		newContainerKubeFilePath := filepath.Join(currentDir, defaults.ContainerKubeConfigDir, kindKubeFileName)
 
-			local, err := ioutil.ReadFile(newLocalKubeFilePath)
-			Ω(err).ShouldNot(HaveOccurred())
-			container, err := ioutil.ReadFile(newContainerKubeFilePath)
-			Ω(err).ShouldNot(HaveOccurred())
-			localGolden, err := ioutil.ReadFile(filepath.Join(configDir, "kubeconfig_local.golden"))
-			Ω(err).ShouldNot(HaveOccurred())
-			containerGolden, err := ioutil.ReadFile(filepath.Join(configDir, "kubeconfig_container.golden"))
-			Ω(err).ShouldNot(HaveOccurred())
+		gfs := filepath.Join(configDir, "kubeconfig_source")
+		err = cluster.PrepareKubeConfigs(clusterName, gfs, "172.17.0.3")
+		Expect(err).To(Succeed())
 
-			Expect(string(local)).Should(Equal(string(localGolden)))
-			Expect(string(container)).Should(Equal(string(containerGolden)))
-		})
-		It("Should return correct kubeconfig file path", func() {
-			got, err := cluster.GetKubeConfigPath("cl1")
-			Ω(err).ShouldNot(HaveOccurred())
-			Expect(got).ShouldNot(BeNil())
-		})
+		local, err := ioutil.ReadFile(newLocalKubeFilePath)
+		Expect(err).To(Succeed())
+
+		container, err := ioutil.ReadFile(newContainerKubeFilePath)
+		Expect(err).To(Succeed())
+
+		localGolden, err := ioutil.ReadFile(filepath.Join(configDir, "kubeconfig_local.golden"))
+		Expect(err).To(Succeed())
+
+		containerGolden, err := ioutil.ReadFile(filepath.Join(configDir, "kubeconfig_container.golden"))
+		Expect(err).To(Succeed())
+
+		Expect(string(local)).Should(Equal(string(localGolden)))
+		Expect(string(container)).Should(Equal(string(containerGolden)))
+	})
+
+	It("Should return correct kubeconfig file path", func() {
+		got, err := cluster.GetKubeConfigPath("west")
+		Expect(err).To(Succeed())
+		Expect(got).To(HaveSuffix("kind-config-west"))
 	})
 })
