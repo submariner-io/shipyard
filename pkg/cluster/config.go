@@ -20,40 +20,40 @@ import (
 
 // Config type
 type Config struct {
-	// Cni is a name of the cni that will be installed for a cluster
+	// The name of the cni that will be installed for a cluster
 	Cni string
 
-	// Name is a cluster name
+	// The cluster name
 	Name string
 
-	// PodSubnet is pod subnet cidr and mask
+	// The pod subnet cidr and mask
 	PodSubnet string
 
-	// ServiceSubnet is a service subnet cidr and mask
+	// The a service subnet cidr and mask
 	ServiceSubnet string
 
-	// DNSDomain is cluster dns domain name
+	// The cluster dns domain name
 	DNSDomain string
 
-	// // KubeAdminAPIVersion for each cluster
+	// The KubeAdminAPIVersion for the cluster
 	KubeAdminAPIVersion string
 
-	// NumWorkers is the number of worker nodes
+	// The number of worker nodes
 	NumWorkers int
 
-	// KubeConfigFilePath is the destination where kind will generate the original kubeconfig file
+	// The destination where kind will generate the original kubeconfig file
 	KubeConfigFilePath string
 
-	// Amount of time to wait for control plain to be ready
+	// The amount of time to wait for control plain to be ready
 	WaitForReady time.Duration
 
-	// Config image name
+	// The config image name
 	NodeImageName string
 
-	// Retain if to retain the cluster despite and error
+	// Whether or not to keep clusters running even if error occurs
 	Retain bool
 
-	// Tiller if to deploy a cluster with tiller
+	// Whether or not to install tiller
 	Tiller bool
 }
 

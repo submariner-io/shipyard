@@ -11,14 +11,14 @@ import (
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
-// DestroyClusterFlagpole is a list of cli flags for destroy clusters command
-type DestroyClusterFlagpole struct {
-	Clusters []string
+// destroyFlagpole is a list of cli flags for destroy clusters command
+type destroyFlagpole struct {
+	clusters []string
 }
 
-// DestroyClustersCommand returns a new cobra.Command under destroy command for armada
-func DestroyClustersCommand(provider *kind.Provider) *cobra.Command {
-	flags := &DestroyClusterFlagpole{}
+// NewDestroyCommand returns a new cobra.Command under destroy command for armada
+func NewDestroyCommand(provider *kind.Provider) *cobra.Command {
+	flags := &destroyFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "clusters",
@@ -27,8 +27,8 @@ func DestroyClustersCommand(provider *kind.Provider) *cobra.Command {
 		RunE: func(cmd *cobra.Command, args []string) error {
 
 			var targetClusters []string
-			if len(flags.Clusters) > 0 {
-				targetClusters = append(targetClusters, flags.Clusters...)
+			if len(flags.clusters) > 0 {
+				targetClusters = append(targetClusters, flags.clusters...)
 			} else {
 				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 				if err != nil {
@@ -57,6 +57,6 @@ func DestroyClustersCommand(provider *kind.Provider) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringSliceVarP(&flags.Clusters, "clusters", "c", []string{}, "comma separated list of cluster names to destroy. eg: cl1,cl6,cl3")
+	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to destroy. eg: cl1,cl6,cl3")
 	return cmd
 }

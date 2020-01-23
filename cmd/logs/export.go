@@ -12,14 +12,14 @@ import (
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
-// ExportLogsFlagpole is a list of cli flags for export logs command
-type ExportLogsFlagpole struct {
-	Clusters []string
+// exportFlagpole is a list of cli flags for export logs command
+type exportFlagpole struct {
+	clusters []string
 }
 
-// ExportLogsCommand returns a new cobra.Command under export command for armada
-func ExportLogsCommand(provider *kind.Provider) *cobra.Command {
-	flags := &ExportLogsFlagpole{}
+// NewExportCommand returns a new cobra.Command under export command for armada
+func NewExportCommand(provider *kind.Provider) *cobra.Command {
+	flags := &exportFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "logs",
@@ -31,8 +31,8 @@ func ExportLogsCommand(provider *kind.Provider) *cobra.Command {
 			_ = os.RemoveAll(filepath.Join(defaults.KindLogsDir, defaults.KindLogsDir))
 
 			var targetClusters []string
-			if len(flags.Clusters) > 0 {
-				targetClusters = append(targetClusters, flags.Clusters...)
+			if len(flags.clusters) > 0 {
+				targetClusters = append(targetClusters, flags.clusters...)
 			} else {
 				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 				if err != nil {
@@ -52,6 +52,6 @@ func ExportLogsCommand(provider *kind.Provider) *cobra.Command {
 			return nil
 		},
 	}
-	cmd.Flags().StringSliceVarP(&flags.Clusters, "clusters", "c", []string{}, "comma separated list of cluster names. eg: cluster1,cluster6,cluster3")
+	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names. eg: cluster1,cluster6,cluster3")
 	return cmd
 }
