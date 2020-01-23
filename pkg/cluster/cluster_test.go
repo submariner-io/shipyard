@@ -13,11 +13,11 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
-	"github.com/submariner-io/armada/pkg/cluster"
-	kind "sigs.k8s.io/kind/pkg/cluster"
 	"github.com/gobuffalo/packr/v2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/armada/pkg/cluster"
+	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
 func TestCluster(t *testing.T) {

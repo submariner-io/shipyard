@@ -6,9 +6,9 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/submariner-io/armada/pkg/cluster"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
+	"github.com/submariner-io/armada/pkg/cluster"
 	"github.com/submariner-io/armada/pkg/defaults"
 )
 
