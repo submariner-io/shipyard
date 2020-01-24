@@ -11,60 +11,45 @@ import (
 	"github.com/submariner-io/armada/pkg/cluster"
 )
 
-var _ = Describe("cni tests", func() {
-
+var _ = Describe("CNI tests", func() {
 	box := packr.New("configs", "../../configs")
 
-	Context("Cni deployment files", func() {
-		It("Should generate correct weave deployment file", func() {
-			currentDir, err := os.Getwd()
-			Ω(err).ShouldNot(HaveOccurred())
+	Context("GenerateWeaveDeploymentFile function", func() {
+		It("should generate the correct deployment yaml", func() {
+			actual, err := cluster.GenerateWeaveDeploymentFile(&cluster.Config{PodSubnet: "1.2.3.4/14"}, box)
+			Expect(err).To(Succeed())
 
-			cl := &cluster.Config{
-				Name:      "cl1",
-				PodSubnet: "1.2.3.4/14",
-			}
-
-			configDir := filepath.Join(currentDir, "testdata/cni")
-			actual, err := cluster.GenerateWeaveDeploymentFile(cl, box)
-			Ω(err).ShouldNot(HaveOccurred())
-			golden, err := ioutil.ReadFile(filepath.Join(configDir, "weave_deployment.golden"))
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(actual).Should(Equal(string(golden)))
+			verifyDeployment(actual, "weave_deployment.golden")
 		})
-		It("Should generate correct flannel deployment file", func() {
-			currentDir, err := os.Getwd()
-			Ω(err).ShouldNot(HaveOccurred())
+	})
 
-			cl := &cluster.Config{
-				Name:      "cl1",
-				PodSubnet: "1.2.3.4/8",
-			}
+	Context("GenerateFlannelDeploymentFile function", func() {
+		It("should generate the correct deployment yaml", func() {
+			actual, err := cluster.GenerateFlannelDeploymentFile(&cluster.Config{PodSubnet: "1.2.3.4/8"}, box)
+			Expect(err).To(Succeed())
 
-			configDir := filepath.Join(currentDir, "testdata/cni")
-			actual, err := cluster.GenerateFlannelDeploymentFile(cl, box)
-			Ω(err).ShouldNot(HaveOccurred())
-			golden, err := ioutil.ReadFile(filepath.Join(configDir, "flannel_deployment.golden"))
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(actual).Should(Equal(string(golden)))
+			verifyDeployment(actual, "flannel_deployment.golden")
 		})
-		It("Should generate correct calico deployment file", func() {
-			currentDir, err := os.Getwd()
-			Ω(err).ShouldNot(HaveOccurred())
+	})
 
-			cl := &cluster.Config{
-				PodSubnet: "1.2.3.4/16",
-			}
+	Context("GenerateCalicoDeploymentFile function", func() {
+		It("should generate the correct deployment yaml", func() {
+			actual, err := cluster.GenerateCalicoDeploymentFile(&cluster.Config{PodSubnet: "1.2.3.4/16"}, box)
+			Expect(err).To(Succeed())
 
-			configDir := filepath.Join(currentDir, "testdata/cni")
-			actual, err := cluster.GenerateCalicoDeploymentFile(cl, box)
-			Ω(err).ShouldNot(HaveOccurred())
-			golden, err := ioutil.ReadFile(filepath.Join(configDir, "calico_deployment.golden"))
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(actual).Should(Equal(string(golden)))
+			verifyDeployment(actual, "calico_deployment.golden")
 		})
 	})
 })
+
+func verifyDeployment(actualDeploymentContents string, expDeploymentFileName string) {
+	currentDir, err := os.Getwd()
+	Expect(err).To(Succeed())
+	configDir := filepath.Join(currentDir, "testdata/cni")
+
+	expDeploymentFilePath := filepath.Join(configDir, expDeploymentFileName)
+	expectedContents, err := ioutil.ReadFile(expDeploymentFilePath)
+	Expect(err).To(Succeed())
+
+	Expect(string(actualDeploymentContents)).Should(Equal(string(expectedContents)))
+}

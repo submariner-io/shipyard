@@ -5,64 +5,40 @@ import (
 	"text/template"
 
 	"github.com/gobuffalo/packr/v2"
+	"github.com/pkg/errors"
 )
 
 // GenerateCalicoDeploymentFile generates calico deployment file from template
-func GenerateCalicoDeploymentFile(cl *Config, box *packr.Box) (string, error) {
-	calicoDeploymentTemplate, err := box.Resolve("tpl/calico-daemonset.yaml")
-	if err != nil {
-		return "", err
-	}
-
-	t, err := template.New("calico").Parse(calicoDeploymentTemplate.String())
-	if err != nil {
-		return "", err
-	}
-
-	var calicoDeploymentFile bytes.Buffer
-	err = t.Execute(&calicoDeploymentFile, cl)
-	if err != nil {
-		return "", err
-	}
-	return calicoDeploymentFile.String(), nil
+func GenerateCalicoDeploymentFile(config *Config, box *packr.Box) (string, error) {
+	return generateDeployment(config, box, "tpl/calico-daemonset.yaml")
 }
 
 // GenerateFlannelDeploymentFile generates flannel deployment file from template
-func GenerateFlannelDeploymentFile(cl *Config, box *packr.Box) (string, error) {
-	flannelDeploymentTemplate, err := box.Resolve("tpl/flannel-daemonset.yaml")
-	if err != nil {
-		return "", err
-	}
-
-	t, err := template.New("flannel").Parse(flannelDeploymentTemplate.String())
-	if err != nil {
-		return "", err
-	}
-
-	var flannelDeploymentFile bytes.Buffer
-	err = t.Execute(&flannelDeploymentFile, cl)
-	if err != nil {
-		return "", err
-	}
-	return flannelDeploymentFile.String(), nil
+func GenerateFlannelDeploymentFile(config *Config, box *packr.Box) (string, error) {
+	return generateDeployment(config, box, "tpl/flannel-daemonset.yaml")
 }
 
 // GenerateWeaveDeploymentFile generates weave deployment file from template
-func GenerateWeaveDeploymentFile(cl *Config, box *packr.Box) (string, error) {
-	weaveDeploymentTemplate, err := box.Resolve("tpl/weave-daemonset.yaml")
+func GenerateWeaveDeploymentFile(config *Config, box *packr.Box) (string, error) {
+	return generateDeployment(config, box, "tpl/weave-daemonset.yaml")
+}
+
+func generateDeployment(config *Config, box *packr.Box, templateFileName string) (string, error) {
+	templateFile, err := box.Resolve(templateFileName)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to find template file %q", templateFileName)
 	}
 
-	t, err := template.New("weave").Parse(weaveDeploymentTemplate.String())
+	t, err := template.New(templateFileName).Parse(templateFile.String())
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to parse template file %q", templateFileName)
 	}
 
-	var weaveDeploymentFile bytes.Buffer
-	err = t.Execute(&weaveDeploymentFile, cl)
+	var deploymentBuffer bytes.Buffer
+	err = t.Execute(&deploymentBuffer, config)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to generate deployment file from template %q", templateFileName)
 	}
-	return weaveDeploymentFile.String(), nil
+
+	return deploymentBuffer.String(), nil
 }
