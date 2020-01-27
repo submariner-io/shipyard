@@ -29,17 +29,8 @@ type CreateFlagpole struct {
 	// Whether or not to keep clusters running even if error occurs
 	Retain bool
 
-	// weave if to install weave cni
-	Weave bool
-
-	// flannel if to install flannel cni
-	Flannel bool
-
-	// calico if to install calico cni
-	Calico bool
-
-	// kindnet if to install kindnet default cni
-	Kindnet bool
+	// The name of the cni that will be installed for the cluster
+	Cni string
 
 	// Whether or not to install tiller
 	Tiller bool
@@ -153,11 +144,8 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 	}
 	cmd.Flags().StringVarP(&flags.ImageName, "image", "i", "", "node docker image to use for booting the cluster")
 	cmd.Flags().BoolVarP(&flags.Retain, "retain", "", true, "retain nodes for debugging when cluster creation fails")
-	cmd.Flags().BoolVarP(&flags.Weave, "weave", "w", false, "deploy with weave")
+	cmd.Flags().StringVarP(&flags.Cni, "cni", "c", cluster.Kindnet, fmt.Sprintf("name of the cni that will be deployed on the cluster. Supported CNIs: %v", cluster.CNIs))
 	cmd.Flags().BoolVarP(&flags.Tiller, "tiller", "t", false, "deploy with tiller")
-	cmd.Flags().BoolVarP(&flags.Calico, "calico", "c", false, "deploy with calico")
-	cmd.Flags().BoolVarP(&flags.Kindnet, "kindnet", "k", true, "deploy with kindnet default cni")
-	cmd.Flags().BoolVarP(&flags.Flannel, "flannel", "f", false, "deploy with flannel")
 	cmd.Flags().BoolVarP(&flags.Overlap, "overlap", "o", false, "create clusters with overlapping cidrs")
 	cmd.Flags().BoolVarP(&flags.Debug, "debug", "v", false, "set log level to debug")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 5*time.Minute, "amount of minutes to wait for control plane nodes to be ready")
@@ -177,8 +165,7 @@ func GetTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*clust
 		if known {
 			log.Infof("✔ Cluster with the name %q already exists.", clName)
 		} else {
-			cni := getCniFromFlags(flags)
-			cl, err := cluster.PopulateConfig(i, flags.ImageName, cni, flags.Retain, flags.Tiller, flags.Overlap, flags.Wait)
+			cl, err := cluster.PopulateConfig(i, flags.ImageName, flags.Cni, flags.Retain, flags.Tiller, flags.Overlap, flags.Wait)
 			if err != nil {
 				return nil, err
 			}
@@ -186,19 +173,4 @@ func GetTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*clust
 		}
 	}
 	return targetClusters, nil
-}
-
-// getCniFromFlags returns the cni name from flags
-func getCniFromFlags(flags *CreateFlagpole) string {
-	var cni string
-	if flags.Weave {
-		cni = "weave"
-	} else if flags.Flannel {
-		cni = "flannel"
-	} else if flags.Calico {
-		cni = "calico"
-	} else if flags.Kindnet {
-		cni = "kindnet"
-	}
-	return cni
 }
