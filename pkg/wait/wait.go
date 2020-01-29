@@ -7,21 +7,37 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/submariner-io/armada/pkg/defaults"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/fields"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 // ForPodsRunning waits for pods to be running
-func ForPodsRunning(clName string, c kubernetes.Interface, namespace, selector string, replicas int) error {
+func ForPodsRunning(clName string, c client.Client, namespace, selector string, replicas int) error {
+	labelSelector, err := labels.Parse(selector)
+	if err != nil {
+		return err
+	}
+
+	fieldSelector, err := fields.ParseSelector("status.phase=Running")
+	if err != nil {
+		return err
+	}
+
 	ctx := context.Background()
 	log.Infof("Waiting up to %v for pods running with label %q, namespace %q, replicas %v in cluster %q ...", defaults.WaitDurationResources, selector, namespace, replicas, clName)
 	podsContext, cancel := context.WithTimeout(ctx, defaults.WaitDurationResources)
 	wait.Until(func() {
-		podList, err := c.CoreV1().Pods(namespace).List(metav1.ListOptions{
-			LabelSelector: selector,
-			FieldSelector: "status.phase=Running",
+		podList := &corev1.PodList{}
+		err := c.List(context.TODO(), podList, &client.ListOptions{
+			Namespace:     namespace,
+			LabelSelector: labelSelector,
+			FieldSelector: fieldSelector,
 		})
 
 		if err != nil {
@@ -34,7 +50,7 @@ func ForPodsRunning(clName string, c kubernetes.Interface, namespace, selector s
 		}
 	}, 2*time.Second, podsContext.Done())
 
-	err := podsContext.Err()
+	err = podsContext.Err()
 	if err != nil && err != context.Canceled {
 		return errors.Wrap(err, "Error waiting for pods to be running.")
 	}
@@ -42,12 +58,13 @@ func ForPodsRunning(clName string, c kubernetes.Interface, namespace, selector s
 }
 
 // ForDeploymentReady waits for deployment roll out
-func ForDeploymentReady(clName string, c kubernetes.Interface, namespace, deploymentName string) error {
+func ForDeploymentReady(clName string, c client.Client, namespace, deploymentName string) error {
 	ctx := context.Background()
 	log.Infof("Waiting up to %v for %q deployment roll out in cluster %q ...", defaults.WaitDurationResources, deploymentName, clName)
 	deploymentContext, cancel := context.WithTimeout(ctx, defaults.WaitDurationResources)
 	wait.Until(func() {
-		deployment, err := c.AppsV1().Deployments(namespace).Get(deploymentName, metav1.GetOptions{})
+		deployment := &appsv1.Deployment{}
+		err := c.Get(context.TODO(), types.NamespacedName{Name: deploymentName, Namespace: namespace}, deployment)
 		if err == nil {
 			if deployment.Status.ReadyReplicas == *deployment.Spec.Replicas {
 				log.Infof("✔ %q successfully deployed in cluster %q with %v replicas ready", deploymentName, clName, deployment.Status.ReadyReplicas)
@@ -61,6 +78,7 @@ func ForDeploymentReady(clName string, c kubernetes.Interface, namespace, deploy
 			log.Errorf("Error getting deployment %q in cluster %q: %v", deploymentName, clName, err)
 		}
 	}, 2*time.Second, deploymentContext.Done())
+
 	err := deploymentContext.Err()
 	if err != nil && err != context.Canceled {
 		return errors.Wrapf(err, "Error waiting for %q deployment roll out.", deploymentName)
@@ -69,12 +87,13 @@ func ForDeploymentReady(clName string, c kubernetes.Interface, namespace, deploy
 }
 
 // ForDaemonSetReady waits for daemon set roll out
-func ForDaemonSetReady(clName string, c kubernetes.Interface, namespace, daemonSetName string) error {
+func ForDaemonSetReady(clName string, c client.Client, namespace, daemonSetName string) error {
 	ctx := context.Background()
 	log.Infof("Waiting up to %v for %q daemon set roll out in cluster %q ...", defaults.WaitDurationResources, daemonSetName, clName)
 	deploymentContext, cancel := context.WithTimeout(ctx, defaults.WaitDurationResources)
 	wait.Until(func() {
-		daemonSet, err := c.AppsV1().DaemonSets(namespace).Get(daemonSetName, metav1.GetOptions{})
+		daemonSet := &appsv1.DaemonSet{}
+		err := c.Get(context.TODO(), types.NamespacedName{Name: daemonSetName, Namespace: namespace}, daemonSet)
 		if err == nil {
 			if daemonSet.Status.NumberReady == daemonSet.Status.DesiredNumberScheduled {
 				log.Infof("✔ Daemon set %q successfully rolled out %v replicas in cluster %q", daemonSetName, clName, daemonSet.Status.NumberReady)
@@ -88,6 +107,7 @@ func ForDaemonSetReady(clName string, c kubernetes.Interface, namespace, daemonS
 			log.Errorf("Error getting daemon set %q in cluster %q: %v", daemonSetName, clName, err)
 		}
 	}, 2*time.Second, deploymentContext.Done())
+
 	err := deploymentContext.Err()
 	if err != nil && err != context.Canceled {
 		return errors.Wrapf(err, "Error waiting for %s daemon set roll out.", daemonSetName)

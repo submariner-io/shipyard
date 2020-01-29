@@ -207,13 +207,13 @@ var _ = Describe("E2E Tests", func() {
 			wg.Add(len(clusters))
 			for _, clName := range clusters {
 				go func(clName string) {
-					clientSet, err := cluster.GetClientSet(clName)
+					client, err := cluster.NewClient(clName)
 					Ω(err).ShouldNot(HaveOccurred())
 
-					err = deploy.Resources(clName, clientSet, nginxDeploymentFile.String(), "Nginx")
+					err = deploy.Resources(clName, client, nginxDeploymentFile.String(), "Nginx")
 					Ω(err).ShouldNot(HaveOccurred())
 
-					err = wait.ForDaemonSetReady(clName, clientSet, "default", "nginx-demo")
+					err = wait.ForDaemonSetReady(clName, client, "default", "nginx-demo")
 					Ω(err).ShouldNot(HaveOccurred())
 					activeDeployments = append(activeDeployments, clName)
 					wg.Done()
@@ -240,13 +240,13 @@ var _ = Describe("E2E Tests", func() {
 			for _, file := range configFiles {
 				go func(file os.FileInfo) {
 					clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					clientSet, err := cluster.GetClientSet(clName)
+					client, err := cluster.NewClient(clName)
 					Ω(err).ShouldNot(HaveOccurred())
 
-					err = deploy.Resources(clName, clientSet, netshootDeploymentFile.String(), "Netshoot")
+					err = deploy.Resources(clName, client, netshootDeploymentFile.String(), "Netshoot")
 					Ω(err).ShouldNot(HaveOccurred())
 
-					err = wait.ForDaemonSetReady(clName, clientSet, "default", "netshoot")
+					err = wait.ForDaemonSetReady(clName, client, "default", "netshoot")
 					Ω(err).ShouldNot(HaveOccurred())
 					activeDeployments = append(activeDeployments, clName)
 					wg.Done()

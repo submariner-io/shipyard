@@ -58,17 +58,17 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 			wg.Add(len(targetClusters))
 			for _, clName := range targetClusters {
 				go func(clName string) {
-					clientSet, err := cluster.GetClientSet(clName)
+					client, err := cluster.NewClient(clName)
 					if err != nil {
 						log.Fatalf("%s %s", clName, err)
 					}
 
-					err = deploy.Resources(clName, clientSet, nginxDeploymentFile.String(), "Nginx")
+					err = deploy.Resources(clName, client, nginxDeploymentFile.String(), "Nginx")
 					if err != nil {
 						log.Fatalf("%s %s", clName, err)
 					}
 
-					err = wait.ForDaemonSetReady(clName, clientSet, "default", "nginx-demo")
+					err = wait.ForDaemonSetReady(clName, client, "default", "nginx-demo")
 					if err != nil {
 						log.Fatalf("%s %s", clName, err)
 					}
