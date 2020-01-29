@@ -121,7 +121,7 @@ func PopulateConfig(clusterNum int, image, cni string, retain, tiller, overlap b
 		Retain:              retain,
 		Tiller:              tiller,
 		WaitForReady:        wait,
-		KubeConfigFilePath:  filepath.Join(user.HomeDir, ".kube", strings.Join([]string{"kind-config", name}, "-")),
+		KubeConfigFilePath:  filepath.Join(user.HomeDir, ".kube", "kind-config-"+name),
 	}
 
 	podIP := net.ParseIP(defaults.PodCidrBase)

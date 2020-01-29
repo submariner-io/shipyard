@@ -85,10 +85,10 @@ func testGenerateKindConfig() {
 	})
 }
 
-func verifyKindConfigFile(configDir string, actualConfigFilePath string, expConfigFileName string) {
-	expConfigFilePath := filepath.Join(configDir, expConfigFileName)
+func verifyKindConfigFile(configDir string, actualConfigFilePath string, expectedConfigFileName string) {
+	expectedConfigFilePath := filepath.Join(configDir, expectedConfigFileName)
 
-	expected, err := ioutil.ReadFile(expConfigFilePath)
+	expected, err := ioutil.ReadFile(expectedConfigFilePath)
 	Expect(err).To(Succeed())
 
 	actual, err := ioutil.ReadFile(actualConfigFilePath)
