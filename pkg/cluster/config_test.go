@@ -100,7 +100,7 @@ func verifyKindConfigFile(configDir string, actualConfigFilePath string, expecte
 func testPopulateConfig() {
 	When("the CNI is kindnet and the kind image name is empty", func() {
 		It("should correctly set the Config fields", func() {
-			config := executePopulateConfig("", "kindnet", false)
+			config := executePopulateConfig(1, "", "kindnet", true)
 
 			user, err := user.Current()
 			Expect(err).To(Succeed())
@@ -109,8 +109,8 @@ func testPopulateConfig() {
 			Expect(config).Should(Equal(&cluster.Config{
 				Cni:                 "kindnet",
 				Name:                name,
-				PodSubnet:           "10.4.0.0/14",
-				ServiceSubnet:       "100.1.0.0/16",
+				PodSubnet:           "10.0.0.0/14",
+				ServiceSubnet:       "100.0.0.0/16",
 				DNSDomain:           name + ".local",
 				KubeAdminAPIVersion: defaults.KubeAdminAPIVersion,
 				NumWorkers:          defaults.NumWorkers,
@@ -125,28 +125,32 @@ func testPopulateConfig() {
 
 	When("the kind image version is less than 1.15", func() {
 		It("should set the KubeAdminAPIVersion to kubeadm.k8s.io/v1beta1", func() {
-			config := executePopulateConfig("kindest/node:v1.11.1", "kindnet", false)
+			imageName := "kindest/node:v1.11.1"
+			config := executePopulateConfig(1, imageName, "kindnet", true)
 			Expect(config.KubeAdminAPIVersion).To(Equal("kubeadm.k8s.io/v1beta1"))
+			Expect(config.NodeImageName).To(Equal(imageName))
 		})
 	})
 
 	When("the kind image version is greater than 1.15", func() {
 		It(fmt.Sprintf("should set the KubeAdminAPIVersion to %s", defaults.KubeAdminAPIVersion), func() {
-			config := executePopulateConfig("kindest/node:v1.16.3", "kindnet", false)
+			imageName := "kindest/node:v1.16.3"
+			config := executePopulateConfig(1, imageName, "kindnet", true)
 			Expect(config.KubeAdminAPIVersion).To(Equal(defaults.KubeAdminAPIVersion))
+			Expect(config.NodeImageName).To(Equal(imageName))
 		})
 	})
 
 	When("the kind image version is invalid", func() {
 		It("should return an error", func() {
-			_, err := cluster.PopulateConfig(1, "kindest/node:1.16.3", "kindnet", false, false, false, waitForReady)
+			_, err := cluster.PopulateConfig(1, "kindest/node:1.16.3", "kindnet", false, false, true, waitForReady)
 			Expect(err).ToNot(Succeed())
 		})
 	})
 
 	When("the CNI is weave", func() {
 		It("should set WaitForReady to 0", func() {
-			config := executePopulateConfig("", "weave", false)
+			config := executePopulateConfig(1, "", "weave", true)
 			Expect(config.Cni).To(Equal("weave"))
 			Expect(config.WaitForReady).To(Equal(time.Duration(0)))
 		})
@@ -154,7 +158,7 @@ func testPopulateConfig() {
 
 	When("the CNI is calico", func() {
 		It("should set WaitForReady to 0", func() {
-			config := executePopulateConfig("", "calico", false)
+			config := executePopulateConfig(1, "", "calico", true)
 			Expect(config.Cni).To(Equal("calico"))
 			Expect(config.WaitForReady).To(Equal(time.Duration(0)))
 		})
@@ -162,23 +166,28 @@ func testPopulateConfig() {
 
 	When("the CNI is flannel", func() {
 		It("should set WaitForReady to 0", func() {
-			config := executePopulateConfig("", "flannel", false)
+			config := executePopulateConfig(1, "", "flannel", true)
 			Expect(config.Cni).To(Equal("flannel"))
 			Expect(config.WaitForReady).To(Equal(time.Duration(0)))
 		})
 	})
 
-	When("overlapping IPs are desired", func() {
-		It("should set the pod and service subnets CIDRs to the defaults", func() {
-			config := executePopulateConfig("", "kindnet", true)
-			Expect(config.PodSubnet).To(Equal("10.0.0.0/14"))
-			Expect(config.ServiceSubnet).To(Equal("100.0.0.0/16"))
+	When("non-overlapping IPs are desired", func() {
+		It("should correctly set the pod and service subnets CIDRs to be different", func() {
+			expectedPodSubnets := []string{"10.4.0.0/14", "10.8.0.0/14"}
+			expectedServiceSubnets := []string{"100.1.0.0/16", "100.2.0.0/16"}
+			for i := 0; i < 2; i++ {
+				config := executePopulateConfig(i+1, "", "kindnet", false)
+				Expect(config.PodSubnet).To(Equal(expectedPodSubnets[i]))
+				Expect(config.ServiceSubnet).To(Equal(expectedServiceSubnets[i]))
+				Expect(config.Name).To(Equal(defaults.ClusterNameBase + strconv.Itoa(i+1)))
+			}
 		})
 	})
 }
 
-func executePopulateConfig(imageName, cni string, overlap bool) *cluster.Config {
-	config, err := cluster.PopulateConfig(1, imageName, cni, false, false, overlap, waitForReady)
+func executePopulateConfig(clusterNum int, imageName, cni string, overlap bool) *cluster.Config {
+	config, err := cluster.PopulateConfig(clusterNum, imageName, cni, false, false, overlap, waitForReady)
 	Expect(err).To(Succeed())
 	return config
 }
