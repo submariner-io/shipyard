@@ -9,7 +9,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -27,7 +27,6 @@ import (
 	"github.com/submariner-io/armada/pkg/image"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
-	"sigs.k8s.io/kind/pkg/cluster/nodes"
 	kindcmd "sigs.k8s.io/kind/pkg/cmd"
 )
 
@@ -37,31 +36,35 @@ func CreateEnvironment(flags *clustercmd.CreateFlagpole, provider *kind.Provider
 
 	targetClusters, err := clustercmd.GetTargetClusters(provider, flags)
 	if err != nil {
-		log.Fatal(err)
+		return nil, err
 	}
 
-	var wg sync.WaitGroup
-	wg.Add(len(targetClusters))
-	for _, cl := range targetClusters {
-		go func(cl *cluster.Config) {
-			err := cluster.Create(cl, provider, box, &wg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}(cl)
+	tasks := []func() error{}
+	for _, c := range targetClusters {
+		clusterName := c
+		tasks = append(tasks, func() error {
+			return cluster.Create(clusterName, provider, box)
+		})
 	}
-	wg.Wait()
 
-	wg.Add(len(targetClusters))
-	for _, cl := range targetClusters {
-		go func(cl *cluster.Config) {
-			err := cluster.FinalizeSetup(cl, box, &wg)
-			if err != nil {
-				log.Fatal(err)
-			}
-		}(cl)
+	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+	if err != nil {
+		return nil, err
 	}
-	wg.Wait()
+
+	tasks = []func() error{}
+	for _, c := range targetClusters {
+		clusterName := c
+		tasks = append(tasks, func() error {
+			return cluster.FinalizeSetup(clusterName, box)
+		})
+	}
+
+	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+	if err != nil {
+		return nil, err
+	}
+
 	return targetClusters, nil
 }
 
@@ -198,31 +201,38 @@ var _ = Describe("E2E Tests", func() {
 
 			box := packr.New("configs", "../../configs")
 			nginxDeploymentFile, err := box.Resolve("debug/nginx-demo-daemonset.yaml")
-			Ω(err).ShouldNot(HaveOccurred())
+			Expect(err).To(Succeed())
 
 			clusters := []string{"cluster1", "cluster3"}
 
-			var activeDeployments []string
-			var wg sync.WaitGroup
-			wg.Add(len(clusters))
-			for _, clName := range clusters {
-				go func(clName string) {
-					client, err := cluster.NewClient(clName)
-					Ω(err).ShouldNot(HaveOccurred())
+			var activeDeployments uint32
+			tasks := []func() error{}
+			for _, c := range clusters {
+				clusterName := c
+				tasks = append(tasks, func() error {
+					client, err := cluster.NewClient(clusterName)
+					if err != nil {
+						return err
+					}
 
-					err = deploy.Resources(clName, client, nginxDeploymentFile.String(), "Nginx")
-					Ω(err).ShouldNot(HaveOccurred())
+					err = deploy.Resources(clusterName, client, nginxDeploymentFile.String(), "Nginx")
+					if err != nil {
+						return err
+					}
 
-					err = wait.ForDaemonSetReady(clName, client, "default", "nginx-demo")
-					Ω(err).ShouldNot(HaveOccurred())
-					activeDeployments = append(activeDeployments, clName)
-					wg.Done()
-				}(clName)
+					err = wait.ForDaemonSetReady(clusterName, client, "default", "nginx-demo")
+					if err != nil {
+						return err
+					}
+
+					atomic.AddUint32(&activeDeployments, 1)
+					return nil
+				})
 			}
-			wg.Wait()
 
-			Expect(len(activeDeployments)).Should(Equal(2))
-
+			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+			Expect(err).To(Succeed())
+			Expect(int(activeDeployments)).To(Equal(2))
 		})
 
 		It("Should deploy netshoot to all 3 clusters", func() {
@@ -234,28 +244,36 @@ var _ = Describe("E2E Tests", func() {
 			configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 			Ω(err).ShouldNot(HaveOccurred())
 
-			var activeDeployments []string
-			var wg sync.WaitGroup
-			wg.Add(len(configFiles))
-			for _, file := range configFiles {
-				go func(file os.FileInfo) {
-					clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					client, err := cluster.NewClient(clName)
-					Ω(err).ShouldNot(HaveOccurred())
+			var activeDeployments uint32
+			tasks := []func() error{}
+			for _, f := range configFiles {
+				file := f
+				tasks = append(tasks, func() error {
+					clusterName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
+					client, err := cluster.NewClient(clusterName)
+					if err != nil {
+						return err
+					}
 
-					err = deploy.Resources(clName, client, netshootDeploymentFile.String(), "Netshoot")
-					Ω(err).ShouldNot(HaveOccurred())
+					err = deploy.Resources(clusterName, client, netshootDeploymentFile.String(), "Netshoot")
+					if err != nil {
+						return err
+					}
 
-					err = wait.ForDaemonSetReady(clName, client, "default", "netshoot")
-					Ω(err).ShouldNot(HaveOccurred())
-					activeDeployments = append(activeDeployments, clName)
-					wg.Done()
-				}(file)
+					err = wait.ForDaemonSetReady(clusterName, client, "default", "netshoot")
+					if err != nil {
+						return err
+					}
+
+					atomic.AddUint32(&activeDeployments, 1)
+					return nil
+				})
 			}
-			wg.Wait()
 
+			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+			Expect(err).To(Succeed())
 			Expect(len(configFiles)).Should(Equal(3))
-			Expect(len(activeDeployments)).Should(Equal(3))
+			Expect(int(activeDeployments)).To(Equal(3))
 		})
 	})
 
@@ -312,7 +330,7 @@ var _ = Describe("E2E Tests", func() {
 			}
 
 			images := []string{"alpine:edge"}
-			var nodesWithImage []nodes.Node
+			var nodesWithImage uint32
 			for _, imageName := range images {
 				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 				Ω(err).ShouldNot(HaveOccurred())
@@ -326,19 +344,28 @@ var _ = Describe("E2E Tests", func() {
 				defer os.RemoveAll(filepath.Dir(imageTarPath))
 
 				log.Infof("loading image: %s to nodes: %s ...", imageName, selectedNodes)
-				var wg sync.WaitGroup
-				wg.Add(len(selectedNodes))
-				for _, node := range selectedNodes {
-					go func(node nodes.Node) {
-						err = image.LoadToNode(imageTarPath, imageName, node, &wg)
-						Ω(err).ShouldNot(HaveOccurred())
-						nodesWithImage = append(nodesWithImage, node)
-					}(node)
+
+				tasks := []func() error{}
+				for _, n := range selectedNodes {
+					node := n
+					tasks = append(tasks, func() error {
+						err = image.LoadToNode(imageTarPath, imageName, node)
+						if err != nil {
+							return err
+						}
+
+						atomic.AddUint32(&nodesWithImage, 1)
+						return nil
+					})
 				}
-				wg.Wait()
+
+				err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+				Expect(err).To(Succeed())
 			}
-			Expect(len(nodesWithImage)).Should(Equal(9))
+
+			Expect(int(nodesWithImage)).To(Equal(9))
 		})
+
 		It("Should load multiple images to cluster 1 and 3 only", func() {
 			log.SetLevel(log.DebugLevel)
 
@@ -348,7 +375,7 @@ var _ = Describe("E2E Tests", func() {
 				defaults.ClusterNameBase + strconv.Itoa(3),
 			}
 
-			var nodesWithImages []nodes.Node
+			var nodesWithImage uint32
 			for _, imageName := range images {
 				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 				Ω(err).ShouldNot(HaveOccurred())
@@ -361,18 +388,25 @@ var _ = Describe("E2E Tests", func() {
 				defer os.RemoveAll(filepath.Dir(imageTarPath))
 
 				log.Infof("loading image: %s to nodes: %s ...", imageName, selectedNodes)
-				var wg sync.WaitGroup
-				wg.Add(len(selectedNodes))
-				for _, node := range selectedNodes {
-					go func(node nodes.Node) {
-						err = image.LoadToNode(imageTarPath, imageName, node, &wg)
-						Ω(err).ShouldNot(HaveOccurred())
-						nodesWithImages = append(nodesWithImages, node)
-					}(node)
+
+				tasks := []func() error{}
+				for _, n := range selectedNodes {
+					node := n
+					tasks = append(tasks, func() error {
+						err = image.LoadToNode(imageTarPath, imageName, node)
+						if err != nil {
+							return err
+						}
+
+						atomic.AddUint32(&nodesWithImage, 1)
+						return nil
+					})
 				}
-				wg.Wait()
+				err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+				Expect(err).To(Succeed())
 			}
-			Expect(len(nodesWithImages)).Should(Equal(12))
+
+			Expect(int(nodesWithImage)).To(Equal(12))
 		})
 	})
 	Context("Cluster deletion", func() {

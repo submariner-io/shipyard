@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
-	"sync"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -107,7 +106,7 @@ func Save(ctx context.Context, dockerCli *dockerclient.Client, imageName string)
 }
 
 // LoadToNode loads an image to kubernetes node
-func LoadToNode(imageTarPath, imageName string, node nodes.Node, wg *sync.WaitGroup) error {
+func LoadToNode(imageTarPath, imageName string, node nodes.Node) error {
 	f, err := os.Open(imageTarPath)
 	if err != nil {
 		return errors.Wrapf(err, "failed to open an image: %s, location: %q", imageName, imageTarPath)
@@ -120,6 +119,5 @@ func LoadToNode(imageTarPath, imageName string, node nodes.Node, wg *sync.WaitGr
 		return errors.Wrapf(err, "failed to loading image: %q, node %q", imageName, node.String())
 	}
 	log.Infof("✔ image: %q was loaded to node: %q.", imageName, node.String())
-	wg.Done()
 	return nil
 }
