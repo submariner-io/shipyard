@@ -70,7 +70,7 @@ func iterate(start, end int) (stream chan int) {
 }
 
 // GenerateKindConfig creates kind config file and returns its path
-func GenerateKindConfig(config *Config, configDir string, box *packr.Box) (string, error) {
+func GenerateKindConfig(config *Config, configDir string, box *packr.Box) (kindConfigFilePath string, err error) {
 	templateFile := "tpl/cluster-config.yaml"
 	kindConfigTemplateFile, err := box.Resolve(templateFile)
 	if err != nil {
@@ -82,25 +82,31 @@ func GenerateKindConfig(config *Config, configDir string, box *packr.Box) (strin
 		return "", errors.Wrapf(err, "failed to parse kind config template file %q", templateFile)
 	}
 
-	kindConfigFilePath := filepath.Join(configDir, "kind-config-"+config.Name+".yaml")
+	kindConfigFilePath = filepath.Join(configDir, "kind-config-"+config.Name+".yaml")
 	kindConfigFile, err := os.Create(kindConfigFilePath)
 	if err != nil {
 		return "", errors.Wrapf(err, "failed to create kind config file %q", kindConfigFilePath)
 	}
 
+	defer func() {
+		if err == nil {
+			err = kindConfigFile.Close()
+		}
+
+		if err != nil {
+			os.Remove(kindConfigFilePath)
+			kindConfigFilePath = ""
+		}
+	}()
+
 	err = kindConfigTemplate.Execute(kindConfigFile, config)
 	if err != nil {
-		os.Remove(kindConfigFilePath)
-		return "", errors.Wrapf(err, "failed to generated kind config file %q", kindConfigFilePath)
-	}
-
-	if err := kindConfigFile.Close(); err != nil {
-		os.Remove(kindConfigFilePath)
-		return "", errors.Wrapf(err, "failed to close kind config file %q", kindConfigFilePath)
+		err = errors.Wrapf(err, "failed to generated kind config file %q", kindConfigFilePath)
+		return
 	}
 
 	log.Debugf("Generated kind config config file %q", kindConfigFilePath)
-	return kindConfigFilePath, nil
+	return
 }
 
 // PopulateConfig return a desired cluster config object
