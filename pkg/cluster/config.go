@@ -57,55 +57,77 @@ type Config struct {
 	Tiller bool
 }
 
+// iterate func map for config template
+func iterate(start, end int) (stream chan int) {
+	stream = make(chan int)
+	go func() {
+		for i := start; i <= end; i++ {
+			stream <- i
+		}
+		close(stream)
+	}()
+	return
+}
+
 // GenerateKindConfig creates kind config file and returns its path
-func GenerateKindConfig(cl *Config, configDir string, box *packr.Box) (string, error) {
-	kindConfigFileTemplate, err := box.Resolve("tpl/cluster-config.yaml")
+func GenerateKindConfig(config *Config, configDir string, box *packr.Box) (kindConfigFilePath string, err error) {
+	templateFile := "tpl/cluster-config.yaml"
+	kindConfigTemplateFile, err := box.Resolve(templateFile)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to find kind config template file %q", templateFile)
 	}
 
-	t, err := template.New("config").Funcs(template.FuncMap{"iterate": iterate}).Parse(kindConfigFileTemplate.String())
+	kindConfigTemplate, err := template.New("config").Funcs(template.FuncMap{"iterate": iterate}).Parse(kindConfigTemplateFile.String())
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to parse kind config template file %q", templateFile)
 	}
 
-	kindConfigFilePath := filepath.Join(configDir, "kind-config-"+cl.Name+".yaml")
-	f, err := os.Create(kindConfigFilePath)
+	kindConfigFilePath = filepath.Join(configDir, "kind-config-"+config.Name+".yaml")
+	kindConfigFile, err := os.Create(kindConfigFilePath)
 	if err != nil {
-		return "", err
+		return "", errors.Wrapf(err, "failed to create kind config file %q", kindConfigFilePath)
 	}
 
-	err = t.Execute(f, cl)
+	defer func() {
+		if err == nil {
+			err = kindConfigFile.Close()
+		}
+
+		if err != nil {
+			os.Remove(kindConfigFilePath)
+			kindConfigFilePath = ""
+		}
+	}()
+
+	err = kindConfigTemplate.Execute(kindConfigFile, config)
 	if err != nil {
-		return "", err
+		err = errors.Wrapf(err, "failed to generated kind config file %q", kindConfigFilePath)
+		return
 	}
 
-	if err := f.Close(); err != nil {
-		return "", err
-	}
-	log.Debugf("Config config file for %s generated.", cl.Name)
-	return kindConfigFilePath, nil
+	log.Debugf("Generated kind config config file %q", kindConfigFilePath)
+	return
 }
 
 // PopulateConfig return a desired cluster config object
-func PopulateConfig(i int, image, cni string, retain, tiller, overlap bool, wait time.Duration) (*Config, error) {
-
-	usr, err := user.Current()
+func PopulateConfig(clusterNum int, image, cni string, retain, tiller, overlap bool, wait time.Duration) (*Config, error) {
+	user, err := user.Current()
 	if err != nil {
-		return nil, err
+		return nil, errors.Wrap(err, "failed to get current user information")
 	}
 
-	cl := &Config{
-		Name:                defaults.ClusterNameBase + strconv.Itoa(i),
+	name := defaults.ClusterNameBase + strconv.Itoa(clusterNum)
+	config := &Config{
+		Name:                name,
 		NodeImageName:       image,
 		Cni:                 cni,
 		NumWorkers:          defaults.NumWorkers,
-		DNSDomain:           defaults.ClusterNameBase + strconv.Itoa(i) + ".local",
+		DNSDomain:           name + ".local",
 		KubeAdminAPIVersion: defaults.KubeAdminAPIVersion,
 		Retain:              retain,
 		Tiller:              tiller,
 		WaitForReady:        wait,
-		KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", strings.Join([]string{"kind-config", defaults.ClusterNameBase + strconv.Itoa(i)}, "-")),
+		KubeConfigFilePath:  filepath.Join(user.HomeDir, ".kube", "kind-config-"+name),
 	}
 
 	podIP := net.ParseIP(defaults.PodCidrBase)
@@ -114,15 +136,15 @@ func PopulateConfig(i int, image, cni string, retain, tiller, overlap bool, wait
 	serviceIP = serviceIP.To4()
 
 	if !overlap {
-		podIP[1] += byte(4 * i)
-		serviceIP[1] += byte(i)
+		podIP[1] += byte(4 * clusterNum)
+		serviceIP[1] += byte(clusterNum)
 	}
 
-	cl.PodSubnet = podIP.String() + defaults.PodCidrMask
-	cl.ServiceSubnet = serviceIP.String() + defaults.ServiceCidrMask
+	config.PodSubnet = podIP.String() + defaults.PodCidrMask
+	config.ServiceSubnet = serviceIP.String() + defaults.ServiceCidrMask
 
 	if cni != "kindnet" {
-		cl.WaitForReady = 0
+		config.WaitForReady = 0
 	}
 
 	if image != "" {
@@ -131,11 +153,11 @@ func PopulateConfig(i int, image, cni string, retain, tiller, overlap bool, wait
 		if len(results) == 2 {
 			sver := semver.MustParse(results[len(results)-1])
 			if sver.LessThan(tgt) {
-				cl.KubeAdminAPIVersion = "kubeadm.k8s.io/v1beta1"
+				config.KubeAdminAPIVersion = "kubeadm.k8s.io/v1beta1"
 			}
 		} else {
-			return nil, errors.Errorf("%q: Could not extract version from %s, split is by ':v', example of correct image name: kindest/node:v1.15.3.", cl.Name, cl.NodeImageName)
+			return nil, errors.Errorf("%q: Could not extract version from image %q. Split is by ':v' - example of correct image name: kindest/node:v1.15.3.", config.Name, config.NodeImageName)
 		}
 	}
-	return cl, nil
+	return config, nil
 }
