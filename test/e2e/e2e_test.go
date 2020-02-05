@@ -34,33 +34,7 @@ func CreateEnvironment(flags *clustercmd.CreateFlagpole, provider *kind.Provider
 	log.SetLevel(log.DebugLevel)
 	box := packr.New("configs", "../../configs")
 
-	targetClusters, err := clustercmd.GetTargetClusters(provider, flags)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks := []func() error{}
-	for _, c := range targetClusters {
-		clusterName := c
-		tasks = append(tasks, func() error {
-			return cluster.Create(clusterName, provider, box)
-		})
-	}
-
-	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
-	if err != nil {
-		return nil, err
-	}
-
-	tasks = []func() error{}
-	for _, c := range targetClusters {
-		clusterName := c
-		tasks = append(tasks, func() error {
-			return cluster.FinalizeSetup(clusterName, box)
-		})
-	}
-
-	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+	targetClusters, err := clustercmd.CreateClusters(flags, provider, box)
 	if err != nil {
 		return nil, err
 	}

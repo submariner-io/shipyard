@@ -45,7 +45,7 @@ type CreateFlagpole struct {
 	NumClusters int
 }
 
-// CreateClustersCommand returns a new cobra.Command under create command for armada
+// NewCreateCommand returns a new cobra.Command under create command for armada
 func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 	flags := &CreateFlagpole{}
 	cmd := &cobra.Command{
@@ -54,92 +54,11 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 		Short: "Creates multiple kubernetes clusters",
 		Long:  "Creates multiple kubernetes clusters using Docker container 'nodes'",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if flags.Debug {
-				log.SetLevel(log.DebugLevel)
-				//log.SetReportCaller(true)
-			}
-
-			targetClusters, err := GetTargetClusters(provider, flags)
-			if err != nil {
-				return err
-			}
-
-			tasks := []func() error{}
-			for _, c := range targetClusters {
-				config := c
-				tasks = append(tasks, func() error {
-					err := cluster.Create(config, provider, box)
-					if err != nil {
-						return fmt.Errorf("Error creating cluster %q", config.Name)
-					}
-
-					return nil
-				})
-			}
-
-			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
-			if err != nil {
-				return err
-			}
-
-			log.Info("Finalizing the clusters setup ...")
-
-			tasks = []func() error{}
-			for _, c := range targetClusters {
-				config := c
-				tasks = append(tasks, func() error {
-					err := cluster.FinalizeSetup(config, box)
-					if err != nil {
-						return fmt.Errorf("Error finalizing cluster %q", config.Name)
-					}
-
-					return nil
-				})
-			}
-
-			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
-			if err != nil {
-				return err
-			}
-
-			return nil
+			_, err := CreateClusters(flags, provider, box)
+			return err
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {
-			files, err := ioutil.ReadDir(defaults.KindConfigDir)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			provider := kind.NewProvider()
-
-			for _, file := range files {
-				clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-				known, err := cluster.IsKnown(clName, provider)
-				if err != nil {
-					log.Error(err)
-				}
-				if !known {
-					usr, err := user.Current()
-					if err != nil {
-						log.Error(err)
-					}
-
-					kindKubeFileName := strings.Join([]string{"kind-config", clName}, "-")
-					kindKubeFilePath := filepath.Join(usr.HomeDir, ".kube", kindKubeFileName)
-
-					masterIP, err := cluster.GetMasterDockerIP(clName)
-					if err != nil {
-						log.Error(err)
-					}
-
-					err = cluster.PrepareKubeConfigs(clName, kindKubeFilePath, masterIP)
-					if err != nil {
-						log.Error(err)
-					}
-				}
-			}
-			log.Infof("✔ Kubeconfigs: export KUBECONFIG=$(echo ./%s/kind-config-%s{1..%v} | sed 's/ /:/g')", defaults.LocalKubeConfigDir, defaults.ClusterNameBase, flags.NumClusters)
+			persistClusterKubeconfigs(flags)
 		},
 	}
 	cmd.Flags().StringVarP(&flags.ImageName, "image", "i", "", "node docker image to use for booting the cluster")
@@ -153,8 +72,97 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 	return cmd
 }
 
-// GetTargetClusters returns a list of clusters to create
-func GetTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*cluster.Config, error) {
+// CreateClusters will create the requested clusters while waiting for their creation to finish
+func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.Box) ([]*cluster.Config, error) {
+	if flags.Debug {
+		log.SetLevel(log.DebugLevel)
+	}
+
+	targetClusters, err := getTargetClusters(provider, flags)
+	if err != nil {
+		return nil, err
+	}
+
+	tasks := []func() error{}
+	for _, c := range targetClusters {
+		config := c
+		tasks = append(tasks, func() error {
+			err := cluster.Create(config, provider, box)
+			if err != nil {
+				return fmt.Errorf("Error creating cluster %q", config.Name)
+			}
+
+			return nil
+		})
+	}
+
+	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+	if err != nil {
+		return nil, err
+	}
+
+	log.Info("Finalizing the clusters setup ...")
+
+	tasks = []func() error{}
+	for _, c := range targetClusters {
+		config := c
+		tasks = append(tasks, func() error {
+			err := cluster.FinalizeSetup(config, box)
+			if err != nil {
+				return fmt.Errorf("Error finalizing cluster %q", config.Name)
+			}
+
+			return nil
+		})
+	}
+
+	err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+	if err != nil {
+		return nil, err
+	}
+
+	return targetClusters, nil
+}
+
+func persistClusterKubeconfigs(flags *CreateFlagpole) {
+	files, err := ioutil.ReadDir(defaults.KindConfigDir)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	provider := kind.NewProvider()
+
+	for _, file := range files {
+		clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
+		known, err := cluster.IsKnown(clName, provider)
+		if err != nil {
+			log.Error(err)
+		}
+		if !known {
+			usr, err := user.Current()
+			if err != nil {
+				log.Error(err)
+			}
+
+			kindKubeFileName := strings.Join([]string{"kind-config", clName}, "-")
+			kindKubeFilePath := filepath.Join(usr.HomeDir, ".kube", kindKubeFileName)
+
+			masterIP, err := cluster.GetMasterDockerIP(clName)
+			if err != nil {
+				log.Error(err)
+			}
+
+			err = cluster.PrepareKubeConfigs(clName, kindKubeFilePath, masterIP)
+			if err != nil {
+				log.Error(err)
+			}
+		}
+	}
+	log.Infof("✔ Kubeconfigs: export KUBECONFIG=$(echo ./%s/kind-config-%s{1..%v} | sed 's/ /:/g')", defaults.LocalKubeConfigDir, defaults.ClusterNameBase, flags.NumClusters)
+}
+
+// getTargetClusters returns a list of clusters to create
+func getTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*cluster.Config, error) {
 	var targetClusters []*cluster.Config
 	for i := 1; i <= flags.NumClusters; i++ {
 		clName := defaults.ClusterNameBase + strconv.Itoa(i)
