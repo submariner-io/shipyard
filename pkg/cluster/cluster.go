@@ -9,19 +9,17 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/docker/docker/api/types/filters"
-	"github.com/submariner-io/armada/pkg/deploy"
-	"github.com/submariner-io/armada/pkg/wait"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-
 	dockertypes "github.com/docker/docker/api/types"
+	"github.com/docker/docker/api/types/filters"
 	dockerclient "github.com/docker/docker/client"
 	"github.com/gobuffalo/packr/v2"
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/submariner-io/armada/pkg/defaults"
-	apiextclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
+	"github.com/submariner-io/armada/pkg/deploy"
+	"github.com/submariner-io/armada/pkg/wait"
+	"k8s.io/client-go/tools/clientcmd"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 	kinderrors "sigs.k8s.io/kind/pkg/errors"
 )
@@ -126,9 +124,9 @@ func IsKnown(clName string, provider *kind.Provider) (bool, error) {
 	return false, nil
 }
 
-// GetClientSet returns kubernetes interface
-func GetClientSet(clName string) (kubernetes.Interface, error) {
-	kubeConfigFilePath, err := GetKubeConfigPath(clName)
+// NewClient creates a new client.Client instance for the given cluster name.
+func NewClient(cluster string) (client.Client, error) {
+	kubeConfigFilePath, err := GetKubeConfigPath(cluster)
 	if err != nil {
 		return nil, err
 	}
@@ -138,30 +136,7 @@ func GetClientSet(clName string) (kubernetes.Interface, error) {
 		return nil, err
 	}
 
-	clientSet, err := kubernetes.NewForConfig(kconfig)
-	if err != nil {
-		return nil, err
-	}
-	return clientSet, nil
-}
-
-// GetCrdClientSet returns apiextclientset interface
-func GetCrdClientSet(clName string) (apiextclientset.Interface, error) {
-	kubeConfigFilePath, err := GetKubeConfigPath(clName)
-	if err != nil {
-		return nil, err
-	}
-
-	kconfig, err := clientcmd.BuildConfigFromFlags("", kubeConfigFilePath)
-	if err != nil {
-		return nil, err
-	}
-
-	apiExtClientSet, err := apiextclientset.NewForConfig(kconfig)
-	if err != nil {
-		return nil, err
-	}
-	return apiExtClientSet, nil
+	return client.New(kconfig, client.Options{})
 }
 
 // FinalizeSetup creates custom environment
@@ -176,12 +151,7 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 		return err
 	}
 
-	clientSet, err := GetClientSet(cl.Name)
-	if err != nil {
-		return err
-	}
-
-	apiExtClientSet, err := GetCrdClientSet(cl.Name)
+	client, err := NewClient(cl.Name)
 	if err != nil {
 		return err
 	}
@@ -198,22 +168,22 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 			return err
 		}
 
-		err = deploy.CrdResources(cl.Name, apiExtClientSet, calicoCrdFile.String())
+		err = deploy.Resources(cl.Name, client, calicoCrdFile.String(), "Calico CRD")
 		if err != nil {
 			return err
 		}
 
-		err = deploy.Resources(cl.Name, clientSet, calicoDeploymentFile, "Calico")
+		err = deploy.Resources(cl.Name, client, calicoDeploymentFile, "Calico")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDaemonSetReady(cl.Name, clientSet, "kube-system", "calico-node")
+		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "calico-node")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDeploymentReady(cl.Name, clientSet, "kube-system", "coredns")
+		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
 		if err != nil {
 			return err
 		}
@@ -223,17 +193,17 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 			return err
 		}
 
-		err = deploy.Resources(cl.Name, clientSet, flannelDeploymentFile, "Flannel")
+		err = deploy.Resources(cl.Name, client, flannelDeploymentFile, "Flannel")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDaemonSetReady(cl.Name, clientSet, "kube-system", "kube-flannel-ds-amd64")
+		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "kube-flannel-ds-amd64")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDeploymentReady(cl.Name, clientSet, "kube-system", "coredns")
+		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
 		if err != nil {
 			return err
 		}
@@ -243,17 +213,17 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 			return err
 		}
 
-		err = deploy.Resources(cl.Name, clientSet, weaveDeploymentFile, "Weave")
+		err = deploy.Resources(cl.Name, client, weaveDeploymentFile, "Weave")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDaemonSetReady(cl.Name, clientSet, "kube-system", "weave-net")
+		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "weave-net")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDeploymentReady(cl.Name, clientSet, "kube-system", "coredns")
+		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
 		if err != nil {
 			return err
 		}
@@ -265,12 +235,12 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 			return err
 		}
 
-		err = deploy.Resources(cl.Name, clientSet, tillerDeploymentFile.String(), "Tiller")
+		err = deploy.Resources(cl.Name, client, tillerDeploymentFile.String(), "Tiller")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDeploymentReady(cl.Name, clientSet, "kube-system", "tiller-deploy")
+		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "tiller-deploy")
 		if err != nil {
 			return err
 		}
