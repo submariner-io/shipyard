@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"os/user"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -164,7 +163,7 @@ func persistClusterKubeconfigs(flags *CreateFlagpole) {
 func getTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*cluster.Config, error) {
 	var targetClusters []*cluster.Config
 	for i := 1; i <= flags.NumClusters; i++ {
-		clName := defaults.ClusterNameBase + strconv.Itoa(i)
+		clName := utils.ClusterName(i)
 		known, err := cluster.IsKnown(clName, provider)
 		if err != nil {
 			return nil, err

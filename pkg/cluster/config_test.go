@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"strconv"
 	"time"
 
 	"github.com/gobuffalo/packr/v2"
@@ -14,6 +13,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/armada/pkg/cluster"
 	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/utils"
 )
 
 const waitForReady = 5 * time.Minute
@@ -105,7 +105,7 @@ func testPopulateConfig() {
 			user, err := user.Current()
 			Expect(err).To(Succeed())
 
-			name := defaults.ClusterNameBase + strconv.Itoa(1)
+			name := utils.ClusterName(1)
 			Expect(config).Should(Equal(&cluster.Config{
 				Cni:                 "kindnet",
 				Name:                name,
@@ -180,7 +180,7 @@ func testPopulateConfig() {
 				config := executePopulateConfig(i+1, "", "kindnet", false)
 				Expect(config.PodSubnet).To(Equal(expectedPodSubnets[i]))
 				Expect(config.ServiceSubnet).To(Equal(expectedServiceSubnets[i]))
-				Expect(config.Name).To(Equal(defaults.ClusterNameBase + strconv.Itoa(i+1)))
+				Expect(config.Name).To(Equal(utils.ClusterName(i + 1)))
 			}
 		})
 	})

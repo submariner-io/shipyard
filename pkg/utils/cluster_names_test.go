@@ -21,9 +21,18 @@ func TestUtils(t *testing.T) {
 }
 
 var _ = Describe("Utils tests", func() {
+	Context("ClusterName", testClusterName)
 	Context("ClusterNamesFromFiles", testClusterNamesFromFiles)
 	Context("ClusterNamesOrAll", testClusterNamesOrAll)
 })
+
+func testClusterName() {
+	When("sent a number", func() {
+		It("should return a cluster name", func() {
+			Expect("cluster42").To(Equal(ClusterName(42)))
+		})
+	})
+}
 
 func stubDirectory() {
 	origDir = defaults.KindConfigDir

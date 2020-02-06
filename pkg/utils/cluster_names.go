@@ -2,6 +2,7 @@ package utils
 
 import (
 	"io/ioutil"
+	"strconv"
 	"strings"
 
 	log "github.com/sirupsen/logrus"
@@ -9,6 +10,11 @@ import (
 )
 
 var logFatal = log.Fatal
+
+// ClusterName returns the canonical cluster name based on the given number
+func ClusterName(clusterNum int) string {
+	return defaults.ClusterNameBase + strconv.Itoa(clusterNum)
+}
 
 // ClusterNamesFromFiles will return all clusters from the existing kind files.
 // An error is returned if there's a failure to read the config directory.

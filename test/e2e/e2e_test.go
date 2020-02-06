@@ -6,7 +6,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"strconv"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -70,9 +69,9 @@ var _ = Describe("E2E Tests", func() {
 			clusters, err := CreateEnvironment(flags, provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
-			cl1Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(1), provider)
+			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
 			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(2), provider)
+			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(cl1Status).Should(BeTrue())
@@ -80,25 +79,25 @@ var _ = Describe("E2E Tests", func() {
 			Expect(clusters).Should(Equal([]*cluster.Config{
 				{
 					Cni:                 "flannel",
-					Name:                defaults.ClusterNameBase + strconv.Itoa(1),
+					Name:                utils.ClusterName(1),
 					PodSubnet:           "10.0.0.0/14",
 					ServiceSubnet:       "100.0.0.0/16",
-					DNSDomain:           defaults.ClusterNameBase + strconv.Itoa(1) + ".local",
+					DNSDomain:           utils.ClusterName(1) + ".local",
 					KubeAdminAPIVersion: defaults.KubeAdminAPIVersion,
 					NumWorkers:          defaults.NumWorkers,
-					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+defaults.ClusterNameBase+strconv.Itoa(1)),
+					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+utils.ClusterName(1)),
 					Retain:              false,
 					WaitForReady:        0,
 				},
 				{
 					Cni:                 "flannel",
-					Name:                defaults.ClusterNameBase + strconv.Itoa(2),
+					Name:                utils.ClusterName(2),
 					PodSubnet:           "10.0.0.0/14",
 					ServiceSubnet:       "100.0.0.0/16",
-					DNSDomain:           defaults.ClusterNameBase + strconv.Itoa(2) + ".local",
+					DNSDomain:           utils.ClusterName(2) + ".local",
 					KubeAdminAPIVersion: defaults.KubeAdminAPIVersion,
 					NumWorkers:          defaults.NumWorkers,
-					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+defaults.ClusterNameBase+strconv.Itoa(2)),
+					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+utils.ClusterName(2)),
 					Retain:              false,
 					WaitForReady:        0,
 				},
@@ -123,14 +122,14 @@ var _ = Describe("E2E Tests", func() {
 			Ω(err).ShouldNot(HaveOccurred())
 
 			containerFilter := filters.NewArgs()
-			containerFilter.Add("name", defaults.ClusterNameBase+strconv.Itoa(3)+"-control-plane")
+			containerFilter.Add("name", utils.ClusterName(3)+"-control-plane")
 			container, err := dockerCli.ContainerList(ctx, dockertypes.ContainerListOptions{
 				Filters: containerFilter,
 				Limit:   1,
 			})
 			Ω(err).ShouldNot(HaveOccurred())
 			image := container[0].Image
-			cl3Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(3), provider)
+			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(image).Should(Equal(flags.ImageName))
@@ -138,13 +137,13 @@ var _ = Describe("E2E Tests", func() {
 			Expect(clusters).Should(Equal([]*cluster.Config{
 				{
 					Cni:                 "weave",
-					Name:                defaults.ClusterNameBase + strconv.Itoa(3),
+					Name:                utils.ClusterName(3),
 					PodSubnet:           "10.12.0.0/14",
 					ServiceSubnet:       "100.3.0.0/16",
-					DNSDomain:           defaults.ClusterNameBase + strconv.Itoa(3) + ".local",
+					DNSDomain:           utils.ClusterName(3) + ".local",
 					KubeAdminAPIVersion: "kubeadm.k8s.io/v1beta2",
 					NumWorkers:          defaults.NumWorkers,
-					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+defaults.ClusterNameBase+strconv.Itoa(3)),
+					KubeConfigFilePath:  filepath.Join(usr.HomeDir, ".kube", "kind-config-"+utils.ClusterName(3)),
 					WaitForReady:        0,
 					NodeImageName:       "kindest/node:v1.15.6",
 					Retain:              false,
@@ -156,7 +155,7 @@ var _ = Describe("E2E Tests", func() {
 		It("Should not create a new cluster", func() {
 			numClusters := 3
 			for i := 1; i <= numClusters; i++ {
-				clName := defaults.ClusterNameBase + strconv.Itoa(i)
+				clName := utils.ClusterName(i)
 				known, err := cluster.IsKnown(clName, provider)
 				Ω(err).ShouldNot(HaveOccurred())
 				if known {
@@ -337,8 +336,8 @@ var _ = Describe("E2E Tests", func() {
 
 			images := []string{"nginx:stable-alpine", "alpine:latest"}
 			clusters := []string{
-				defaults.ClusterNameBase + strconv.Itoa(1),
-				defaults.ClusterNameBase + strconv.Itoa(3),
+				utils.ClusterName(1),
+				utils.ClusterName(3),
 			}
 
 			var nodesWithImage uint32
@@ -377,7 +376,7 @@ var _ = Describe("E2E Tests", func() {
 	})
 	Context("Cluster deletion", func() {
 		It("Should destroy clusters 1 and 3 only", func() {
-			clusters := []string{defaults.ClusterNameBase + strconv.Itoa(1), defaults.ClusterNameBase + strconv.Itoa(3)}
+			clusters := []string{utils.ClusterName(1), utils.ClusterName(3)}
 			for _, clName := range clusters {
 				known, err := cluster.IsKnown(clName, provider)
 				Ω(err).ShouldNot(HaveOccurred())
@@ -387,11 +386,11 @@ var _ = Describe("E2E Tests", func() {
 				}
 			}
 
-			cl1Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(1), provider)
+			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
 			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(2), provider)
+			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
 			Ω(err).ShouldNot(HaveOccurred())
-			cl3Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(3), provider)
+			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(cl1Status).Should(BeFalse())
@@ -407,11 +406,11 @@ var _ = Describe("E2E Tests", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 			}
 
-			cl1Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(1), provider)
+			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
 			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(2), provider)
+			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
 			Ω(err).ShouldNot(HaveOccurred())
-			cl3Status, err := cluster.IsKnown(defaults.ClusterNameBase+strconv.Itoa(3), provider)
+			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(cl1Status).Should(BeFalse())
