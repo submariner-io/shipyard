@@ -1,16 +1,14 @@
 package netshoot
 
 import (
-	"io/ioutil"
-	"strings"
 	"sync"
 
 	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/cluster"
-	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/deploy"
+	"github.com/submariner-io/armada/pkg/utils"
 	"github.com/submariner-io/armada/pkg/wait"
 )
 
@@ -50,23 +48,10 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 				log.Error(err)
 			}
 
-			var targetClusters []string
-			if len(flags.clusters) > 0 {
-				targetClusters = append(targetClusters, flags.clusters...)
-			} else {
-				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
-				if err != nil {
-					log.Fatal(err)
-				}
-				for _, configFile := range configFiles {
-					clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					targetClusters = append(targetClusters, clName)
-				}
-			}
-
+			clusters := utils.ClusterNamesOrAll(flags.clusters)
 			var wg sync.WaitGroup
-			wg.Add(len(targetClusters))
-			for _, clName := range targetClusters {
+			wg.Add(len(clusters))
+			for _, clName := range clusters {
 				go func(clName string) {
 					client, err := cluster.NewClient(clName)
 					if err != nil {

@@ -1,13 +1,10 @@
 package cluster
 
 import (
-	"io/ioutil"
-	"strings"
-
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/cluster"
-	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/utils"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
@@ -25,22 +22,8 @@ func NewDestroyCommand(provider *kind.Provider) *cobra.Command {
 		Short: "Destroy clusters",
 		Long:  "Destroys clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			var targetClusters []string
-			if len(flags.clusters) > 0 {
-				targetClusters = append(targetClusters, flags.clusters...)
-			} else {
-				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
-				if err != nil {
-					log.Fatal(err)
-				}
-				for _, configFile := range configFiles {
-					clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					targetClusters = append(targetClusters, clName)
-				}
-			}
-
-			for _, clName := range targetClusters {
+			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			for _, clName := range clusters {
 				known, err := cluster.IsKnown(clName, provider)
 				if err != nil {
 					log.Fatalf("%s: %v", clName, err)

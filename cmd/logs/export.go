@@ -1,14 +1,13 @@
 package logs
 
 import (
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/utils"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
@@ -30,20 +29,8 @@ func NewExportCommand(provider *kind.Provider) *cobra.Command {
 			// remove existing before exporting
 			_ = os.RemoveAll(filepath.Join(defaults.KindLogsDir, defaults.KindLogsDir))
 
-			var targetClusters []string
-			if len(flags.clusters) > 0 {
-				targetClusters = append(targetClusters, flags.clusters...)
-			} else {
-				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
-				if err != nil {
-					log.Fatal(err)
-				}
-				for _, configFile := range configFiles {
-					clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					targetClusters = append(targetClusters, clName)
-				}
-			}
-			for _, clName := range targetClusters {
+			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			for _, clName := range clusters {
 				err := provider.CollectLogs(clName, filepath.Join(defaults.KindLogsDir, clName))
 				if err != nil {
 					log.Fatalf("%s: %v", clName, err)

@@ -2,7 +2,6 @@ package cluster
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os/user"
 	"path/filepath"
 	"strconv"
@@ -14,6 +13,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/cluster"
 	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/utils"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
@@ -125,15 +125,14 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 }
 
 func persistClusterKubeconfigs(flags *CreateFlagpole) {
-	files, err := ioutil.ReadDir(defaults.KindConfigDir)
+	clusters, err := utils.ClusterNamesFromFiles()
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	provider := kind.NewProvider()
 
-	for _, file := range files {
-		clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
+	for _, clName := range clusters {
 		known, err := cluster.IsKnown(clName, provider)
 		if err != nil {
 			log.Error(err)
