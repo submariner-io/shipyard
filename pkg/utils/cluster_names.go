@@ -2,11 +2,13 @@ package utils
 
 import (
 	"io/ioutil"
-	"log"
 	"strings"
 
+	log "github.com/sirupsen/logrus"
 	"github.com/submariner-io/armada/pkg/defaults"
 )
+
+var logFatal = log.Fatal
 
 // ClusterNamesFromFiles will return all clusters from the existing kind files.
 // An error is returned if there's a failure to read the config directory.
@@ -35,7 +37,7 @@ func ClusterNamesOrAll(clusters []string) []string {
 
 	clusters, err := ClusterNamesFromFiles()
 	if err != nil {
-		log.Fatal(err)
+		logFatal(err)
 	}
 
 	return clusters
