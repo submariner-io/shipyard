@@ -3,12 +3,10 @@ package e2e
 import (
 	"context"
 	"io"
-	"io/ioutil"
 	"os"
 	"os/user"
 	"path/filepath"
 	"strconv"
-	"strings"
 	"sync/atomic"
 	"testing"
 	"time"
@@ -25,6 +23,7 @@ import (
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/deploy"
 	"github.com/submariner-io/armada/pkg/image"
+	"github.com/submariner-io/armada/pkg/utils"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 	kindcmd "sigs.k8s.io/kind/pkg/cmd"
@@ -215,15 +214,14 @@ var _ = Describe("E2E Tests", func() {
 			netshootDeploymentFile, err := box.Resolve("debug/netshoot-daemonset.yaml")
 			Ω(err).ShouldNot(HaveOccurred())
 
-			configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
+			clusters, err := utils.ClusterNamesFromFiles()
 			Ω(err).ShouldNot(HaveOccurred())
 
 			var activeDeployments uint32
 			tasks := []func() error{}
-			for _, f := range configFiles {
-				file := f
+			for _, c := range clusters {
+				clusterName := c
 				tasks = append(tasks, func() error {
-					clusterName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
 					client, err := cluster.NewClient(clusterName)
 					if err != nil {
 						return err
@@ -246,7 +244,7 @@ var _ = Describe("E2E Tests", func() {
 
 			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
 			Expect(err).To(Succeed())
-			Expect(len(configFiles)).Should(Equal(3))
+			Expect(len(clusters)).Should(Equal(3))
 			Expect(int(activeDeployments)).To(Equal(3))
 		})
 	})
@@ -295,21 +293,15 @@ var _ = Describe("E2E Tests", func() {
 		It("Should load an image to all the clusters", func() {
 			log.SetLevel(log.DebugLevel)
 
-			var targetClusters []string
-			configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
+			clusters, err := utils.ClusterNamesFromFiles()
 			Ω(err).ShouldNot(HaveOccurred())
-			for _, configFile := range configFiles {
-				clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-				targetClusters = append(targetClusters, clName)
-			}
-
 			images := []string{"alpine:edge"}
 			var nodesWithImage uint32
 			for _, imageName := range images {
 				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 				Ω(err).ShouldNot(HaveOccurred())
 
-				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, targetClusters)
+				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
 				Ω(err).ShouldNot(HaveOccurred())
 				Expect(len(selectedNodes)).Should(Equal(9))
 
@@ -407,11 +399,10 @@ var _ = Describe("E2E Tests", func() {
 			Expect(cl3Status).Should(BeFalse())
 		})
 		It("Should destroy all remaining clusters", func() {
-			configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
+			clusters, err := utils.ClusterNamesFromFiles()
 			Ω(err).ShouldNot(HaveOccurred())
 
-			for _, file := range configFiles {
-				clName := strings.FieldsFunc(file.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
+			for _, clName := range clusters {
 				err := cluster.Destroy(clName, provider)
 				Ω(err).ShouldNot(HaveOccurred())
 			}
