@@ -1,12 +1,12 @@
 package cluster
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os/user"
 	"path/filepath"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 
 	"github.com/gobuffalo/packr/v2"
@@ -14,6 +14,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/cluster"
 	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
 
@@ -70,34 +71,47 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 
 			targetClusters, err := GetTargetClusters(provider, flags)
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
-			var wg sync.WaitGroup
-			wg.Add(len(targetClusters))
-			for _, cl := range targetClusters {
-				go func(cl *cluster.Config) {
-					err := cluster.Create(cl, provider, box, &wg)
+			tasks := []func() error{}
+			for _, c := range targetClusters {
+				config := c
+				tasks = append(tasks, func() error {
+					err := cluster.Create(config, provider, box)
 					if err != nil {
-						defer wg.Done()
-						log.Fatalf("%s: %s", cl.Name, err)
+						return fmt.Errorf("Error creating cluster %q", config.Name)
 					}
-				}(cl)
+
+					return nil
+				})
 			}
-			wg.Wait()
+
+			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+			if err != nil {
+				return err
+			}
 
 			log.Info("Finalizing the clusters setup ...")
-			wg.Add(len(targetClusters))
-			for _, cl := range targetClusters {
-				go func(cl *cluster.Config) {
-					err := cluster.FinalizeSetup(cl, box, &wg)
+
+			tasks = []func() error{}
+			for _, c := range targetClusters {
+				config := c
+				tasks = append(tasks, func() error {
+					err := cluster.FinalizeSetup(config, box)
 					if err != nil {
-						defer wg.Done()
-						log.Fatalf("%s: %s", cl.Name, err)
+						return fmt.Errorf("Error finalizing cluster %q", config.Name)
 					}
-				}(cl)
+
+					return nil
+				})
 			}
-			wg.Wait()
+
+			err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+			if err != nil {
+				return err
+			}
+
 			return nil
 		},
 		PersistentPostRun: func(cmd *cobra.Command, args []string) {

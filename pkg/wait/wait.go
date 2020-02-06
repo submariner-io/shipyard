@@ -2,6 +2,8 @@ package wait
 
 import (
 	"context"
+	"fmt"
+	"sync"
 	"time"
 
 	"github.com/pkg/errors"
@@ -113,4 +115,35 @@ func ForDaemonSetReady(clName string, c client.Client, namespace, daemonSetName 
 		return errors.Wrapf(err, "Error waiting for %s daemon set roll out.", daemonSetName)
 	}
 	return nil
+}
+
+func ForTasksComplete(timeout time.Duration, tasks ...func() error) error {
+	var wg sync.WaitGroup
+	wg.Add(len(tasks))
+
+	failed := make(chan error, len(tasks))
+	done := make(chan struct{})
+	go func() {
+		defer close(done)
+		wg.Wait()
+	}()
+
+	for _, t := range tasks {
+		go func(task func() error) {
+			defer wg.Done()
+			err := task()
+			if err != nil {
+				failed <- err
+			}
+		}(t)
+	}
+
+	select {
+	case err := <-failed:
+		return err
+	case <-done:
+		return nil
+	case <-time.After(timeout):
+		return fmt.Errorf("timed out after %v", timeout)
+	}
 }

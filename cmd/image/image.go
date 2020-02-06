@@ -2,19 +2,19 @@ package image
 
 import (
 	"context"
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	dockerclient "github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/image"
+	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
-	"sigs.k8s.io/kind/pkg/cluster/nodes"
 )
 
 // loadFlagpole is a list of cli flags for export logs command
@@ -41,7 +41,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 			ctx := context.Background()
 			dockerCli, err := dockerclient.NewEnvClient()
 			if err != nil {
-				log.Fatal(err)
+				return err
 			}
 
 			var targetClusters []string
@@ -50,7 +50,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 			} else {
 				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
 				if err != nil {
-					log.Fatal(err)
+					return err
 				}
 				for _, configFile := range configFiles {
 					clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
@@ -62,7 +62,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 				for _, imageName := range flags.images {
 					localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 					if err != nil {
-						log.Fatal(err)
+						return err
 					}
 					selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, targetClusters)
 					if err != nil {
@@ -71,23 +71,29 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 					if len(selectedNodes) > 0 {
 						imageTarPath, err := image.Save(ctx, dockerCli, imageName)
 						if err != nil {
-							log.Fatal(err)
+							return err
 						}
 						defer os.RemoveAll(filepath.Dir(imageTarPath))
 
 						log.Infof("loading image: %s to nodes: %s ...", imageName, selectedNodes)
-						var wg sync.WaitGroup
-						wg.Add(len(selectedNodes))
-						for _, node := range selectedNodes {
-							go func(node nodes.Node) {
-								err = image.LoadToNode(imageTarPath, imageName, node, &wg)
+
+						tasks := []func() error{}
+						for _, n := range selectedNodes {
+							node := n
+							tasks = append(tasks, func() error {
+								err := image.LoadToNode(imageTarPath, imageName, node)
 								if err != nil {
-									defer wg.Done()
-									log.Fatal(err)
+									return fmt.Errorf("Error loading image %q to noode %q", imageName, node.String())
 								}
-							}(node)
+
+								return nil
+							})
 						}
-						wg.Wait()
+
+						err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+						if err != nil {
+							return err
+						}
 					}
 				}
 			}

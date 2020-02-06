@@ -7,7 +7,6 @@ import (
 	"os/user"
 	"path/filepath"
 	"strings"
-	"sync"
 
 	dockertypes "github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/filters"
@@ -25,7 +24,7 @@ import (
 )
 
 // Create creates cluster with kind
-func Create(cl *Config, provider *kind.Provider, box *packr.Box, wg *sync.WaitGroup) error {
+func Create(cl *Config, provider *kind.Provider, box *packr.Box) error {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -67,7 +66,7 @@ func Create(cl *Config, provider *kind.Provider, box *packr.Box, wg *sync.WaitGr
 		}
 		return errors.Wrap(err, "failed to create cluster")
 	}
-	wg.Done()
+
 	return nil
 }
 
@@ -140,7 +139,7 @@ func NewClient(cluster string) (client.Client, error) {
 }
 
 // FinalizeSetup creates custom environment
-func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
+func FinalizeSetup(cl *Config, box *packr.Box) error {
 	masterIP, err := GetMasterDockerIP(cl.Name)
 	if err != nil {
 		return err
@@ -246,6 +245,5 @@ func FinalizeSetup(cl *Config, box *packr.Box, wg *sync.WaitGroup) error {
 		}
 	}
 	log.Infof("✔ Cluster %q is ready 🔥🔥🔥", cl.Name)
-	wg.Done()
 	return nil
 }
