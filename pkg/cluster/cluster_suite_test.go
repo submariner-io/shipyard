@@ -15,6 +15,6 @@ func TestCluster(t *testing.T) {
 }
 
 var _ = BeforeSuite(func() {
-	defaults.WaitDurationResources = 1 * time.Minute
+	defaults.WaitDurationResources = 10 * time.Second
 	defaults.WaitRetryPeriod = 200 * time.Millisecond
 })

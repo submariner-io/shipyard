@@ -1,22 +1,23 @@
 package cluster_test
 
 import (
+	"context"
 	"io/ioutil"
 	"os"
 	"path/filepath"
+	"reflect"
 
 	"github.com/gobuffalo/packr/v2"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/armada/pkg/cluster"
 	appsv1 "k8s.io/api/apps/v1"
-	apiextclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	fakeApiext "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset/fake"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/informers"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/kubernetes/fake"
-	"k8s.io/client-go/tools/cache"
+	corev1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/client-go/kubernetes/scheme"
+	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/fake"
 )
 
 var _ = Describe("CNI tests", func() {
@@ -54,52 +55,54 @@ var _ = Describe("CNI tests", func() {
 	})
 })
 
+type interceptorMap map[reflect.Type]func(obj runtime.Object)
+
+type interceptingClient struct {
+	client.Client
+	getInterceptors interceptorMap
+}
+
+func (c *interceptingClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
+	err := c.Client.Get(ctx, key, obj)
+	if err != nil {
+		return err
+	}
+
+	f, found := c.getInterceptors[reflect.TypeOf(obj)]
+	if found {
+		f(obj)
+	}
+
+	return nil
+}
+
 func testDeployCNIs(box *packr.Box) {
 	var (
-		clientSet       kubernetes.Interface
-		apiExtClientSet apiextclientset.Interface
-		config          *cluster.Config
-		stopCh          chan struct{}
-		deployErr       error
+		client    client.Client
+		config    *cluster.Config
+		deployErr error
 	)
 
 	BeforeEach(func() {
-		clientSet = fake.NewSimpleClientset()
-		apiExtClientSet = fakeApiext.NewSimpleClientset()
-		stopCh = make(chan struct{})
-
 		config = &cluster.Config{
 			Name:      "east",
 			PodSubnet: "1.2.3.4/8",
 		}
 	})
 
-	AfterEach(func() {
-		close(stopCh)
-	})
-
 	JustBeforeEach(func() {
-		factory := informers.NewSharedInformerFactory(clientSet, 0)
-		factory.Apps().V1().Deployments().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
-				d := obj.(*appsv1.Deployment)
-				d.Status.ReadyReplicas = *d.Spec.Replicas
-				_, _ = clientSet.AppsV1().Deployments(d.Namespace).Update(d)
-			},
-		})
-
-		factory.Apps().V1().DaemonSets().Informer().AddEventHandler(cache.ResourceEventHandlerFuncs{
-			AddFunc: func(obj interface{}) {
+		client = &interceptingClient{Client: fake.NewFakeClientWithScheme(scheme.Scheme),
+			getInterceptors: interceptorMap{reflect.TypeOf(&appsv1.DaemonSet{}): func(obj runtime.Object) {
 				d := obj.(*appsv1.DaemonSet)
 				d.Status.DesiredNumberScheduled = 1
 				d.Status.NumberReady = d.Status.DesiredNumberScheduled
-				_, _ = clientSet.AppsV1().DaemonSets(d.Namespace).Update(d)
-			},
-		})
+			}, reflect.TypeOf(&appsv1.Deployment{}): func(obj runtime.Object) {
+				d := obj.(*appsv1.Deployment)
+				d.Status.ReadyReplicas = *d.Spec.Replicas
+			}},
+		}
 
-		factory.Start(stopCh)
-
-		deployErr = cluster.DeployCni(config, box, clientSet, apiExtClientSet)
+		deployErr = cluster.DeployCni(config, box, client)
 	})
 
 	When("the weave CNI is specified", func() {
@@ -107,9 +110,9 @@ func testDeployCNIs(box *packr.Box) {
 			config.Cni = cluster.Weave
 		})
 
-		It("should create the weave-net DaemonSet", func() {
+		It("should create the weave DaemonSet", func() {
 			Expect(deployErr).To(Succeed())
-			ds := getDaemonSetByLabel("name=weave-net", clientSet)
+			ds := getDaemonSet("weave-net", client)
 			Expect(ds.Spec.Template.Spec.Containers[0].Image).Should(Equal("docker.io/weaveworks/weave-kube:2.6.0"))
 			Expect(ds.Spec.Template.Spec.Containers[0].Env[1].Value).Should(Equal(config.PodSubnet))
 		})
@@ -120,12 +123,13 @@ func testDeployCNIs(box *packr.Box) {
 			config.Cni = cluster.Flannel
 		})
 
-		It("should create the flannel DaemonSet and kube-flannel-cfg ConfigMap", func() {
+		It("should create the flannel DaemonSet and ConfigMap", func() {
 			Expect(deployErr).To(Succeed())
-			ds := getDaemonSetByLabel("app=flannel", clientSet)
+			ds := getDaemonSet("kube-flannel-ds-amd64", client)
 			Expect(ds.Spec.Template.Spec.Containers[0].Image).Should(Equal("quay.io/coreos/flannel:v0.11.0-amd64"))
 
-			cm, err := clientSet.CoreV1().ConfigMaps("kube-system").Get("kube-flannel-cfg", metav1.GetOptions{})
+			cm := &corev1.ConfigMap{}
+			err := client.Get(context.TODO(), types.NamespacedName{Name: "kube-flannel-cfg", Namespace: "kube-system"}, cm)
 			Expect(err).To(Succeed())
 			Expect(cm.Data["net-conf.json"]).To(ContainSubstring(config.PodSubnet))
 		})
@@ -136,13 +140,13 @@ func testDeployCNIs(box *packr.Box) {
 			config.Cni = cluster.Calico
 		})
 
-		It("should create the calico-node DaemonSet and the calico-kube-controllers Deployment", func() {
+		It("should create the calico DaemonSet and Deployment", func() {
 			Expect(deployErr).To(Succeed())
-			ds := getDaemonSetByLabel("k8s-app=calico-node", clientSet)
+			ds := getDaemonSet("calico-node", client)
 			Expect(ds.Spec.Template.Spec.Containers[0].Image).Should(Equal("calico/node:v3.9.3"))
 			Expect(ds.Spec.Template.Spec.Containers[0].Env[8].Value).Should(Equal(config.PodSubnet))
 
-			getDeploymentByLabel("k8s-app=calico-kube-controllers", clientSet)
+			getDeployment("calico-kube-controllers", client)
 		})
 	})
 
@@ -157,18 +161,18 @@ func testDeployCNIs(box *packr.Box) {
 	})
 }
 
-func getDaemonSetByLabel(label string, clientSet kubernetes.Interface) *appsv1.DaemonSet {
-	list, err := clientSet.AppsV1().DaemonSets("kube-system").List(metav1.ListOptions{LabelSelector: label})
+func getDaemonSet(name string, client client.Client) *appsv1.DaemonSet {
+	daemonSet := &appsv1.DaemonSet{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: "kube-system"}, daemonSet)
 	Expect(err).To(Succeed())
-	Expect(list.Items).To(HaveLen(1))
-	return &list.Items[0]
+	return daemonSet
 }
 
-func getDeploymentByLabel(label string, clientSet kubernetes.Interface) *appsv1.Deployment {
-	list, err := clientSet.AppsV1().Deployments("kube-system").List(metav1.ListOptions{LabelSelector: label})
+func getDeployment(name string, client client.Client) *appsv1.Deployment {
+	deployment := &appsv1.Deployment{}
+	err := client.Get(context.TODO(), types.NamespacedName{Name: name, Namespace: "kube-system"}, deployment)
 	Expect(err).To(Succeed())
-	Expect(list.Items).To(HaveLen(1))
-	return &list.Items[0]
+	return deployment
 }
 
 func verifyDeployment(actualDeploymentContents string, expDeploymentFileName string) {

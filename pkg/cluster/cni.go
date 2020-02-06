@@ -9,8 +9,7 @@ import (
 	"github.com/pkg/errors"
 	"github.com/submariner-io/armada/pkg/deploy"
 	"github.com/submariner-io/armada/pkg/wait"
-	apiextclientset "k8s.io/apiextensions-apiserver/pkg/client/clientset/clientset"
-	"k8s.io/client-go/kubernetes"
+	"sigs.k8s.io/controller-runtime/pkg/client"
 )
 
 const (
@@ -20,7 +19,7 @@ const (
 	Weave   = "weave"
 )
 
-type deployCniFunc func(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error
+type deployCniFunc func(config *Config, box *packr.Box, client client.Client) error
 
 var (
 	CNIs = []string{Calico, Flannel, Kindnet, Weave}
@@ -28,27 +27,27 @@ var (
 	cniDeployers = map[string]deployCniFunc{Calico: deployCalico, Flannel: deployFlannel, Weave: deployWeave, Kindnet: deployKindnet}
 )
 
-func DeployCni(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error {
+func DeployCni(config *Config, box *packr.Box, client client.Client) error {
 	deployCni, exists := cniDeployers[config.Cni]
 	if !exists {
 		return fmt.Errorf("Invalid CNI name %q", config.Cni)
 	}
 
-	return deployCni(config, box, clientSet, apiExtClientSet)
+	return deployCni(config, box, client)
 }
 
-func deployFlannel(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error {
+func deployFlannel(config *Config, box *packr.Box, client client.Client) error {
 	flannelDeploymentFile, err := GenerateFlannelDeploymentFile(config, box)
 	if err != nil {
 		return err
 	}
 
-	err = deploy.Resources(config.Name, clientSet, flannelDeploymentFile, "Flannel")
+	err = deploy.Resources(config.Name, client, flannelDeploymentFile, "Flannel")
 	if err != nil {
 		return err
 	}
 
-	err = wait.ForDaemonSetReady(config.Name, clientSet, "kube-system", "kube-flannel-ds-amd64")
+	err = wait.ForDaemonSetReady(config.Name, client, "kube-system", "kube-flannel-ds-amd64")
 	if err != nil {
 		return err
 	}
@@ -56,7 +55,7 @@ func deployFlannel(config *Config, box *packr.Box, clientSet kubernetes.Interfac
 	return nil
 }
 
-func deployCalico(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error {
+func deployCalico(config *Config, box *packr.Box, client client.Client) error {
 	calicoDeploymentFile, err := GenerateCalicoDeploymentFile(config, box)
 	if err != nil {
 		return err
@@ -67,22 +66,22 @@ func deployCalico(config *Config, box *packr.Box, clientSet kubernetes.Interface
 		return err
 	}
 
-	err = deploy.CrdResources(config.Name, apiExtClientSet, calicoCrdFile.String())
+	err = deploy.Resources(config.Name, client, calicoCrdFile.String(), "Calico CRDs")
 	if err != nil {
 		return err
 	}
 
-	err = deploy.Resources(config.Name, clientSet, calicoDeploymentFile, "Calico")
+	err = deploy.Resources(config.Name, client, calicoDeploymentFile, "Calico")
 	if err != nil {
 		return err
 	}
 
-	err = wait.ForDaemonSetReady(config.Name, clientSet, "kube-system", "calico-node")
+	err = wait.ForDaemonSetReady(config.Name, client, "kube-system", "calico-node")
 	if err != nil {
 		return err
 	}
 
-	err = wait.ForDeploymentReady(config.Name, clientSet, "kube-system", "calico-kube-controllers")
+	err = wait.ForDeploymentReady(config.Name, client, "kube-system", "calico-kube-controllers")
 	if err != nil {
 		return err
 	}
@@ -90,18 +89,18 @@ func deployCalico(config *Config, box *packr.Box, clientSet kubernetes.Interface
 	return nil
 }
 
-func deployWeave(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error {
+func deployWeave(config *Config, box *packr.Box, client client.Client) error {
 	weaveDeploymentFile, err := GenerateWeaveDeploymentFile(config, box)
 	if err != nil {
 		return err
 	}
 
-	err = deploy.Resources(config.Name, clientSet, weaveDeploymentFile, "Weave")
+	err = deploy.Resources(config.Name, client, weaveDeploymentFile, "Weave")
 	if err != nil {
 		return err
 	}
 
-	err = wait.ForDaemonSetReady(config.Name, clientSet, "kube-system", "weave-net")
+	err = wait.ForDaemonSetReady(config.Name, client, "kube-system", "weave-net")
 	if err != nil {
 		return err
 	}
@@ -109,7 +108,7 @@ func deployWeave(config *Config, box *packr.Box, clientSet kubernetes.Interface,
 	return nil
 }
 
-func deployKindnet(config *Config, box *packr.Box, clientSet kubernetes.Interface, apiExtClientSet apiextclientset.Interface) error {
+func deployKindnet(config *Config, box *packr.Box, client client.Client) error {
 	return nil
 }
 
