@@ -140,7 +140,7 @@ func NewClient(cluster string) (client.Client, error) {
 
 // FinalizeSetup creates custom environment
 func FinalizeSetup(config *Config, box *packr.Box) error {
-	masterIP, err := GetMasterDockerIP(cl.Name)
+	masterIP, err := GetMasterDockerIP(config.Name)
 	if err != nil {
 		return err
 	}

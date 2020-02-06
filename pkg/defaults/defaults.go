@@ -34,7 +34,7 @@ const (
 	// LocalKubeConfigDir is a default  kubeconfig files destination directory if running inside container
 	ContainerKubeConfigDir = "output/kube-config/container"
 
-	// KubeAdminAPIVersion is a default version used by in kind configs
+	// KubeAdminAPIVersion is a default version used in kind configs
 	KubeAdminAPIVersion = "kubeadm.k8s.io/v1beta2"
 )
 
@@ -42,6 +42,6 @@ var (
 	// WaitDurationResources is a default timeout for waiter functions
 	WaitDurationResources = time.Duration(10) * time.Minute
 
-	// WaitRetryPeriod is the amount oof time between retries for waiter functions
+	// WaitRetryPeriod is the amount of time between retries for waiter functions
 	WaitRetryPeriod = 2 * time.Second
 )
