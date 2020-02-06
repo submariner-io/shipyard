@@ -12,7 +12,6 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	apiErrors "k8s.io/apimachinery/pkg/api/errors"
-	"k8s.io/apimachinery/pkg/fields"
 	"k8s.io/apimachinery/pkg/labels"
 	"k8s.io/apimachinery/pkg/types"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -26,11 +25,6 @@ func ForPodsRunning(clName string, c client.Client, namespace, selector string, 
 		return err
 	}
 
-	fieldSelector, err := fields.ParseSelector("status.phase=Running")
-	if err != nil {
-		return err
-	}
-
 	ctx := context.Background()
 	log.Infof("Waiting up to %v for pods running with label %q, namespace %q, replicas %v in cluster %q ...", defaults.WaitDurationResources, selector, namespace, replicas, clName)
 	podsContext, cancel := context.WithTimeout(ctx, defaults.WaitDurationResources)
@@ -39,22 +33,32 @@ func ForPodsRunning(clName string, c client.Client, namespace, selector string, 
 		err := c.List(context.TODO(), podList, &client.ListOptions{
 			Namespace:     namespace,
 			LabelSelector: labelSelector,
-			FieldSelector: fieldSelector,
 		})
 
 		if err != nil {
 			log.Errorf("Error listing pods for label %q, namespace %q in cluster %q: %v", selector, namespace, clName, err)
-		} else if len(podList.Items) == replicas {
+			return
+		}
+
+		numRunning := 0
+		for _, p := range podList.Items {
+			if p.Status.Phase == corev1.PodRunning {
+				numRunning++
+			}
+		}
+
+		if numRunning == replicas {
 			log.Infof("✔ All pods with label %q in namespace %q are running in cluster %q.", selector, namespace, clName)
 			cancel()
 		} else {
-			log.Infof("Still waiting for pods with label %q, namespace %q, replicas %v in cluster: %q.", selector, namespace, replicas, clName)
+			log.Infof("Still waiting for pods with label %q, namespace %q in cluster %q - %v out of %v are running",
+				selector, namespace, clName, numRunning, replicas)
 		}
 	}, defaults.WaitRetryPeriod, podsContext.Done())
 
 	err = podsContext.Err()
 	if err != nil && err != context.Canceled {
-		return errors.Wrap(err, "Error waiting for pods to be running.")
+		return errors.Wrap(err, "Error waiting for pods to be running")
 	}
 	return nil
 }
