@@ -50,7 +50,7 @@ func ForPodsRunning(clName string, c client.Client, namespace, selector string, 
 		} else {
 			log.Infof("Still waiting for pods with label %q, namespace %q, replicas %v in cluster: %q.", selector, namespace, replicas, clName)
 		}
-	}, 2*time.Second, podsContext.Done())
+	}, defaults.WaitRetryPeriod, podsContext.Done())
 
 	err = podsContext.Err()
 	if err != nil && err != context.Canceled {
@@ -79,7 +79,7 @@ func ForDeploymentReady(clName string, c client.Client, namespace, deploymentNam
 		} else {
 			log.Errorf("Error getting deployment %q in cluster %q: %v", deploymentName, clName, err)
 		}
-	}, 2*time.Second, deploymentContext.Done())
+	}, defaults.WaitRetryPeriod, deploymentContext.Done())
 
 	err := deploymentContext.Err()
 	if err != nil && err != context.Canceled {
@@ -97,8 +97,8 @@ func ForDaemonSetReady(clName string, c client.Client, namespace, daemonSetName 
 		daemonSet := &appsv1.DaemonSet{}
 		err := c.Get(context.TODO(), types.NamespacedName{Name: daemonSetName, Namespace: namespace}, daemonSet)
 		if err == nil {
-			if daemonSet.Status.NumberReady == daemonSet.Status.DesiredNumberScheduled {
-				log.Infof("✔ Daemon set %q successfully rolled out %v replicas in cluster %q", daemonSetName, clName, daemonSet.Status.NumberReady)
+			if daemonSet.Status.DesiredNumberScheduled > 0 && daemonSet.Status.NumberReady == daemonSet.Status.DesiredNumberScheduled {
+				log.Infof("✔ Daemon set %q successfully rolled out %v replicas in cluster %q", daemonSetName, daemonSet.Status.NumberReady, clName)
 				cancel()
 			} else {
 				log.Infof("Still waiting for daemon set %q roll out in cluster %q, %v out of %v replicas ready", daemonSetName, clName, daemonSet.Status.NumberReady, daemonSet.Status.DesiredNumberScheduled)
@@ -108,7 +108,7 @@ func ForDaemonSetReady(clName string, c client.Client, namespace, daemonSetName 
 		} else {
 			log.Errorf("Error getting daemon set %q in cluster %q: %v", daemonSetName, clName, err)
 		}
-	}, 2*time.Second, deploymentContext.Done())
+	}, defaults.WaitRetryPeriod, deploymentContext.Done())
 
 	err := deploymentContext.Err()
 	if err != nil && err != context.Canceled {

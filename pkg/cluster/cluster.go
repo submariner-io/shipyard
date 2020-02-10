@@ -139,111 +139,43 @@ func NewClient(cluster string) (client.Client, error) {
 }
 
 // FinalizeSetup creates custom environment
-func FinalizeSetup(cl *Config, box *packr.Box) error {
-	masterIP, err := GetMasterDockerIP(cl.Name)
+func FinalizeSetup(config *Config, box *packr.Box) error {
+	masterIP, err := GetMasterDockerIP(config.Name)
 	if err != nil {
 		return err
 	}
 
-	err = PrepareKubeConfigs(cl.Name, cl.KubeConfigFilePath, masterIP)
+	err = PrepareKubeConfigs(config.Name, config.KubeConfigFilePath, masterIP)
 	if err != nil {
 		return err
 	}
 
-	client, err := NewClient(cl.Name)
+	client, err := NewClient(config.Name)
 	if err != nil {
 		return err
 	}
 
-	switch cl.Cni {
-	case "calico":
-		calicoDeploymentFile, err := GenerateCalicoDeploymentFile(cl, box)
-		if err != nil {
-			return err
-		}
-
-		calicoCrdFile, err := box.Resolve("tpl/calico-crd.yaml")
-		if err != nil {
-			return err
-		}
-
-		err = deploy.Resources(cl.Name, client, calicoCrdFile.String(), "Calico CRD")
-		if err != nil {
-			return err
-		}
-
-		err = deploy.Resources(cl.Name, client, calicoDeploymentFile, "Calico")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "calico-node")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
-		if err != nil {
-			return err
-		}
-	case "flannel":
-		flannelDeploymentFile, err := GenerateFlannelDeploymentFile(cl, box)
-		if err != nil {
-			return err
-		}
-
-		err = deploy.Resources(cl.Name, client, flannelDeploymentFile, "Flannel")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "kube-flannel-ds-amd64")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
-		if err != nil {
-			return err
-		}
-	case "weave":
-		weaveDeploymentFile, err := GenerateWeaveDeploymentFile(cl, box)
-		if err != nil {
-			return err
-		}
-
-		err = deploy.Resources(cl.Name, client, weaveDeploymentFile, "Weave")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDaemonSetReady(cl.Name, client, "kube-system", "weave-net")
-		if err != nil {
-			return err
-		}
-
-		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "coredns")
-		if err != nil {
-			return err
-		}
+	err = DeployCni(config, box, client)
+	if err != nil {
+		return err
 	}
 
-	if cl.Tiller {
+	if config.Tiller {
 		tillerDeploymentFile, err := box.Resolve("helm/tiller-deployment.yaml")
 		if err != nil {
 			return err
 		}
 
-		err = deploy.Resources(cl.Name, client, tillerDeploymentFile.String(), "Tiller")
+		err = deploy.Resources(config.Name, client, tillerDeploymentFile.String(), "Tiller")
 		if err != nil {
 			return err
 		}
 
-		err = wait.ForDeploymentReady(cl.Name, client, "kube-system", "tiller-deploy")
+		err = wait.ForDeploymentReady(config.Name, client, "kube-system", "tiller-deploy")
 		if err != nil {
 			return err
 		}
 	}
-	log.Infof("✔ Cluster %q is ready 🔥🔥🔥", cl.Name)
+	log.Infof("✔ Cluster %q is ready 🔥🔥🔥", config.Name)
 	return nil
 }

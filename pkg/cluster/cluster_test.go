@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"os"
-	"testing"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -16,11 +15,6 @@ import (
 	"github.com/submariner-io/armada/pkg/cluster"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
-
-func TestCluster(t *testing.T) {
-	RegisterFailHandler(Fail)
-	RunSpecs(t, "Cluster test suite")
-}
 
 var _ = Describe("cluster tests", func() {
 	Context("Containers", func() {

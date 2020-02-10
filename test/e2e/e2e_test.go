@@ -89,7 +89,7 @@ var _ = Describe("E2E Tests", func() {
 			flags := &clustercmd.CreateFlagpole{
 				NumClusters: 2,
 				Overlap:     true,
-				Flannel:     true,
+				Cni:         cluster.Flannel,
 				Retain:      false,
 				Wait:        5 * time.Minute,
 			}
@@ -135,7 +135,7 @@ var _ = Describe("E2E Tests", func() {
 		It("Should create a third cluster with weave, kindest/node:v1.15.6 and tiller", func() {
 			flags := &clustercmd.CreateFlagpole{
 				NumClusters: 3,
-				Weave:       true,
+				Cni:         cluster.Weave,
 				Tiller:      true,
 				ImageName:   "kindest/node:v1.15.6",
 				Retain:      false,
