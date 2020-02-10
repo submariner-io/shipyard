@@ -43,7 +43,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 				return err
 			}
 
-			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			clusters := utils.DetermineClusterNames(flags.clusters)
 			if len(clusters) > 0 {
 				for _, imageName := range flags.images {
 					localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)

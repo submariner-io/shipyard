@@ -23,14 +23,12 @@ func TestUtils(t *testing.T) {
 var _ = Describe("Utils tests", func() {
 	Context("ClusterName", testClusterName)
 	Context("ClusterNamesFromFiles", testClusterNamesFromFiles)
-	Context("ClusterNamesOrAll", testClusterNamesOrAll)
+	Context("DetermineClusterNames", testDetermineClusterNames)
 })
 
 func testClusterName() {
-	When("sent a number", func() {
-		It("should return a cluster name", func() {
-			Expect("cluster42").To(Equal(ClusterName(42)))
-		})
+	It("should return the correct cluster name for the given number", func() {
+		Expect("cluster42").To(Equal(ClusterName(42)))
 	})
 }
 
@@ -73,24 +71,24 @@ func testClusterNamesFromFiles() {
 		clusters, err = ClusterNamesFromFiles()
 	})
 
-	When("directory doesn't exist", func() {
+	When("the directory doesn't exist", func() {
 		It("should return an error", func() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
 
-	When("directory exists", func() {
+	When("the directory exists", func() {
 		BeforeEach(createStubDirectory)
 
 		AfterEach(deleteStubDirectory)
 
-		When("the directory is empty", func() {
+		Context("and is empty", func() {
 			It("should return an empty slice", func() {
 				Expect(len(clusters)).To(Equal(0))
 			})
 		})
 
-		When("the directory has files", func() {
+		Context("and contains files", func() {
 			var expectedClusters = []string{"cluster1", "cluster2", "cluster42"}
 			BeforeEach(func() {
 				generateClusterFiles(expectedClusters)
@@ -103,7 +101,7 @@ func testClusterNamesFromFiles() {
 	})
 }
 
-func testClusterNamesOrAll() {
+func testDetermineClusterNames() {
 	var (
 		clusters     []string
 		sentClusters []string
@@ -117,19 +115,19 @@ func testClusterNamesOrAll() {
 	AfterEach(restoreDirectory)
 
 	JustBeforeEach(func() {
-		clusters = ClusterNamesOrAll(sentClusters)
+		clusters = DetermineClusterNames(sentClusters)
 	})
 
-	When("cluster names are sent", func() {
+	When("cluster names are provided", func() {
 		BeforeEach(func() {
 			sentClusters = []string{"cluster13", "cluster76"}
 		})
-		It("should return the sent clusters", func() {
+		It("should return the provided clusters", func() {
 			Expect(clusters).To(ConsistOf(sentClusters))
 		})
 	})
 
-	When("directory doesn't exist", func() {
+	When("the directory doesn't exist", func() {
 		var (
 			logFatalCalled bool
 			origLogFatal   func(args ...interface{})
@@ -152,18 +150,18 @@ func testClusterNamesOrAll() {
 		})
 	})
 
-	When("directory exists", func() {
+	When("the directory exists", func() {
 		BeforeEach(createStubDirectory)
 
 		AfterEach(deleteStubDirectory)
 
-		When("the directory is empty", func() {
+		Context("and is empty", func() {
 			It("should return an empty slice", func() {
 				Expect(len(clusters)).To(Equal(0))
 			})
 		})
 
-		When("the directory has files", func() {
+		Context("and contains files", func() {
 			var expectedClusters = []string{"cluster1", "cluster2", "cluster42"}
 			BeforeEach(func() {
 				generateClusterFiles(expectedClusters)

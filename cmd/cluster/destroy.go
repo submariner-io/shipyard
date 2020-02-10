@@ -22,7 +22,7 @@ func NewDestroyCommand(provider *kind.Provider) *cobra.Command {
 		Short: "Destroy clusters",
 		Long:  "Destroys clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
-			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			clusters := utils.DetermineClusterNames(flags.clusters)
 			for _, clName := range clusters {
 				known, err := cluster.IsKnown(clName, provider)
 				if err != nil {

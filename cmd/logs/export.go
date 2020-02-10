@@ -29,7 +29,7 @@ func NewExportCommand(provider *kind.Provider) *cobra.Command {
 			// remove existing before exporting
 			_ = os.RemoveAll(filepath.Join(defaults.KindLogsDir, defaults.KindLogsDir))
 
-			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			clusters := utils.DetermineClusterNames(flags.clusters)
 			for _, clName := range clusters {
 				err := provider.CollectLogs(clName, filepath.Join(defaults.KindLogsDir, clName))
 				if err != nil {

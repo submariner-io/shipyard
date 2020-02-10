@@ -33,10 +33,10 @@ func ClusterNamesFromFiles() ([]string, error) {
 	return clusters, nil
 }
 
-// ClusterNamesOrAll will return the cluster names sent to it, if there are any.
+// DetermineClusterNames will return the cluster names sent to it, if there are any.
 // In case the slice is empty, it will read the cluster names from the existing kind files.
 // Should the read fail, it will fatally log the error (causing the process to abort).
-func ClusterNamesOrAll(clusters []string) []string {
+func DetermineClusterNames(clusters []string) []string {
 	if len(clusters) > 0 {
 		return clusters
 	}

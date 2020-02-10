@@ -38,7 +38,7 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 				log.Error(err)
 			}
 
-			clusters := utils.ClusterNamesOrAll(flags.clusters)
+			clusters := utils.DetermineClusterNames(flags.clusters)
 			var wg sync.WaitGroup
 			wg.Add(len(clusters))
 			for _, clName := range clusters {
