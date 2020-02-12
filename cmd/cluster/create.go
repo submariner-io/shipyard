@@ -136,24 +136,26 @@ func persistClusterKubeconfigs(flags *CreateFlagpole) {
 		if err != nil {
 			log.Error(err)
 		}
-		if !known {
-			usr, err := user.Current()
-			if err != nil {
-				log.Error(err)
-			}
+		if known {
+			continue
+		}
 
-			kindKubeFileName := strings.Join([]string{"kind-config", clName}, "-")
-			kindKubeFilePath := filepath.Join(usr.HomeDir, ".kube", kindKubeFileName)
+		usr, err := user.Current()
+		if err != nil {
+			log.Error(err)
+		}
 
-			masterIP, err := cluster.GetMasterDockerIP(clName)
-			if err != nil {
-				log.Error(err)
-			}
+		kindKubeFileName := strings.Join([]string{"kind-config", clName}, "-")
+		kindKubeFilePath := filepath.Join(usr.HomeDir, ".kube", kindKubeFileName)
 
-			err = cluster.PrepareKubeConfigs(clName, kindKubeFilePath, masterIP)
-			if err != nil {
-				log.Error(err)
-			}
+		masterIP, err := cluster.GetMasterDockerIP(clName)
+		if err != nil {
+			log.Error(err)
+		}
+
+		err = cluster.PrepareKubeConfigs(clName, kindKubeFilePath, masterIP)
+		if err != nil {
+			log.Error(err)
 		}
 	}
 	log.Infof("✔ Kubeconfigs: export KUBECONFIG=$(echo ./%s/kind-config-%s{1..%v} | sed 's/ /:/g')", defaults.LocalKubeConfigDir, defaults.ClusterNameBase, flags.NumClusters)
@@ -170,13 +172,14 @@ func getTargetClusters(provider *kind.Provider, flags *CreateFlagpole) ([]*clust
 		}
 		if known {
 			log.Infof("✔ Cluster with the name %q already exists.", clName)
-		} else {
-			cl, err := cluster.PopulateConfig(i, flags.ImageName, flags.Cni, flags.Retain, flags.Tiller, flags.Overlap, flags.Wait)
-			if err != nil {
-				return nil, err
-			}
-			targetClusters = append(targetClusters, cl)
+			continue
 		}
+
+		cl, err := cluster.PopulateConfig(i, flags.ImageName, flags.Cni, flags.Retain, flags.Tiller, flags.Overlap, flags.Wait)
+		if err != nil {
+			return nil, err
+		}
+		targetClusters = append(targetClusters, cl)
 	}
 	return targetClusters, nil
 }

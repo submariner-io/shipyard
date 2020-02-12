@@ -28,13 +28,14 @@ func NewDestroyCommand(provider *kind.Provider) *cobra.Command {
 				if err != nil {
 					log.Fatalf("%s: %v", clName, err)
 				}
-				if known {
-					err := cluster.Destroy(clName, provider)
-					if err != nil {
-						log.Fatalf("%s: %v", clName, err)
-					}
-				} else {
+				if !known {
 					log.Errorf("cluster %q not found.", clName)
+					continue
+				}
+
+				err = cluster.Destroy(clName, provider)
+				if err != nil {
+					log.Fatalf("%s: %v", clName, err)
 				}
 			}
 			return nil

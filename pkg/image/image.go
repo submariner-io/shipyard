@@ -46,27 +46,27 @@ func GetNodesWithout(provider *kind.Provider, imageName, localImageID string, cl
 		if err != nil {
 			return nil, err
 		}
-		if known {
-			nodeList, err := provider.ListInternalNodes(clName)
-			if err != nil {
-				return nil, err
-			}
-			if len(nodeList) == 0 {
-				return nil, errors.Errorf("no nodes found for cluster %q", clName)
-			}
-			// pick only the nodes that don't have the image
-			for _, node := range nodeList {
-				nodeImageID, err := nodeutils.ImageID(node, imageName)
-				if err != nil || nodeImageID != localImageID {
-					selectedNodes = append(selectedNodes, node)
-					log.Debugf("%s: image: %q with ID %q not present on node %q", clName, imageName, localImageID, node.String())
-				}
-				if nodeImageID == localImageID {
-					log.Infof("%s: ✔ image with ID %q already present on node %q", clName, nodeImageID, node.String())
-				}
-			}
-		} else {
+		if !known {
 			return selectedNodes, errors.Errorf("cluster %q not found.", clName)
+		}
+
+		nodeList, err := provider.ListInternalNodes(clName)
+		if err != nil {
+			return nil, err
+		}
+		if len(nodeList) == 0 {
+			return nil, errors.Errorf("no nodes found for cluster %q", clName)
+		}
+		// pick only the nodes that don't have the image
+		for _, node := range nodeList {
+			nodeImageID, err := nodeutils.ImageID(node, imageName)
+			if err != nil || nodeImageID != localImageID {
+				selectedNodes = append(selectedNodes, node)
+				log.Debugf("%s: image: %q with ID %q not present on node %q", clName, imageName, localImageID, node.String())
+			}
+			if nodeImageID == localImageID {
+				log.Infof("%s: ✔ image with ID %q already present on node %q", clName, nodeImageID, node.String())
+			}
 		}
 	}
 	return selectedNodes, nil
