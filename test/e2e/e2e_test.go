@@ -56,6 +56,13 @@ var _ = Describe("E2E Tests", func() {
 	})
 	usr, _ := user.Current()
 
+	// isKnown is a helper function to get the cluster's known state while asserting no error.
+	isKnown := func(clusterNum int) bool {
+		status, err := cluster.IsKnown(utils.ClusterName(clusterNum), provider)
+		ExpectWithOffset(1, err).ToNot(HaveOccurred())
+		return status
+	}
+
 	Context("Config creation", func() {
 		It("Should create 2 clusters with flannel and overlapping cidrs", func() {
 			flags := &clustercmd.CreateFlagpole{
@@ -69,13 +76,8 @@ var _ = Describe("E2E Tests", func() {
 			clusters, err := CreateEnvironment(flags, provider)
 			Ω(err).ShouldNot(HaveOccurred())
 
-			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(cl1Status).Should(BeTrue())
-			Expect(cl2Status).Should(BeTrue())
+			Expect(isKnown(1)).Should(BeTrue())
+			Expect(isKnown(2)).Should(BeTrue())
 			Expect(clusters).Should(Equal([]*cluster.Config{
 				{
 					Cni:                 "flannel",
@@ -129,11 +131,9 @@ var _ = Describe("E2E Tests", func() {
 			})
 			Ω(err).ShouldNot(HaveOccurred())
 			image := container[0].Image
-			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
-			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(image).Should(Equal(flags.ImageName))
-			Expect(cl3Status).Should(BeTrue())
+			Expect(isKnown(3)).Should(BeTrue())
 			Expect(clusters).Should(Equal([]*cluster.Config{
 				{
 					Cni:                 "weave",
@@ -155,11 +155,8 @@ var _ = Describe("E2E Tests", func() {
 		It("Should not create a new cluster", func() {
 			numClusters := 3
 			for i := 1; i <= numClusters; i++ {
-				clName := utils.ClusterName(i)
-				known, err := cluster.IsKnown(clName, provider)
-				Ω(err).ShouldNot(HaveOccurred())
-				if known {
-					log.Infof("✔ Config with the name %q already exists.", clName)
+				if isKnown(i) {
+					log.Infof("✔ Config with the name %q already exists.", utils.ClusterName(i))
 				} else {
 					Fail("Attempted to create a new cluster, but should have skipped as cluster already exists")
 				}
@@ -376,26 +373,17 @@ var _ = Describe("E2E Tests", func() {
 	})
 	Context("Cluster deletion", func() {
 		It("Should destroy clusters 1 and 3 only", func() {
-			clusters := []string{utils.ClusterName(1), utils.ClusterName(3)}
-			for _, clName := range clusters {
-				known, err := cluster.IsKnown(clName, provider)
-				Ω(err).ShouldNot(HaveOccurred())
-				if known {
-					err := cluster.Destroy(clName, provider)
+			clusters := []int{1, 3}
+			for _, i := range clusters {
+				if isKnown(i) {
+					err := cluster.Destroy(utils.ClusterName(i), provider)
 					Ω(err).ShouldNot(HaveOccurred())
 				}
 			}
 
-			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(cl1Status).Should(BeFalse())
-			Expect(cl2Status).Should(BeTrue())
-			Expect(cl3Status).Should(BeFalse())
+			Expect(isKnown(1)).Should(BeFalse())
+			Expect(isKnown(2)).Should(BeTrue())
+			Expect(isKnown(3)).Should(BeFalse())
 		})
 		It("Should destroy all remaining clusters", func() {
 			clusters, err := utils.ClusterNamesFromFiles()
@@ -406,16 +394,9 @@ var _ = Describe("E2E Tests", func() {
 				Ω(err).ShouldNot(HaveOccurred())
 			}
 
-			cl1Status, err := cluster.IsKnown(utils.ClusterName(1), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-			cl2Status, err := cluster.IsKnown(utils.ClusterName(2), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-			cl3Status, err := cluster.IsKnown(utils.ClusterName(3), provider)
-			Ω(err).ShouldNot(HaveOccurred())
-
-			Expect(cl1Status).Should(BeFalse())
-			Expect(cl2Status).Should(BeFalse())
-			Expect(cl3Status).Should(BeFalse())
+			for i := 1; i <= 3; i++ {
+				Expect(isKnown(i)).Should(BeFalse())
+			}
 		})
 	})
 })
