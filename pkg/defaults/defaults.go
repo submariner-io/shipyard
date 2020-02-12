@@ -25,9 +25,6 @@ const (
 	// KindLogsDir is a default kind log files destination directory
 	KindLogsDir = "output/logs"
 
-	// KindConfigDir is a default kind config files destination directory
-	KindConfigDir = "output/kind-clusters"
-
 	// LocalKubeConfigDir is a default local workstation kubeconfig files destination directory
 	LocalKubeConfigDir = "output/kube-config/local-dev"
 
@@ -39,6 +36,9 @@ const (
 )
 
 var (
+	// KindConfigDir is a default kind config files destination directory
+	KindConfigDir = "output/kind-clusters"
+
 	// WaitDurationResources is a default timeout for waiter functions
 	WaitDurationResources = time.Duration(10) * time.Minute
 

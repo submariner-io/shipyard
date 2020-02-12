@@ -3,16 +3,15 @@ package image
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"path/filepath"
-	"strings"
 
 	dockerclient "github.com/docker/docker/client"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/image"
+	"github.com/submariner-io/armada/pkg/utils"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
@@ -44,27 +43,14 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 				return err
 			}
 
-			var targetClusters []string
-			if len(flags.clusters) > 0 {
-				targetClusters = append(targetClusters, flags.clusters...)
-			} else {
-				configFiles, err := ioutil.ReadDir(defaults.KindConfigDir)
-				if err != nil {
-					return err
-				}
-				for _, configFile := range configFiles {
-					clName := strings.FieldsFunc(configFile.Name(), func(r rune) bool { return strings.ContainsRune(" -.", r) })[2]
-					targetClusters = append(targetClusters, clName)
-				}
-			}
-
-			if len(targetClusters) > 0 {
+			clusters := utils.DetermineClusterNames(flags.clusters)
+			if len(clusters) > 0 {
 				for _, imageName := range flags.images {
 					localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
 					if err != nil {
 						return err
 					}
-					selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, targetClusters)
+					selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
 					if err != nil {
 						log.Error(err)
 					}

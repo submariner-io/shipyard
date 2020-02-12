@@ -5,7 +5,6 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"text/template"
 	"time"
@@ -16,6 +15,7 @@ import (
 	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/submariner-io/armada/pkg/defaults"
+	"github.com/submariner-io/armada/pkg/utils"
 )
 
 // Config type
@@ -116,7 +116,7 @@ func PopulateConfig(clusterNum int, image, cni string, retain, tiller, overlap b
 		return nil, errors.Wrap(err, "failed to get current user information")
 	}
 
-	name := defaults.ClusterNameBase + strconv.Itoa(clusterNum)
+	name := utils.ClusterName(clusterNum)
 	config := &Config{
 		Name:                name,
 		NodeImageName:       image,
