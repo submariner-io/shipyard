@@ -29,7 +29,6 @@ import (
 )
 
 func CreateEnvironment(flags *clustercmd.CreateFlagpole, provider *kind.Provider) ([]*cluster.Config, error) {
-	log.SetLevel(log.DebugLevel)
 	box := packr.New("configs", "../../configs")
 
 	targetClusters, err := clustercmd.CreateClusters(flags, provider, box)
@@ -46,6 +45,7 @@ func TestCluster(t *testing.T) {
 }
 
 var _ = Describe("E2E Tests", func() {
+	log.SetLevel(log.DebugLevel)
 
 	provider := kind.NewProvider(
 		kind.ProviderWithLogger(kindcmd.NewLogger()),
@@ -166,8 +166,6 @@ var _ = Describe("E2E Tests", func() {
 
 	Context("Deployment", func() {
 		It("Should deploy nginx-demo to clusters 1 and 3", func() {
-			log.SetLevel(log.DebugLevel)
-
 			box := packr.New("configs", "../../configs")
 			nginxDeploymentFile, err := box.Resolve("debug/nginx-demo-daemonset.yaml")
 			Expect(err).To(Succeed())
@@ -205,7 +203,6 @@ var _ = Describe("E2E Tests", func() {
 		})
 
 		It("Should deploy netshoot to all 3 clusters", func() {
-			log.SetLevel(log.DebugLevel)
 			box := packr.New("configs", "../../configs")
 			netshootDeploymentFile, err := box.Resolve("debug/netshoot-daemonset.yaml")
 			Ω(err).ShouldNot(HaveOccurred())
@@ -247,8 +244,6 @@ var _ = Describe("E2E Tests", func() {
 
 	Context("Logs export", func() {
 		It("Should export logs for clusters 1 and 2", func() {
-			log.SetLevel(log.DebugLevel)
-
 			for _, clName := range []string{"cluster1", "cluster2"} {
 				err := provider.CollectLogs(clName, filepath.Join(defaults.KindLogsDir, clName))
 				Ω(err).ShouldNot(HaveOccurred())
@@ -287,8 +282,6 @@ var _ = Describe("E2E Tests", func() {
 		})
 
 		It("Should load an image to all the clusters", func() {
-			log.SetLevel(log.DebugLevel)
-
 			clusters, err := utils.ClusterNamesFromFiles()
 			Ω(err).ShouldNot(HaveOccurred())
 			images := []string{"alpine:edge"}
@@ -326,8 +319,6 @@ var _ = Describe("E2E Tests", func() {
 		})
 
 		It("Should load multiple images to cluster 1 and 3 only", func() {
-			log.SetLevel(log.DebugLevel)
-
 			images := []string{"nginx:stable-alpine", "alpine:latest"}
 			clusters := []string{
 				utils.ClusterName(1),

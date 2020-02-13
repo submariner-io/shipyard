@@ -31,9 +31,9 @@ var _ = Describe("image tests", func() {
 			Ω(err).ShouldNot(HaveOccurred())
 			_, err = io.Copy(os.Stdout, reader)
 			Ω(err).ShouldNot(HaveOccurred())
+			log.SetLevel(log.DebugLevel)
 		})
 		It("Should return the correct local imageID", func() {
-			log.SetLevel(log.DebugLevel)
 			imageFilter := filters.NewArgs()
 			imageFilter.Add("reference", "alpine:latest")
 			result, err := dockerCli.ImageList(ctx, types.ImageListOptions{
@@ -47,7 +47,6 @@ var _ = Describe("image tests", func() {
 			Expect(result[0].ID).Should(Equal(imageID))
 		})
 		It("Should save the image to temp location", func() {
-			log.SetLevel(log.DebugLevel)
 			tempFilePath, err := Save(ctx, dockerCli, "alpine:latest")
 			Ω(err).ShouldNot(HaveOccurred())
 			defer os.RemoveAll(filepath.Dir(tempFilePath))
