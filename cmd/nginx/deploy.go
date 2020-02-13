@@ -16,7 +16,6 @@ import (
 // NginxDeployFlagpole is a list of cli flags for deploy nginx-demo command
 type deployFlagpole struct {
 	clusters []string
-	debug    bool
 }
 
 // NewDeployCommand returns a new cobra.Command under deploy command for armada
@@ -28,11 +27,6 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 		Short: "Deploy nginx demo application service and pods",
 		Long:  "Deploy nginx demo application service and pods",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if flags.debug {
-				log.SetLevel(log.DebugLevel)
-			}
-
 			nginxDeploymentFile, err := box.Resolve("debug/nginx-demo-daemonset.yaml")
 			if err != nil {
 				log.Error(err)
@@ -65,6 +59,5 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 		},
 	}
 	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
-	cmd.Flags().BoolVarP(&flags.debug, "debug", "v", false, "set log level to debug")
 	return cmd
 }
