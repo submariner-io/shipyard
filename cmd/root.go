@@ -20,17 +20,24 @@ import (
 var (
 	Build   string
 	Version string
-)
-
-// NewRootCmd returns a new cobra.Command implementing the root command for armada
-func NewRootCmd() *cobra.Command {
-	cmd := &cobra.Command{
+	Debug   bool
+	cmd     = &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "armada",
 		Short: "Armada is a tool for e2e environment creation for submariner-io org",
 		Long:  "Creates multiple kind clusters and e2e environments",
 	}
+)
 
+func setLogDebug() {
+	if Debug {
+		log.SetLevel(log.DebugLevel)
+	}
+}
+
+func init() {
+	cobra.OnInitialize(setLogDebug)
+	cmd.PersistentFlags().BoolVarP(&Debug, "debug", "v", false, "set log level to debug")
 	customFormatter := new(log.TextFormatter)
 	customFormatter.TimestampFormat = "2006-01-02 15:04:05"
 	log.SetFormatter(customFormatter)
@@ -48,12 +55,11 @@ func NewRootCmd() *cobra.Command {
 	cmd.AddCommand(load.NewCommand(provider))
 	cmd.AddCommand(deploy.NewCommand(box))
 	cmd.AddCommand(version.NewCommand(Version, Build))
-	return cmd
 }
 
 // Run runs the `armada` root command
 func Run() error {
-	return NewRootCmd().Execute()
+	return cmd.Execute()
 }
 
 // Main wraps Run

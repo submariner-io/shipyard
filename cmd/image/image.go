@@ -20,7 +20,6 @@ import (
 type loadFlagpole struct {
 	clusters []string
 	images   []string
-	debug    bool
 }
 
 // NewLoadCommand returns a new cobra.Command under load command for armada
@@ -32,11 +31,6 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 		Short: "Load docker images in to the cluster",
 		Long:  "Load docker images in to the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if flags.debug {
-				log.SetLevel(log.DebugLevel)
-			}
-
 			ctx := context.Background()
 			dockerCli, err := dockerclient.NewEnvClient()
 			if err != nil {
@@ -88,6 +82,5 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 	}
 	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to load the image in to.")
 	cmd.Flags().StringSliceVarP(&flags.images, "images", "i", []string{}, "comma separated list images to load.")
-	cmd.Flags().BoolVarP(&flags.debug, "debug", "v", false, "set log level to debug")
 	return cmd
 }

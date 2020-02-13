@@ -15,7 +15,6 @@ import (
 // deployFlagpole is a list of cli flags for deploy nginx-demo command
 type deployFlagpole struct {
 	hostNetwork bool
-	debug       bool
 	clusters    []string
 }
 
@@ -28,11 +27,6 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 		Short: "Deploy netshoot pods for debugging",
 		Long:  "Deploy netshoot pods for debugging",
 		RunE: func(cmd *cobra.Command, args []string) error {
-
-			if flags.debug {
-				log.SetLevel(log.DebugLevel)
-			}
-
 			var netshootDeploymentFilePath string
 			var selector string
 			if flags.hostNetwork {
@@ -75,7 +69,6 @@ func NewDeployCommand(box *packr.Box) *cobra.Command {
 		},
 	}
 	cmd.Flags().BoolVar(&flags.hostNetwork, "host-network", false, "deploy the pods in host network mode.")
-	cmd.Flags().BoolVarP(&flags.debug, "debug", "v", false, "set log level to debug")
 	cmd.Flags().StringSliceVarP(&flags.clusters, "clusters", "c", []string{}, "comma separated list of cluster names to deploy to. eg: cl1,cl6,cl3")
 	return cmd
 }

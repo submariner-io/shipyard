@@ -37,9 +37,6 @@ type CreateFlagpole struct {
 	// Whether or not to create clusters with overlapping cidrs
 	Overlap bool
 
-	// Log level to debug
-	Debug bool
-
 	// The number of clusters to create
 	NumClusters int
 }
@@ -65,7 +62,6 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 	cmd.Flags().StringVarP(&flags.Cni, "cni", "c", cluster.Kindnet, fmt.Sprintf("name of the cni that will be deployed on the cluster. Supported CNIs: %v", cluster.CNIs))
 	cmd.Flags().BoolVarP(&flags.Tiller, "tiller", "t", false, "deploy with tiller")
 	cmd.Flags().BoolVarP(&flags.Overlap, "overlap", "o", false, "create clusters with overlapping cidrs")
-	cmd.Flags().BoolVarP(&flags.Debug, "debug", "v", false, "set log level to debug")
 	cmd.Flags().DurationVar(&flags.Wait, "wait", 5*time.Minute, "amount of minutes to wait for control plane nodes to be ready")
 	cmd.Flags().IntVarP(&flags.NumClusters, "num", "n", 2, "number of clusters to create")
 	return cmd
@@ -73,10 +69,6 @@ func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 
 // CreateClusters will create the requested clusters while waiting for their creation to finish
 func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.Box) ([]*cluster.Config, error) {
-	if flags.Debug {
-		log.SetLevel(log.DebugLevel)
-	}
-
 	targetClusters, err := getTargetClusters(provider, flags)
 	if err != nil {
 		return nil, err
