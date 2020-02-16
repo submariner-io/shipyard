@@ -44,43 +44,47 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 			}
 
 			clusters := utils.DetermineClusterNames(flags.clusters)
-			if len(clusters) > 0 {
-				for _, imageName := range flags.images {
-					localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
-					if err != nil {
-						return err
-					}
-					selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
-					if err != nil {
-						log.Error(err)
-					}
-					if len(selectedNodes) > 0 {
-						imageTarPath, err := image.Save(ctx, dockerCli, imageName)
+			if len(clusters) == 0 {
+				return nil
+			}
+
+			for _, imageName := range flags.images {
+				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
+				if err != nil {
+					return err
+				}
+				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
+				if err != nil {
+					log.Error(err)
+				}
+				if len(selectedNodes) == 0 {
+					continue
+				}
+
+				imageTarPath, err := image.Save(ctx, dockerCli, imageName)
+				if err != nil {
+					return err
+				}
+				defer os.RemoveAll(filepath.Dir(imageTarPath))
+
+				log.Infof("loading image: %s to nodes: %s ...", imageName, selectedNodes)
+
+				tasks := []func() error{}
+				for _, n := range selectedNodes {
+					node := n
+					tasks = append(tasks, func() error {
+						err := image.LoadToNode(imageTarPath, imageName, node)
 						if err != nil {
-							return err
-						}
-						defer os.RemoveAll(filepath.Dir(imageTarPath))
-
-						log.Infof("loading image: %s to nodes: %s ...", imageName, selectedNodes)
-
-						tasks := []func() error{}
-						for _, n := range selectedNodes {
-							node := n
-							tasks = append(tasks, func() error {
-								err := image.LoadToNode(imageTarPath, imageName, node)
-								if err != nil {
-									return fmt.Errorf("Error loading image %q to noode %q", imageName, node.String())
-								}
-
-								return nil
-							})
+							return fmt.Errorf("Error loading image %q to node %q", imageName, node.String())
 						}
 
-						err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
-						if err != nil {
-							return err
-						}
-					}
+						return nil
+					})
+				}
+
+				err = wait.ForTasksComplete(defaults.WaitDurationResources, tasks...)
+				if err != nil {
+					return err
 				}
 			}
 			return nil
