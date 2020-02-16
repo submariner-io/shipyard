@@ -21,8 +21,7 @@ import (
 	"sigs.k8s.io/kind/pkg/cluster/nodeutils"
 )
 
-// GetLocalID returns local image id by name/reference
-func GetLocalID(ctx context.Context, dockerCli *dockerclient.Client, imageName string) (string, error) {
+func getLocalID(ctx context.Context, dockerCli *dockerclient.Client, imageName string) (string, error) {
 	imageFilter := filters.NewArgs()
 	imageFilter.Add("reference", imageName)
 	result, err := dockerCli.ImageList(ctx, types.ImageListOptions{
@@ -39,7 +38,11 @@ func GetLocalID(ctx context.Context, dockerCli *dockerclient.Client, imageName s
 }
 
 // GetNodesWithout return a list of nodes that don't have the image for multiple clusters
-func GetNodesWithout(provider *kind.Provider, imageName, localImageID string, clusters []string) ([]nodes.Node, error) {
+func GetNodesWithout(ctx context.Context, dockerCli *dockerclient.Client, provider *kind.Provider, imageName string, clusters []string) ([]nodes.Node, error) {
+	localImageID, err := getLocalID(ctx, dockerCli, imageName)
+	if err != nil {
+		return nil, err
+	}
 	var selectedNodes []nodes.Node
 	for _, clName := range clusters {
 		known, err := cluster.IsKnown(clName, provider)

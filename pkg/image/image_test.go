@@ -1,4 +1,4 @@
-package image_test
+package image
 
 import (
 	"context"
@@ -14,7 +14,6 @@ import (
 	dockerclient "github.com/docker/docker/client"
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
-	"github.com/submariner-io/armada/pkg/image"
 )
 
 func TestImage(t *testing.T) {
@@ -42,14 +41,14 @@ var _ = Describe("image tests", func() {
 				Filters: imageFilter,
 			})
 			Ω(err).ShouldNot(HaveOccurred())
-			imageID, err := image.GetLocalID(ctx, dockerCli, "alpine:latest")
+			imageID, err := getLocalID(ctx, dockerCli, "alpine:latest")
 			Ω(err).ShouldNot(HaveOccurred())
 
 			Expect(result[0].ID).Should(Equal(imageID))
 		})
 		It("Should save the image to temp location", func() {
 			log.SetLevel(log.DebugLevel)
-			tempFilePath, err := image.Save(ctx, dockerCli, "alpine:latest")
+			tempFilePath, err := Save(ctx, dockerCli, "alpine:latest")
 			Ω(err).ShouldNot(HaveOccurred())
 			defer os.RemoveAll(filepath.Dir(tempFilePath))
 

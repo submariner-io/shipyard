@@ -49,11 +49,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 			}
 
 			for _, imageName := range flags.images {
-				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
-				if err != nil {
-					return err
-				}
-				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
+				selectedNodes, err := image.GetNodesWithout(ctx, dockerCli, provider, imageName, clusters)
 				if err != nil {
 					log.Error(err)
 				}
