@@ -294,10 +294,7 @@ var _ = Describe("E2E Tests", func() {
 			images := []string{"alpine:edge"}
 			var nodesWithImage uint32
 			for _, imageName := range images {
-				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
-				Ω(err).ShouldNot(HaveOccurred())
-
-				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
+				selectedNodes, err := image.GetNodesWithout(ctx, dockerCli, provider, imageName, clusters)
 				Ω(err).ShouldNot(HaveOccurred())
 				Expect(len(selectedNodes)).Should(Equal(9))
 
@@ -339,10 +336,7 @@ var _ = Describe("E2E Tests", func() {
 
 			var nodesWithImage uint32
 			for _, imageName := range images {
-				localImageID, err := image.GetLocalID(ctx, dockerCli, imageName)
-				Ω(err).ShouldNot(HaveOccurred())
-
-				selectedNodes, err := image.GetNodesWithout(provider, imageName, localImageID, clusters)
+				selectedNodes, err := image.GetNodesWithout(ctx, dockerCli, provider, imageName, clusters)
 				Ω(err).ShouldNot(HaveOccurred())
 
 				imageTarPath, err := image.Save(ctx, dockerCli, imageName)
