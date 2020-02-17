@@ -2,7 +2,6 @@ package image
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
@@ -69,12 +68,9 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 				for _, n := range selectedNodes {
 					node := n
 					tasks = append(tasks, func() error {
-						err := image.LoadToNode(imageTarPath, imageName, node)
-						if err != nil {
-							return fmt.Errorf("Error loading image %q to node %q", imageName, node.String())
-						}
-
-						return nil
+						return utils.ErrorIfOccurrs(
+							image.LoadToNode(imageTarPath, imageName, node),
+							"Error loading image %q to node %q", imageName, node.String())
 					})
 				}
 

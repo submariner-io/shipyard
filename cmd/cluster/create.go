@@ -86,12 +86,9 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 	for _, c := range targetClusters {
 		config := c
 		tasks = append(tasks, func() error {
-			err := cluster.Create(config, provider, box)
-			if err != nil {
-				return fmt.Errorf("Error creating cluster %q", config.Name)
-			}
-
-			return nil
+			return utils.ErrorIfOccurrs(
+				cluster.Create(config, provider, box),
+				"Error creating cluster %q", config.Name)
 		})
 	}
 
@@ -106,12 +103,9 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 	for _, c := range targetClusters {
 		config := c
 		tasks = append(tasks, func() error {
-			err := cluster.FinalizeSetup(config, box)
-			if err != nil {
-				return fmt.Errorf("Error finalizing cluster %q", config.Name)
-			}
-
-			return nil
+			return utils.ErrorIfOccurrs(
+				cluster.FinalizeSetup(config, box),
+				"Error finalizing cluster %q", config.Name)
 		})
 	}
 
