@@ -13,6 +13,7 @@ import (
 	"github.com/submariner-io/armada/pkg/cluster"
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/utils"
+	"github.com/submariner-io/armada/pkg/utils/errors"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
@@ -86,7 +87,7 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 	for _, c := range targetClusters {
 		config := c
 		tasks = append(tasks, func() error {
-			return utils.ErrorIfOccurrs(
+			return errors.IfOccurs(
 				cluster.Create(config, provider, box),
 				"Error creating cluster %q", config.Name)
 		})
@@ -103,7 +104,7 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 	for _, c := range targetClusters {
 		config := c
 		tasks = append(tasks, func() error {
-			return utils.ErrorIfOccurrs(
+			return errors.IfOccurs(
 				cluster.FinalizeSetup(config, box),
 				"Error finalizing cluster %q", config.Name)
 		})

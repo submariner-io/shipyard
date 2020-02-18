@@ -11,6 +11,7 @@ import (
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/image"
 	"github.com/submariner-io/armada/pkg/utils"
+	"github.com/submariner-io/armada/pkg/utils/errors"
 	"github.com/submariner-io/armada/pkg/wait"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 )
@@ -68,7 +69,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 				for _, n := range selectedNodes {
 					node := n
 					tasks = append(tasks, func() error {
-						return utils.ErrorIfOccurrs(
+						return errors.IfOccurs(
 							image.LoadToNode(imageTarPath, imageName, node),
 							"Error loading image %q to node %q", imageName, node.String())
 					})
