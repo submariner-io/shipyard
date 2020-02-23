@@ -27,15 +27,30 @@ func TestWait(t *testing.T) {
 	RunSpecs(t, "Wait test suite")
 }
 
+const namespace = "test-namespace"
+
+var origWaitDurationResources time.Duration
+var origWaitRetryPeriod time.Duration
+
+var _ = BeforeSuite(func() {
+	origWaitDurationResources = defaults.WaitDurationResources
+	origWaitRetryPeriod = defaults.WaitRetryPeriod
+})
+
+var _ = AfterSuite(func() {
+	defaults.WaitDurationResources = origWaitDurationResources
+	defaults.WaitRetryPeriod = origWaitRetryPeriod
+})
+
 type testClient struct {
 	client.Client
-	returnError error
+	initialError error
 }
 
 func (c *testClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.Object) error {
-	err := c.returnError
+	err := c.initialError
 	if err != nil {
-		c.returnError = nil
+		c.initialError = nil
 		return err
 	}
 
@@ -43,9 +58,9 @@ func (c *testClient) Get(ctx context.Context, key client.ObjectKey, obj runtime.
 }
 
 func (c *testClient) List(ctx context.Context, list runtime.Object, opts ...client.ListOption) error {
-	err := c.returnError
+	err := c.initialError
 	if err != nil {
-		c.returnError = nil
+		c.initialError = nil
 		return err
 	}
 
@@ -65,8 +80,6 @@ var _ = Describe("Wait tests", func() {
 })
 
 func testForPodsRunning() {
-	namespace := "test-namespace"
-
 	var (
 		initialPods   []*corev1.Pod
 		client        *testClient
@@ -89,25 +102,12 @@ func testForPodsRunning() {
 			initObjs = append(initObjs, p)
 		}
 
-		client = &testClient{Client: fake.NewFakeClientWithScheme(scheme.Scheme, initObjs...), returnError: listError}
+		client = &testClient{Client: fake.NewFakeClientWithScheme(scheme.Scheme, initObjs...), initialError: listError}
 
 		waitCh = runAsync(func() error {
 			return wait.ForPodsRunning("east", client, namespace, labelSelector, numReplicas)
 		})
 	})
-
-	newPod := func(name string, phase corev1.PodPhase) *corev1.Pod {
-		return &corev1.Pod{
-			ObjectMeta: metav1.ObjectMeta{
-				Namespace: namespace,
-				Name:      name,
-				Labels:    map[string]string{"app": "test"},
-			},
-			Status: corev1.PodStatus{
-				Phase: phase,
-			},
-		}
-	}
 
 	When("the Pods initially exist", func() {
 		BeforeEach(func() {
@@ -176,7 +176,7 @@ func testForPodsRunning() {
 		})
 	})
 
-	When("the invalid label selector is provided", func() {
+	When("an invalid label selector is provided", func() {
 		BeforeEach(func() {
 			labelSelector = "a bogus selector"
 			initialPods = append(initialPods, newPod("test-Pod", corev1.PodRunning))
@@ -225,27 +225,27 @@ func testForResourceReady(resourceType string, newResource func() runtime.Object
 	waitForReady func(string, client.Client, string, string) error) {
 
 	var (
-		resource          runtime.Object
-		initialDeployment runtime.Object
-		client            *testClient
-		waitCh            chan error
-		getError          error
+		resource        runtime.Object
+		initialResource runtime.Object
+		client          *testClient
+		waitCh          chan error
+		initialError    error
 	)
 
 	BeforeEach(func() {
 		resource = newResource()
 
-		getError = nil
-		initialDeployment = nil
+		initialError = nil
+		initialResource = nil
 	})
 
 	JustBeforeEach(func() {
 		var initObjs []runtime.Object
-		if initialDeployment != nil {
-			initObjs = append(initObjs, initialDeployment)
+		if initialResource != nil {
+			initObjs = append(initObjs, initialResource)
 		}
 
-		client = &testClient{Client: fake.NewFakeClientWithScheme(scheme.Scheme, initObjs...), returnError: getError}
+		client = &testClient{Client: fake.NewFakeClientWithScheme(scheme.Scheme, initObjs...), initialError: initialError}
 
 		metadata, err := meta.Accessor(resource)
 		Expect(err).To(Succeed())
@@ -257,7 +257,7 @@ func testForResourceReady(resourceType string, newResource func() runtime.Object
 
 	When(fmt.Sprintf("the %s initially exists", resourceType), func() {
 		BeforeEach(func() {
-			initialDeployment = resource
+			initialResource = resource
 		})
 
 		Context("and is initially ready", func() {
@@ -270,7 +270,7 @@ func testForResourceReady(resourceType string, newResource func() runtime.Object
 			})
 		})
 
-		Context("and are eventually ready", func() {
+		Context("and is eventually ready", func() {
 			It("should return success", func() {
 				go func() {
 					time.Sleep(defaults.WaitRetryPeriod * 2)
@@ -297,8 +297,8 @@ func testForResourceReady(resourceType string, newResource func() runtime.Object
 
 	When(fmt.Sprintf("retrieval of the %s initially fails but eventually succeeds and is ready", resourceType), func() {
 		BeforeEach(func() {
-			initialDeployment = resource
-			getError = errors.New("mock error")
+			initialResource = resource
+			initialError = errors.New("mock error")
 			updateToReady(resource)
 		})
 
@@ -383,4 +383,17 @@ func testForTasksComplete() {
 			Expect(err).To(HaveOccurred())
 		})
 	})
+}
+
+func newPod(name string, phase corev1.PodPhase) *corev1.Pod {
+	return &corev1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Namespace: namespace,
+			Name:      name,
+			Labels:    map[string]string{"app": "test"},
+		},
+		Status: corev1.PodStatus{
+			Phase: phase,
+		},
+	}
 }
