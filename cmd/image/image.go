@@ -2,11 +2,11 @@ package image
 
 import (
 	"context"
-	"fmt"
 	"os"
 	"path/filepath"
 
 	dockerclient "github.com/docker/docker/client"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/defaults"
@@ -70,11 +70,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 					node := n
 					tasks = append(tasks, func() error {
 						err := image.LoadToNode(imageTarPath, imageName, node)
-						if err != nil {
-							return fmt.Errorf("Error loading image %q to node %q", imageName, node.String())
-						}
-
-						return nil
+						return errors.Wrapf(err, "Error loading image %q to node %q", imageName, node.String())
 					})
 				}
 
