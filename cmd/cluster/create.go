@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"github.com/gobuffalo/packr/v2"
+	"github.com/pkg/errors"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	"github.com/submariner-io/armada/pkg/cluster"
@@ -79,11 +80,7 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 		config := c
 		tasks = append(tasks, func() error {
 			err := cluster.Create(config, provider, box)
-			if err != nil {
-				return fmt.Errorf("Error creating cluster %q", config.Name)
-			}
-
-			return nil
+			return errors.Wrapf(err, "Error creating cluster %q", config.Name)
 		})
 	}
 
@@ -99,11 +96,7 @@ func CreateClusters(flags *CreateFlagpole, provider *kind.Provider, box *packr.B
 		config := c
 		tasks = append(tasks, func() error {
 			err := cluster.FinalizeSetup(config, box)
-			if err != nil {
-				return fmt.Errorf("Error finalizing cluster %q", config.Name)
-			}
-
-			return nil
+			return errors.Wrapf(err, "Error finalizing cluster %q", config.Name)
 		})
 	}
 
