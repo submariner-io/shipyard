@@ -16,12 +16,12 @@ type exportFlagpole struct {
 	clusters []string
 }
 
-// NewExportCommand returns a new cobra.Command under export command for armada
+// NewExportCommand returns a new cobra.Command capable of exporting logs
 func NewExportCommand(provider *kind.Provider) *cobra.Command {
 	flags := &exportFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "logs",
+		Use:   "export-logs",
 		Short: "Export kind cluster logs",
 		Long:  "Export kind cluster logs",
 		RunE: func(cmd *cobra.Command, args []string) error {

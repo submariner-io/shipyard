@@ -44,27 +44,27 @@ The tool will create two clusters by default, with the Kindnet CNI plugin.
 
 ```bash
 cd ./bin
-./armada create clusters
+./armada create
 ``` 
 
 This command will create five clusters with the Kindnet CNI.
 
 ```bash
-./armada create clusters -n 5
+./armada create -n 5
 ```
 
 Create a total of four clusters, 2 with Weave, one with Flannel, and one with Calico.
 
 ```bash
-./armada create clusters --weave
-./armada create clusters -n 3 --flannel
-./armada create clusters -n 4 --calico
+./armada create --weave
+./armada create -n 3 --flannel
+./armada create -n 4 --calico
 ```
 
 Default Kubernetes node image is kindest/node:v1.16.3. To use different image use the **-i** or **--image** flags. This command will create three clusters with the Flannel CNI and Kubernetes 1.15.6.
 
 ```bash
-./armada create clusters -n 3 --flannel --image kindest/node:v1.15.6
+./armada create -n 3 --flannel --image kindest/node:v1.15.6
 ```
 
 The full list of supported images can be found on [kind release page].
@@ -72,19 +72,19 @@ The full list of supported images can be found on [kind release page].
 Example of running four clusters with multiple K8s versions and different CNI plugins.
 
 ```bash
-./armada create clusters -n 2 --weave  # 2 clusters with weave, K8s version 1.16.3
-./armada create clusters -n 3 --flannel --image kindest/node:v1.15.6 # one clusters with Flannel CNI, K8s version 1.15.6
-./armada create clusters -n 4 --calico --image kindest/node:v1.14.9 # one clusters with calico CNI, K8s version 1.14.9
+./armada create -n 2 --weave  # 2 clusters with weave, K8s version 1.16.3
+./armada create -n 3 --flannel --image kindest/node:v1.15.6 # one clusters with Flannel CNI, K8s version 1.15.6
+./armada create -n 4 --calico --image kindest/node:v1.14.9 # one clusters with calico CNI, K8s version 1.14.9
 ```
 
 Create clusters command full usage.
 
 ```bash
-./armada create clusters -h
+./armada create -h
 Creates multiple kubernetes clusters using Docker container 'nodes'
 
 Usage:
-  armada create clusters [flags]
+  armada create [flags]
 
 Flags:
   -c, --calico          deploy with calico
@@ -106,23 +106,23 @@ Flags:
 Load multiple images into all active clusters. Please note that the images must exist locally.
 
 ```bash
-./armada load docker-images --images alpine:latest,nginx:alpine
+./armada load-images --images alpine:latest,nginx:alpine
 ```
 
 Load multiple images into specific clusters.
 
 ```bash
-./armada load docker-images --images alpine:latest,nginx:alpine --clusters cluster1,cluster3
+./armada load-images --images alpine:latest,nginx:alpine --clusters cluster1,cluster3
 ```
 
 Load images command full usage.
 
 ```bash
-./armada load docker-images -h
+./armada load-images -h
 Load docker images in to the cluster
 
 Usage:
-  armada load docker-images [flags]
+  armada load-images [flags]
 
 Flags:
   -c, --clusters strings   comma separated list of cluster names to load the image in to.
@@ -136,13 +136,13 @@ Flags:
 Destroy all clusters.
 
 ```bash
-./armada destroy clusters
+./armada destroy
 ``` 
 
 Destroy specific clusters.
 
 ```bash
-./armada destroy clusters --clusters cl1,cl3
+./armada destroy --clusters cl1,cl3
 ```
 
 <!--links-->

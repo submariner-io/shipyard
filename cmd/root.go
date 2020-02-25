@@ -6,11 +6,10 @@ import (
 	"github.com/gobuffalo/packr/v2"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
-	"github.com/submariner-io/armada/cmd/create"
+	"github.com/submariner-io/armada/cmd/cluster"
 	"github.com/submariner-io/armada/cmd/deploy"
-	"github.com/submariner-io/armada/cmd/destroy"
-	"github.com/submariner-io/armada/cmd/export"
-	"github.com/submariner-io/armada/cmd/load"
+	"github.com/submariner-io/armada/cmd/image"
+	"github.com/submariner-io/armada/cmd/logs"
 	"github.com/submariner-io/armada/cmd/version"
 	kind "sigs.k8s.io/kind/pkg/cluster"
 	kindcmd "sigs.k8s.io/kind/pkg/cmd"
@@ -49,10 +48,10 @@ func init() {
 
 	box := packr.New("configs", "../configs")
 
-	cmd.AddCommand(create.NewCommand(provider, box))
-	cmd.AddCommand(destroy.NewCommand(provider))
-	cmd.AddCommand(export.NewCommand(provider))
-	cmd.AddCommand(load.NewCommand(provider))
+	cmd.AddCommand(cluster.NewCreateCommand(provider, box))
+	cmd.AddCommand(cluster.NewDestroyCommand(provider))
+	cmd.AddCommand(logs.NewExportCommand(provider))
+	cmd.AddCommand(image.NewLoadCommand(provider))
 	cmd.AddCommand(deploy.NewCommand(box))
 	cmd.AddCommand(version.NewCommand(Version, Build))
 }

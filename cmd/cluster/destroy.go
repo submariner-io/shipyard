@@ -13,12 +13,12 @@ type destroyFlagpole struct {
 	clusters []string
 }
 
-// NewDestroyCommand returns a new cobra.Command under destroy command for armada
+// NewDestroyCommand returns a new cobra.Command that can destroy multiple clusters
 func NewDestroyCommand(provider *kind.Provider) *cobra.Command {
 	flags := &destroyFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "clusters",
+		Use:   "destroy",
 		Short: "Destroy clusters",
 		Long:  "Destroys clusters",
 		RunE: func(cmd *cobra.Command, args []string) error {
