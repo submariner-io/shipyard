@@ -1,4 +1,4 @@
-package netshoot
+package deploy
 
 import (
 	"sync"
@@ -13,14 +13,13 @@ import (
 )
 
 // deployFlagpole is a list of cli flags for deploy nginx-demo command
-type deployFlagpole struct {
+type deployNetshootFlagpole struct {
 	hostNetwork bool
 	clusters    []string
 }
 
-// NewDeployCommand returns a new cobra.Command under deploy command for armada
-func NewDeployCommand(box *packr.Box) *cobra.Command {
-	flags := &deployFlagpole{}
+func newDeployNetshootCommand(box *packr.Box) *cobra.Command {
+	flags := &deployNetshootFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "netshoot",

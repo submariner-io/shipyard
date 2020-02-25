@@ -1,4 +1,4 @@
-package nginx
+package deploy
 
 import (
 	"sync"
@@ -14,13 +14,12 @@ import (
 )
 
 // NginxDeployFlagpole is a list of cli flags for deploy nginx-demo command
-type deployFlagpole struct {
+type deployNginxFlagpole struct {
 	clusters []string
 }
 
-// NewDeployCommand returns a new cobra.Command under deploy command for armada
-func NewDeployCommand(box *packr.Box) *cobra.Command {
-	flags := &deployFlagpole{}
+func newDeployNginxCommand(box *packr.Box) *cobra.Command {
+	flags := &deployNginxFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
 		Use:   "nginx-demo",
