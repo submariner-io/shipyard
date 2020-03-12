@@ -2,6 +2,7 @@
 .idea
 /bin
 output
+dist
 junit.xml
 *.out
 *.coverprofile
