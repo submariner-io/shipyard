@@ -42,12 +42,12 @@ type CreateFlagpole struct {
 	NumClusters int
 }
 
-// NewCreateCommand returns a new cobra.Command under create command for armada
+// NewCreateCommand returns a new cobra.Command that can create multiple clusters
 func NewCreateCommand(provider *kind.Provider, box *packr.Box) *cobra.Command {
 	flags := &CreateFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "clusters",
+		Use:   "create",
 		Short: "Creates multiple kubernetes clusters",
 		Long:  "Creates multiple kubernetes clusters using Docker container 'nodes'",
 		RunE: func(cmd *cobra.Command, args []string) error {

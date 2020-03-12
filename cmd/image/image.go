@@ -27,7 +27,7 @@ func NewLoadCommand(provider *kind.Provider) *cobra.Command {
 	flags := &loadFlagpole{}
 	cmd := &cobra.Command{
 		Args:  cobra.NoArgs,
-		Use:   "docker-images",
+		Use:   "load-images",
 		Short: "Load docker images in to the cluster",
 		Long:  "Load docker images in to the cluster",
 		RunE: func(cmd *cobra.Command, args []string) error {
