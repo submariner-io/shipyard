@@ -17,14 +17,14 @@ import (
 	"github.com/submariner-io/armada/pkg/defaults"
 	"github.com/submariner-io/armada/pkg/deploy"
 	"github.com/submariner-io/armada/pkg/wait"
+	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/client-go/tools/clientcmd"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	kind "sigs.k8s.io/kind/pkg/cluster"
-	kinderrors "sigs.k8s.io/kind/pkg/errors"
 )
 
 // Create creates cluster with kind
-func Create(cl *Config, provider *kind.Provider, box *packr.Box) error {
+func Create(config *Config, provider *kind.Provider, box *packr.Box) error {
 	currentDir, err := os.Getwd()
 	if err != nil {
 		return err
@@ -36,7 +36,7 @@ func Create(cl *Config, provider *kind.Provider, box *packr.Box) error {
 		return err
 	}
 
-	kindConfigFilePath, err := GenerateKindConfig(cl, configDir, box)
+	kindConfigFilePath, err := GenerateKindConfig(config, configDir, box)
 	if err != nil {
 		return err
 	}
@@ -46,25 +46,19 @@ func Create(cl *Config, provider *kind.Provider, box *packr.Box) error {
 		return err
 	}
 
-	log.Infof("Creating cluster %q, cni: %s, podcidr: %s, servicecidr: %s, workers: %v.", cl.Name, cl.Cni, cl.PodSubnet, cl.ServiceSubnet, cl.NumWorkers)
+	log.Infof("Creating cluster %q with CNI: %s, pod CIDR: %s, service CIDR: %s, workers: %v.", config.Name, config.Cni, config.PodSubnet, config.ServiceSubnet, config.NumWorkers)
 
-	if err = provider.Create(
-		cl.Name,
+	err = provider.Create(
+		config.Name,
 		kind.CreateWithRawConfig(raw),
-		kind.CreateWithNodeImage(cl.NodeImageName),
-		kind.CreateWithKubeconfigPath(cl.KubeConfigFilePath),
-		kind.CreateWithRetain(cl.Retain),
-		kind.CreateWithWaitForReady(cl.WaitForReady),
-		kind.CreateWithDisplayUsage(false),
-		kind.CreateWithDisplaySalutation(false),
-	); err != nil {
-		if errs := kinderrors.Errors(err); errs != nil {
-			for _, problem := range errs {
-				return problem
-			}
-			return errors.New("aborting due to invalid configuration")
-		}
-		return errors.Wrap(err, "failed to create cluster")
+		kind.CreateWithNodeImage(config.NodeImageName),
+		kind.CreateWithKubeconfigPath(config.KubeConfigFilePath),
+		kind.CreateWithRetain(config.Retain),
+		kind.CreateWithWaitForReady(config.WaitForReady),
+		kind.CreateWithDisplayUsage(false))
+
+	if err != nil {
+		return errors.Wrapf(err, "failed to create cluster %q", config.Name)
 	}
 
 	return nil
@@ -72,26 +66,30 @@ func Create(cl *Config, provider *kind.Provider, box *packr.Box) error {
 
 // Destroy destroys a kind cluster
 func Destroy(clName string, provider *kind.Provider) error {
-	log.Infof("Deleting cluster %q ...\n", clName)
+	log.Infof("Deleting cluster %q ...", clName)
 	if err := provider.Delete(clName, ""); err != nil {
-		return errors.Wrapf(err, "failed to delete cluster %s", clName)
+		return errors.Wrapf(err, "failed to delete cluster %q", clName)
 	}
 
-	usr, err := user.Current()
+	log.Info("Cleaning up files ...")
+
+	var errs []error
+	errs = append(errs, os.Remove(filepath.Join(defaults.KindConfigDir, "kind-config-"+clName+".yaml")))
+	errs = append(errs, os.Remove(filepath.Join(defaults.LocalKubeConfigDir, "kind-config-"+clName)))
+	errs = append(errs, os.Remove(filepath.Join(defaults.ContainerKubeConfigDir, "kind-config-"+clName)))
+	errs = append(errs, os.RemoveAll(filepath.Join(defaults.KindLogsDir, clName)))
+
+	user, err := user.Current()
 	if err != nil {
-		return err
+		errs = append(errs, errors.WithMessage(err, "could not obtain the current user information"))
+	} else {
+		errs = append(errs, os.RemoveAll(filepath.Join(user.HomeDir, ".kube", strings.Join([]string{"kind-config", clName}, "-"))))
 	}
 
-	_ = os.Remove(filepath.Join(defaults.KindConfigDir, "kind-config-"+clName+".yaml"))
-	_ = os.Remove(filepath.Join(defaults.LocalKubeConfigDir, "kind-config-"+clName))
-	_ = os.Remove(filepath.Join(defaults.ContainerKubeConfigDir, "kind-config-"+clName))
-	_ = os.RemoveAll(filepath.Join(usr.HomeDir, ".kube", strings.Join([]string{"kind-config", clName}, "-")))
-	_ = os.RemoveAll(filepath.Join(defaults.KindLogsDir, clName))
-
-	return nil
+	return errors.Wrap(k8serrors.NewAggregate(errs), "the cluster was deleted but error(s) occurred during cleanup")
 }
 
-// GetMasterDockerIP gets control plain master docker internal ip
+// GetMasterDockerIP the internal docker ip of the master control plane
 func GetMasterDockerIP(clName string) (string, error) {
 	ctx := context.Background()
 	dockerCli, err := dockerclient.NewEnvClient()
@@ -105,9 +103,11 @@ func GetMasterDockerIP(clName string) (string, error) {
 		Filters: containerFilter,
 		Limit:   1,
 	})
+
 	if err != nil {
 		return "", err
 	}
+
 	return containers[0].NetworkSettings.Networks["bridge"].IPAddress, nil
 }
 
@@ -142,7 +142,7 @@ func NewClient(cluster string) (client.Client, error) {
 func FinalizeSetup(config *Config, box *packr.Box) error {
 	masterIP, err := GetMasterDockerIP(config.Name)
 	if err != nil {
-		return err
+		return errors.Wrapf(err, "error getting the master control plane docker IP for cluster %q", config.Name)
 	}
 
 	err = PrepareKubeConfigs(config.Name, config.KubeConfigFilePath, masterIP)
@@ -168,7 +168,7 @@ func FinalizeSetup(config *Config, box *packr.Box) error {
 
 		err = deploy.Resources(config.Name, client, tillerDeploymentFile.String(), "Tiller")
 		if err != nil {
-			return err
+			return errors.Wrapf(err, "error deploying Tiller in cluster %q", config.Name)
 		}
 
 		err = wait.ForDeploymentReady(config.Name, client, "kube-system", "tiller-deploy")
