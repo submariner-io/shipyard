@@ -91,6 +91,13 @@ var (
 	KubeClients []*kubeclientset.Clientset
 )
 
+var (
+	beforeSuiteFuncs []func()
+
+	RestConfigs []*rest.Config
+	KubeClients []*kubeclientset.Clientset
+)
+
 // NewFramework creates a test framework.
 func NewFramework(baseName string) *Framework {
 	f := &Framework{
