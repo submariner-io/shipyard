@@ -15,17 +15,19 @@ import (
 )
 
 var _ = Describe("[example] Basic example to demonstrate how to write tests using the framework", func() {
-	f := framework.NewDefaultFramework("basic-example")
+	f := framework.NewFramework("basic-example")
+
 	It("Should be able to list existing nodes on the cluster", func() {
-		testListingNodes(f)
+		testListingNodes()
 	})
+
 	It("Should be able to create a pod using the provided client", func() {
 		testCreatingAPod(f)
 	})
 })
 
-func testListingNodes(f *framework.Framework) {
-	for _, cs := range f.ClusterClients {
+func testListingNodes() {
+	for _, cs := range framework.KubeClients {
 		testListingNodesFromCluster(cs)
 	}
 }
@@ -71,7 +73,7 @@ var (
 )
 
 func testCreatingAPod(f *framework.Framework) {
-	for _, cs := range f.ClusterClients {
+	for _, cs := range framework.KubeClients {
 		testCreatingAPodInCluster(cs, f)
 	}
 }

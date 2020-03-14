@@ -6,7 +6,6 @@ import (
 	"strings"
 
 	"k8s.io/apimachinery/pkg/runtime/schema"
-	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/klog"
 )
 
@@ -24,7 +23,6 @@ type TestContextType struct {
 	ConnectionAttempts  uint
 	OperationTimeout    uint
 	GlobalnetEnabled    bool
-	ClusterClients      []*kubeclientset.Clientset
 	ClientQPS           float32
 	ClientBurst         int
 	GroupVersion        *schema.GroupVersion

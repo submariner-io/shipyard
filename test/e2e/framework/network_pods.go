@@ -83,7 +83,7 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 }
 
 func (np *NetworkPod) AwaitReady() {
-	pods := np.framework.ClusterClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	np.Pod = AwaitUntil("await pod ready", func() (interface{}, error) {
 		return pods.Get(np.Pod.Name, metav1.GetOptions{})
@@ -101,7 +101,7 @@ func (np *NetworkPod) AwaitReady() {
 }
 
 func (np *NetworkPod) AwaitFinish() {
-	pods := np.framework.ClusterClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
 		return pods.Get(np.Pod.Name, metav1.GetOptions{})
@@ -168,7 +168,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 		},
 	}
 
-	pc := np.framework.ClusterClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
 	np.Pod, err = pc.Create(&tcpCheckListenerPod)
 	Expect(err).NotTo(HaveOccurred())
@@ -211,7 +211,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 		},
 	}
 
-	pc := np.framework.ClusterClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
 	np.Pod, err = pc.Create(&tcpCheckConnectorPod)
 	Expect(err).NotTo(HaveOccurred())

@@ -40,7 +40,7 @@ func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (st
 	Expect(err).To(Succeed(), fmt.Sprintf("ExecWithOptions %#v", options))
 
 	const tty = false
-	req := f.ClusterClients[index].CoreV1().RESTClient().Post().
+	req := KubeClients[index].CoreV1().RESTClient().Post().
 		Resource("pods").
 		Name(options.PodName).
 		Namespace(options.Namespace).

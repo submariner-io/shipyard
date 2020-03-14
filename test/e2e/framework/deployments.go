@@ -11,7 +11,7 @@ import (
 
 func (f *Framework) FindDeployment(cluster ClusterIndex, appName string, namespace string) *appsv1.Deployment {
 	deployments := AwaitUntil("list deployments", func() (interface{}, error) {
-		return f.ClusterClients[cluster].AppsV1().Deployments(namespace).List(metav1.ListOptions{
+		return KubeClients[cluster].AppsV1().Deployments(namespace).List(metav1.ListOptions{
 			LabelSelector: "app=" + appName,
 		})
 	}, NoopCheckResult).(*appsv1.DeploymentList)
@@ -107,7 +107,7 @@ func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 }
 
 func create(f *Framework, cluster ClusterIndex, deployment *appsv1.Deployment) *corev1.PodList {
-	pc := f.ClusterClients[cluster].AppsV1().Deployments(f.Namespace)
+	pc := KubeClients[cluster].AppsV1().Deployments(f.Namespace)
 	appName := deployment.Spec.Template.ObjectMeta.Labels["app"]
 
 	_ = AwaitUntil("create deployment", func() (interface{}, error) {

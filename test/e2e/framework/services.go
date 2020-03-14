@@ -31,7 +31,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 		},
 	}
 
-	services := f.ClusterClients[cluster].CoreV1().Services(f.Namespace)
+	services := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return AwaitUntil("create service", func() (interface{}, error) {
 		service, err := services.Create(&tcpService)
@@ -75,7 +75,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 		},
 	}
 
-	sc := f.ClusterClients[cluster].CoreV1().Services(f.Namespace)
+	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 	service := AwaitUntil("create service", func() (interface{}, error) {
 		return sc.Create(&nginxService)
 
@@ -86,6 +86,6 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 	ginkgo.By(fmt.Sprintf("Deleting service %q on %q", serviceName, TestContext.ClusterIDs[cluster]))
 	AwaitUntil("delete service", func() (interface{}, error) {
-		return nil, f.ClusterClients[cluster].CoreV1().Services(f.Namespace).Delete(serviceName, &metav1.DeleteOptions{})
+		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(serviceName, &metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
