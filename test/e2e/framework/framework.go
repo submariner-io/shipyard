@@ -72,10 +72,7 @@ type Framework struct {
 	// Set together with creating the ClientSet and the namespace.
 	// Guaranteed to be unique in the cluster even when running the same
 	// test multiple times in parallel.
-	UniqueName string
-
-	ClusterClients []*kubeclientset.Clientset
-
+	UniqueName               string
 	SkipNamespaceCreation    bool            // Whether to skip creating a namespace
 	Namespace                string          // Every test has a namespace at least unless creation is skipped
 	namespacesToDelete       map[string]bool // Some tests have more than one.
@@ -87,11 +84,12 @@ type Framework struct {
 	cleanupHandle CleanupActionHandle
 }
 
-// NewDefaultFramework makes a new framework and sets up a BeforeEach/AfterEach for
-// you (you can write additional before/after each functions).
-func NewDefaultFramework(baseName string) *Framework {
-	return NewFramework(baseName)
-}
+var (
+	beforeSuiteFuncs []func()
+
+	RestConfigs []*rest.Config
+	KubeClients []*kubeclientset.Clientset
+)
 
 // NewFramework creates a test framework.
 func NewFramework(baseName string) *Framework {
@@ -106,6 +104,10 @@ func NewFramework(baseName string) *Framework {
 	return f
 }
 
+func AddBeforeSuite(beforeSuite func()) {
+	beforeSuiteFuncs = append(beforeSuiteFuncs, beforeSuite)
+}
+
 func BeforeSuite() {
 	ginkgo.By("Creating kubernetes clients")
 
@@ -113,7 +115,7 @@ func BeforeSuite() {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
 			"Either KubeConfig or KubeConfigs must be specified but not both")
 		for _, context := range TestContext.KubeContexts {
-			TestContext.ClusterClients = append(TestContext.ClusterClients, createKubernetesClient(TestContext.KubeConfig, context))
+			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, context))
 		}
 
 		// if cluster IDs are not provided we assume that cluster-id == context
@@ -125,10 +127,18 @@ func BeforeSuite() {
 		Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
 			"One ClusterID must be provided for each item in the KubeConfigs")
 		for _, kubeConfig := range TestContext.KubeConfigs {
-			TestContext.ClusterClients = append(TestContext.ClusterClients, createKubernetesClient(kubeConfig, ""))
+			RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
 		}
 	} else {
 		ginkgo.Fail("One of KubeConfig or KubeConfigs must be specified")
+	}
+
+	for _, restConfig := range RestConfigs {
+		KubeClients = append(KubeClients, createKubernetesClient(restConfig))
+	}
+
+	for _, beforeSuite := range beforeSuiteFuncs {
+		beforeSuite()
 	}
 }
 
@@ -137,8 +147,6 @@ func (f *Framework) BeforeEach() {
 	// https://github.com/onsi/ginkgo/issues/222
 	f.cleanupHandle = AddCleanupAction(f.AfterEach)
 
-	f.ClusterClients = TestContext.ClusterClients
-
 	if !f.SkipNamespaceCreation {
 		ginkgo.By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
@@ -146,7 +154,7 @@ func (f *Framework) BeforeEach() {
 			"e2e-framework": f.BaseName,
 		}
 
-		for idx, clientSet := range f.ClusterClients {
+		for idx, clientSet := range KubeClients {
 			switch ClusterIndex(idx) {
 			case ClusterA: // On the first cluster we let k8s generate a name for the namespace
 				namespace := generateNamespace(clientSet, f.BaseName, namespaceLabels)
@@ -165,8 +173,7 @@ func (f *Framework) BeforeEach() {
 
 }
 
-func createKubernetesClient(kubeConfig, context string) *kubeclientset.Clientset {
-	restConfig := createRestConfig(kubeConfig, context)
+func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 	clientSet, err := kubeclientset.NewForConfig(restConfig)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -233,7 +240,6 @@ func (f *Framework) AfterEach() {
 
 		// Paranoia-- prevent reuse!
 		f.Namespace = ""
-		f.ClusterClients = nil
 
 		// if we had errors deleting, report them now.
 		if len(nsDeletionErrors) != 0 {
@@ -245,7 +251,7 @@ func (f *Framework) AfterEach() {
 
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	var errs []error
-	for i, clientSet := range f.ClusterClients {
+	for i, clientSet := range KubeClients {
 		ginkgo.By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
 		if err := deleteNamespace(clientSet, ns); err != nil {
 			switch {
