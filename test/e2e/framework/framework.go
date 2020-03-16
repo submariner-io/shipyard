@@ -29,11 +29,6 @@ const (
 	PollInterval = 100 * time.Millisecond
 )
 
-const (
-	HostNetworking = true
-	PodNetworking  = false
-)
-
 type ClusterIndex int
 
 const (
@@ -83,13 +78,6 @@ type Framework struct {
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
 }
-
-var (
-	beforeSuiteFuncs []func()
-
-	RestConfigs []*rest.Config
-	KubeClients []*kubeclientset.Clientset
-)
 
 var (
 	beforeSuiteFuncs []func()
