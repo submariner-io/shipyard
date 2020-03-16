@@ -12,6 +12,13 @@ import (
 	. "github.com/onsi/gomega"
 )
 
+type NetworkingType bool
+
+const (
+	HostNetworking NetworkingType = true
+	PodNetworking  NetworkingType = false
+)
+
 type NetworkPodType int
 
 const (
@@ -37,7 +44,7 @@ type NetworkPodConfig struct {
 	RemoteIP           string
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
-	NetworkType        bool
+	Networking         NetworkingType
 	// TODO: namespace, once https://github.com/submariner-io/submariner/pull/141 is merged
 }
 
@@ -191,7 +198,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 		Spec: v1.PodSpec{
 			Affinity:      nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
-			HostNetwork:   np.Config.NetworkType,
+			HostNetwork:   bool(np.Config.Networking),
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-connector",
