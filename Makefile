@@ -1,5 +1,5 @@
 
-TARGETS := $(shell ls scripts)
+TARGETS := $(shell ls scripts | grep -v dapper-image)
 
 .dapper:
 	@echo Downloading dapper
@@ -8,7 +8,13 @@ TARGETS := $(shell ls scripts)
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
-$(TARGETS): .dapper
+dapper-image: .dapper
+	./.dapper -m bind dapper-image
+
+shell:
+	./.dapper -m bind -s
+
+$(TARGETS): .dapper dapper-image
 	./.dapper -m bind $@
 
 .DEFAULT_GOAL := ci
