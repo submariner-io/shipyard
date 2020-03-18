@@ -10,7 +10,7 @@ git:
 
 jobs:
   include:
-  - env: CMD="make validate"
+  - env: CMD="make validate" DEPLOY=true
 
 install:
   - sudo apt-get install moreutils # make ts available
@@ -21,3 +21,10 @@ services:
 script:
   - set -o pipefail;
     $CMD 2>&1 | ts '[%H:%M:%.S]' -s
+
+deploy:
+  - provider: script
+    script: bash scripts/release
+    on:
+      branch: master
+      condition: $DEPLOY = true
