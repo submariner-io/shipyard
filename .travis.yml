@@ -1,0 +1,23 @@
+dist: xenial
+language: go
+
+branches:
+  only:
+  - master
+
+git:
+  depth: false
+
+jobs:
+  include:
+  - env: CMD="make validate"
+
+install:
+  - sudo apt-get install moreutils # make ts available
+
+services:
+  - docker
+
+script:
+  - set -o pipefail;
+    $CMD 2>&1 | ts '[%H:%M:%.S]' -s
