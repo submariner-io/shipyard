@@ -6,7 +6,6 @@ import (
 	. "github.com/onsi/gomega"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -22,7 +21,7 @@ func (f *Framework) FindDeployment(cluster ClusterIndex, appName string, namespa
 	return &deployments.Items[0]
 }
 
-func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *v1.PodList {
+func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *corev1.PodList {
 	var replicaCount int32 = 1
 	netShootDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -64,7 +63,7 @@ func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *v1.PodList {
 	return create(f, cluster, netShootDeployment)
 }
 
-func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *v1.PodList {
+func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 	var replicaCount int32 = 1
 	var port int32 = 80
 	nginxDeployment := &appsv1.Deployment{
@@ -107,7 +106,7 @@ func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *v1.PodList {
 	return create(f, cluster, nginxDeployment)
 }
 
-func create(f *Framework, cluster ClusterIndex, deployment *appsv1.Deployment) *v1.PodList {
+func create(f *Framework, cluster ClusterIndex, deployment *appsv1.Deployment) *corev1.PodList {
 	pc := f.ClusterClients[cluster].AppsV1().Deployments(f.Namespace)
 	appName := deployment.Spec.Template.ObjectMeta.Labels["app"]
 
