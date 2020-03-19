@@ -8,7 +8,10 @@ TARGETS := $(shell ls scripts)
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
-$(TARGETS): .dapper
+shell:
+	./.dapper -m bind -s
+
+$(TARGETS): .dapper dapper-image
 	./.dapper -m bind $@
 
 .DEFAULT_GOAL := ci
