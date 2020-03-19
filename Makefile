@@ -1,5 +1,5 @@
 
-TARGETS := $(shell ls scripts | grep -v dapper-image)
+TARGETS := $(shell ls scripts)
 
 .dapper:
 	@echo Downloading dapper
@@ -7,9 +7,6 @@ TARGETS := $(shell ls scripts | grep -v dapper-image)
 	@@chmod +x .dapper.tmp
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
-
-dapper-image: .dapper
-	./.dapper -m bind dapper-image
 
 shell:
 	./.dapper -m bind -s
