@@ -8,9 +8,18 @@ import (
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 )
 
+const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
+
+type EndpointType int
+
+const (
+	PodIP EndpointType = iota
+	ServiceIP
+	GlobalIP
+)
+
 type ConnectivityTestParams struct {
 	Framework             *framework.Framework
-	UseService            bool
 	Networking            framework.NetworkingType
 	ConnectionTimeout     uint
 	ConnectionAttempts    uint
@@ -18,6 +27,7 @@ type ConnectivityTestParams struct {
 	FromClusterScheduling framework.NetworkPodScheduling
 	ToCluster             framework.ClusterIndex
 	ToClusterScheduling   framework.NetworkPodScheduling
+	ToEndpointType        EndpointType
 }
 
 func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
@@ -41,9 +51,18 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 	// HostNetwork, it does not get an IPAddress from the podCIDR and it uses the HostIP. Submariner, for such PODs,
 	// would MASQUERADE the external traffic from that POD to the corresponding CNI interface ip-address on that
 	// Host. So, we skip source-ip validation for PODs using HostNetworking.
-	if p.Networking == framework.PodNetworking {
+	if p.Networking == framework.PodNetworking && p.ToEndpointType != GlobalIP {
 		By("Verifying the output of listener pod which must contain the source IP")
 		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
+	}
+
+	// When Globalnet is enabled (i.e., remoteEndpoint is a globalIP), Globalnet Controller MASQUERADEs
+	// the source-ip of the POD to the corresponding global-ip that is assigned to the POD.
+	if p.ToEndpointType == GlobalIP {
+		By("Verifying the output of listener pod which must contain the globalIP of the connector POD")
+		podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
+		Expect(podGlobalIP).ToNot(Equal(""))
+		Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
 	}
 
 	// Return the pods in case further verification is needed
@@ -85,10 +104,16 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	})
 
 	remoteIP := listenerPod.Pod.Status.PodIP
-	if p.UseService {
+	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalIP {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q", framework.TestContext.ClusterIDs[p.ToCluster]))
 		service := listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
+
+		if p.ToEndpointType == GlobalIP {
+			// Wait for the globalIP annotation on the service.
+			service = p.Framework.AwaitServiceByAnnotation(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
+			remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
+		}
 	}
 
 	framework.Logf("Will send traffic to IP: %v", remoteIP)

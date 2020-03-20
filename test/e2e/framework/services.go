@@ -5,7 +5,9 @@ import (
 
 	"github.com/onsi/ginkgo"
 	corev1 "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
 )
@@ -88,4 +90,25 @@ func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 	AwaitUntil("delete service", func() (interface{}, error) {
 		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(serviceName, &metav1.DeleteOptions{})
 	}, NoopCheckResult)
+}
+
+// AwaitServiceByAnnotation queries the service and looks for the presence of annotation.
+func (f *Framework) AwaitServiceByAnnotation(cluster ClusterIndex, annotation string, svcName string, namespace string) *v1.Service {
+	return AwaitUntil("get"+annotation+" annotation for service "+svcName, func() (interface{}, error) {
+		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(svcName, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return service, err
+	}, func(result interface{}) (bool, string, error) {
+		if result == nil {
+			return false, "No Service found", nil
+		}
+
+		service := result.(*v1.Service)
+		if service.GetAnnotations()[annotation] == "" {
+			return false, fmt.Sprintf("Service %q does not have annotation %q yet", svcName, annotation), nil
+		}
+		return true, "", nil
+	}).(*corev1.Service)
 }
