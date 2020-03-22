@@ -1,3 +1,5 @@
+k8s_version ?= 1.14.6
+globalnet ?= false
 
 TARGETS := $(shell ls scripts)
 
@@ -12,7 +14,7 @@ shell:
 	./.dapper -m bind -s
 
 $(TARGETS): .dapper dapper-image
-	./.dapper -m bind $@
+	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet)
 
 .DEFAULT_GOAL := ci
 
