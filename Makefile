@@ -1,5 +1,6 @@
 k8s_version ?= 1.14.6
 globalnet ?= false
+deploytool ?= operator
 
 TARGETS := $(shell ls scripts)
 
@@ -13,8 +14,11 @@ TARGETS := $(shell ls scripts)
 shell:
 	./.dapper -m bind -s
 
+# Deployment needs clusters installed
+deploy: .dapper dapper-image clusters
+
 $(TARGETS): .dapper dapper-image
-	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet)
+	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet) --deploytool $(deploytool)
 
 .DEFAULT_GOAL := ci
 

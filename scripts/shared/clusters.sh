@@ -4,12 +4,6 @@ set -em
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 
-### Constants ###
-
-readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
-readonly OUTPUT_DIR=${DAPPER_OUTPUT}
-readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
-
 ### Functions ###
 
 function render_template() {
@@ -117,6 +111,6 @@ registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTR
 
 declare_cidrs $globalnet
 run_parallel "{1..3}" create_kind_cluster
-export KUBECONFIG=$(echo ${KUBECONFIGS_DIR}/kind-config-cluster{1..3} | sed 's/ /:/g')
+declare_kubeconfig
 run_parallel "2 3" deploy_weave_cni
 
