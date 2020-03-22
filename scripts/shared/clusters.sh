@@ -2,44 +2,15 @@
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
+source ${SCRIPTS_DIR}/lib/utils
 
 ### Constants ###
 
 readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
-readonly KIND_REGISTRY=kind-registry
 
 ### Functions ###
-
-# Mask kubectl to use cluster context if the variable is set and context isn't specified,
-# otherwise use the config context as always.
-function kubectl() {
-    context_flag=""
-    if [[ -n "${cluster}" && ! "${@}" =~ "context" ]]; then
-        context_flag="--context=${cluster}"
-    fi
-    command kubectl ${context_flag} "$@"
-}
-
-# Run cluster commands in parallel.
-# 1st argument is the numbers of the clusters to run for, supports "1 2 3" or "{1..3}" for range
-# 2nd argument is the command to execute, which will have the $cluster variable set.
-function run_parallel() {
-    clusters=$(eval echo "$1")
-    cmnd=$2
-    declare -A pids
-    for i in ${clusters}; do
-        cluster="cluster${i}"
-        ( $cmnd | sed "s/^/[${cluster}] /" ) &
-        unset cluster
-        pids["${i}"]=$!
-    done
-
-    for i in ${!pids[@]}; do
-        wait ${pids[$i]}
-    done
-}
 
 function render_template() {
     eval "echo \"$(cat $1)\""
@@ -99,11 +70,6 @@ function deploy_weave_cni(){
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=300s
     echo "Waiting for core-dns deployment to be ready..."
     kubectl -n kube-system rollout status deploy/coredns --timeout=300s
-}
-
-function registry_running() {
-    docker ps --filter name="^/?$KIND_REGISTRY$" | grep $KIND_REGISTRY
-    return $?
 }
 
 
