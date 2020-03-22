@@ -101,16 +101,6 @@ done
 
 echo "Running with: k8s_version=${version}, globalnet=${globalnet}"
 
-if [[ $globalnet = "true" ]]; then
-    # When globalnet is set to true, we want to deploy clusters with overlapping CIDRs
-    declare -A cluster_CIDRs=( ["cluster1"]="10.244.0.0/16" ["cluster2"]="10.244.0.0/16" ["cluster3"]="10.244.0.0/16" )
-    declare -A service_CIDRs=( ["cluster1"]="100.94.0.0/16" ["cluster2"]="100.94.0.0/16" ["cluster3"]="100.94.0.0/16" )
-    declare -A global_CIDRs=( ["cluster1"]="169.254.1.0/24" ["cluster2"]="169.254.2.0/24" ["cluster3"]="169.254.3.0/24" )
-else
-    declare -A cluster_CIDRs=( ["cluster1"]="10.244.0.0/16" ["cluster2"]="10.245.0.0/16" ["cluster3"]="10.246.0.0/16" )
-    declare -A service_CIDRs=( ["cluster1"]="100.94.0.0/16" ["cluster2"]="100.95.0.0/16" ["cluster3"]="100.96.0.0/16" )
-fi
-
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
@@ -125,6 +115,7 @@ fi
 # This IP is consumed by kind to point the registry mirror correctly to the local registry
 registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
 
+declare_cidrs $globalnet
 run_parallel "{1..3}" create_kind_cluster
 export KUBECONFIG=$(echo ${KUBECONFIGS_DIR}/kind-config-cluster{1..3} | sed 's/ /:/g')
 run_parallel "2 3" deploy_weave_cni
