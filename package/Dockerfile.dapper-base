@@ -1,11 +1,12 @@
 FROM fedora:31
 
-ENV DAPPER_HOST_ARCH=amd64
+ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard/
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     LINT_VERSION=v1.18.0 \
     HELM_VERSION=v2.14.1 \
     KIND_VERSION=v0.6.1 \
-    KUBEFED_VERSION=0.1.0-rc3
+    KUBEFED_VERSION=0.1.0-rc3 \
+    SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARCH} \
     GOPATH=/go GO111MODULE=on PATH=/go/bin:/usr/local/go/bin:${PATH} SHELL=/bin/bash GOFLAGS=-mod=vendor \
@@ -51,6 +52,5 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
-# TODO: uncomment when we have the scripts
-#WORKDIR /opt/kind-e2e
-#COPY scripts/kind-e2e/ .
+WORKDIR $SCRIPTS_DIR
+COPY scripts/shared/ .

@@ -4,8 +4,8 @@ set -e
 DEPLOY="${DEPLOY:-false}"
 
 
-source $(dirname $0)/lib/debug_functions
-source $(dirname $0)/lib/version
+source $(dirname $0)/shared/lib/debug_functions
+source $(dirname $0)/shared/lib/version
 
 
 # This flag is passed from travis, so only the right jobs will deploy the
