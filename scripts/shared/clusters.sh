@@ -66,6 +66,19 @@ function deploy_weave_cni(){
     kubectl -n kube-system rollout status deploy/coredns --timeout=300s
 }
 
+function run_local_registry() {
+    # Run a local registry to avoid loading images manually to kind
+    if registry_running; then
+        echo "Local registry $KIND_REGISTRY already running."
+    else
+        echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
+        docker run -d -p 5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+    fi
+
+    # This IP is consumed by kind to point the registry mirror correctly to the local registry
+    registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
+}
+
 
 ### Main ###
 
@@ -98,17 +111,7 @@ echo "Running with: k8s_version=${version}, globalnet=${globalnet}"
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
-# Run a local registry to avoid loading images manually to kind
-if registry_running; then
-    echo Local registry $KIND_REGISTRY already running.
-else
-    echo Deploying local registry $KIND_REGISTRY to serve images centrally.
-    docker run -d -p 5000:5000 --restart=always --name $KIND_REGISTRY registry:2
-fi
-
-# This IP is consumed by kind to point the registry mirror correctly to the local registry
-registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
-
+run_local_registry
 declare_cidrs
 run_parallel "{1..3}" create_kind_cluster
 declare_kubeconfig
