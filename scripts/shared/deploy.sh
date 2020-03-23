@@ -124,7 +124,7 @@ done
 
 echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
 
-declare_cidrs $globalnet
+declare_cidrs
 declare_kubeconfig
 
 echo "Will deploy submariner using ${deploytool}"

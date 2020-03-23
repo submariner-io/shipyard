@@ -11,15 +11,15 @@ function render_template() {
 }
 
 function generate_cluster_yaml() {
-    pod_cidr="${cluster_CIDRs[$1]}"
-    service_cidr="${service_CIDRs[$1]}"
-    dns_domain="$1.local"
+    pod_cidr="${cluster_CIDRs[${cluster}]}"
+    service_cidr="${service_CIDRs[${cluster}]}"
+    dns_domain="${cluster}.local"
     disable_cni="true"
-    if [[ "$1" = "cluster1" ]]; then
+    if [[ "${cluster}" = "cluster1" ]]; then
         disable_cni="false"
     fi
 
-    render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/$1-config.yaml
+    render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/${cluster}-config.yaml
 }
 
 function kind_fixup_config() {
@@ -37,19 +37,19 @@ function create_kind_cluster() {
     if [[ $(kind get clusters | grep "^${cluster}$" | wc -l) -gt 0  ]]; then
         echo "KIND cluster already exists, skipping its creation..."
         kind export kubeconfig --name=${cluster}
-        kind_fixup_config ${cluster}
+        kind_fixup_config
         return
     fi
 
     echo "Creating KIND cluster..."
-    generate_cluster_yaml "${cluster}"
+    generate_cluster_yaml
     image_flag=''
     if [[ -n ${version} ]]; then
         image_flag="--image=kindest/node:v${version}"
     fi
 
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
-    kind_fixup_config ${cluster}
+    kind_fixup_config
 }
 
 function deploy_weave_cni(){
@@ -109,7 +109,7 @@ fi
 # This IP is consumed by kind to point the registry mirror correctly to the local registry
 registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
 
-declare_cidrs $globalnet
+declare_cidrs
 run_parallel "{1..3}" create_kind_cluster
 declare_kubeconfig
 run_parallel "2 3" deploy_weave_cni
