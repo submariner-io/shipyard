@@ -34,10 +34,12 @@ function deploytool_prereqs() {
 }
 
 function setup_broker() {
-    cluster=$1
     echo "Installing broker..."
-    subctl --kubeconfig ${KUBECONFIGS_DIR}/kind-config-$cluster deploy-broker --no-dataplane
-    unset cluster
+    (
+        cluster=$1
+        cd ${OUTPUT_DIR}
+        subctl --kubeconfig ${KUBECONFIGS_DIR}/kind-config-$cluster deploy-broker --no-dataplane
+    )
 }
 
 function subctl_install_subm() {
@@ -49,7 +51,7 @@ function subctl_install_subm() {
                 --ikeport ${CE_IPSEC_IKEPORT} \
                 --colorcodes ${SUBM_COLORCODES} \
                 --disable-nat \
-                broker-info.subm
+                ${OUTPUT_DIR}/broker-info.subm
 }
 
 function install_subm_all_clusters() {
