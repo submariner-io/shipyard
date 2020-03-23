@@ -44,7 +44,6 @@ function registry_running() {
 }
 
 function declare_cidrs() {
-    globalnet=$1
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
 
     if [[ $globalnet = "true" ]]; then
