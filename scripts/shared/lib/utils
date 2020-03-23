@@ -43,18 +43,21 @@ function registry_running() {
     return $?
 }
 
+function add_cluster_cidrs() {
+    local idx="cluster${1}"
+    local val=$1
+    [[ $globalnet != "true" ]] || val="0"
+    cluster_CIDRs[$idx]="10.24${val}.0.0/16"
+    service_CIDRs[$idx]="100.9${val}.0.0/16"
+    [[ $globalnet != "true" ]] || global_CIDRs[$idx]="169.254.${1}.0/24"
+}
+
 function declare_cidrs() {
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
 
-    if [[ $globalnet = "true" ]]; then
-        # When globalnet is set to true, we want to deploy clusters with overlapping CIDRs
-        cluster_CIDRs=( ["cluster1"]="10.244.0.0/16" ["cluster2"]="10.244.0.0/16" ["cluster3"]="10.244.0.0/16" )
-        service_CIDRs=( ["cluster1"]="100.94.0.0/16" ["cluster2"]="100.94.0.0/16" ["cluster3"]="100.94.0.0/16" )
-        global_CIDRs=( ["cluster1"]="169.254.1.0/24" ["cluster2"]="169.254.2.0/24" ["cluster3"]="169.254.3.0/24" )
-    else
-        cluster_CIDRs=( ["cluster1"]="10.244.0.0/16" ["cluster2"]="10.245.0.0/16" ["cluster3"]="10.246.0.0/16" )
-        service_CIDRs=( ["cluster1"]="100.94.0.0/16" ["cluster2"]="100.95.0.0/16" ["cluster3"]="100.96.0.0/16" )
-    fi
+    for i in {1..3}; do
+        add_cluster_cidrs $i
+    done
 }
 
 function declare_kubeconfig() {
