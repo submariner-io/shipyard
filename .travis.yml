@@ -11,6 +11,8 @@ git:
 jobs:
   include:
   - env: CMD="make validate" DEPLOY=true
+  - env: CMD="make deploy deploytool=helm"
+  - env: CMD="make deploy deploytool=operator"
 
 install:
   - sudo apt-get install moreutils # make ts available
@@ -21,6 +23,11 @@ services:
 script:
   - set -o pipefail;
     $CMD 2>&1 | ts '[%H:%M:%.S]' -s
+
+after_success:
+ -  echo "Testing clean up";
+    set -o pipefail;
+    make cleanup 2>&1 | ts '[%H:%M:%.S]' -s
 
 deploy:
   - provider: script
