@@ -95,6 +95,17 @@ function deploy_resource() {
     unset cluster
 }
 
+function load_deploytool() {
+    local deploy_lib=${SCRIPTS_DIR}/lib/deploy_${deploytool}
+    if [[ ! -f $deploy_lib ]]; then
+        echo "Unknown deploy method: ${deploytool}"
+        exit 1
+    fi
+
+    echo "Will deploy submariner using ${deploytool}"
+    . $deploy_lib
+}
+
 
 ### Main ###
 
@@ -127,16 +138,7 @@ echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
 declare_cidrs
 declare_kubeconfig
 
-echo "Will deploy submariner using ${deploytool}"
-if [[ $deploytool = operator ]]; then
-    . ${SCRIPTS_DIR}/lib/deploy_operator
-elif [[ $deploytool = helm ]]; then
-    . ${SCRIPTS_DIR}/lib/deploy_helm
-else
-    echo "Unknown deploy method: ${deploytool}"
-    exit 1
-fi
-
+load_deploytool
 import_images
 
 # Install Helm/Operator deploy tool prerequisites
