@@ -1,8 +1,4 @@
-# This should only be sourced
-if [ "${0##*/}" = "version" ]; then
-    echo "Don't run me, source me" >&2
-    exit 1
-fi
+. ${BASH_SOURCE%/*}/source_only
 
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     DIRTY="-dirty"
