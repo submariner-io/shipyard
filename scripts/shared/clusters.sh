@@ -34,7 +34,7 @@ function kind_fixup_config() {
 
 function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
-    if [[ $(kind get clusters | grep "^${cluster}$" | wc -l) -gt 0  ]]; then
+    if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
         kind export kubeconfig --name=${cluster}
         kind_fixup_config
