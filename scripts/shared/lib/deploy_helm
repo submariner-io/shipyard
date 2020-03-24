@@ -29,7 +29,6 @@ function deploytool_prereqs() {
 }
 
 function setup_broker() {
-    cluster=$1
     if kubectl get crd clusters.submariner.io > /dev/null 2>&1; then
         echo "Submariner CRDs already exist, skipping broker creation..."
     else
@@ -40,7 +39,6 @@ function setup_broker() {
     SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
     SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
     SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
-    unset cluster
 }
 
 function helm_install_subm() {
@@ -48,6 +46,11 @@ function helm_install_subm() {
     cluster_cidr=${cluster_CIDRs[$cluster]}
     service_cidr=${service_CIDRs[$cluster]}
     global_cidr=${global_CIDRs[$cluster]}
+
+    if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n $SUBM_NS --timeout=60s > /dev/null 2>&1; then
+        echo "Submariner already installed, skipping installation..."
+        return
+    fi
 
     echo "Installing Submariner..."
     helm --kube-context ${cluster} install submariner-latest/submariner \
@@ -78,23 +81,9 @@ function helm_install_subm() {
 
 
 function install_subm_all_clusters() {
-    cluster=cluster1
-    if kubectl get crd clusters.submariner.io > /dev/null 2>&1; then
-        echo "Submariner CRDs already exist, skipping installation..."
-    else
-        helm_install_subm false
-    fi
+    with_context cluster1 helm_install_subm false
 
-    for i in 2 3; do
-      cluster=cluster$i
-      if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n $SUBM_NS --timeout=60s > /dev/null 2>&1; then
-          echo "Submariner already installed, skipping installation..."
-          continue
-      fi
-
-      helm_install_subm true
-      unset cluster
-    done
+    run_parallel "2 3" helm_install_subm true
 }
 
 function deploytool_postreqs() {
