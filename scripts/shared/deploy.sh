@@ -58,16 +58,15 @@ function test_connection() {
 
     echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_svc_ip_cluster3 nginx service cluster3"
 
-    attempt_counter=0
-    max_attempts=5
-    until $(kubectl exec ${netshoot_pod} -- curl --output /dev/null -m 30 --silent --head --fail ${nginx_svc_ip}); do
-        if [[ ${attempt_counter} -eq ${max_attempts} ]];then
-          echo "Max attempts reached, connection test failed!"
-          exit 1
+    for i in {1..5}; do
+        if kubectl exec ${netshoot_pod} -- curl --output /dev/null -m 30 --silent --head --fail ${nginx_svc_ip}; then
+            echo "Connection test was successful!"
+            return
         fi
-        attempt_counter=$(($attempt_counter+1))
     done
-    echo "Connection test was successful!"
+
+    echo "Max attempts reached, connection test failed!"
+    exit 1
 }
 
 function add_subm_gateway_label() {
