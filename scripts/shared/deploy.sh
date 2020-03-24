@@ -7,18 +7,11 @@ source ${SCRIPTS_DIR}/lib/utils
 
 ### Functions ###
 
-function import_images() {
-    docker tag quay.io/submariner/submariner:$VERSION localhost:5000/submariner:local
-    docker tag quay.io/submariner/submariner-route-agent:$VERSION localhost:5000/submariner-route-agent:local
-    if [[ $globalnet = "true" ]]; then
-        docker tag quay.io/submariner/submariner-globalnet:$VERSION localhost:5000/submariner-globalnet:local
-    fi
-
-    docker push localhost:5000/submariner:local
-    docker push localhost:5000/submariner-route-agent:local
-    if [[ $globalnet = "true" ]]; then
-        docker push localhost:5000/submariner-globalnet:local
-    fi
+function import_image() {
+    local orig_image="$1:$VERSION"
+    local local_image="localhost:5000/${1##*/}:local"
+    docker tag ${orig_image} ${local_image}
+    docker push ${local_image}
 }
 
 function get_globalip() {
@@ -138,10 +131,11 @@ echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
 declare_cidrs
 declare_kubeconfig
 
-load_deploytool
-import_images
+import_image quay.io/submariner/submariner
+import_image quay.io/submariner/submariner-route-agent
+[[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
 
-# Install Helm/Operator deploy tool prerequisites
+load_deploytool
 deploytool_prereqs
 
 run_parallel "{1..3}" prepare_cluster
