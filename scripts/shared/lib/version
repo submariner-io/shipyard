@@ -1,14 +1,13 @@
 . ${BASH_SOURCE%/*}/source_only
 
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-    DIRTY="-dirty"
+    dirty="-dirty"
 fi
 
-COMMIT=$(git rev-parse --short HEAD)
-GIT_TAG=$(git tag -l --contains HEAD | head -n 1)
+git_tag=$(git tag -l --contains HEAD | head -n 1)
 
-if [[ -z "$DIRTY" && -n "$GIT_TAG" ]]; then
-    VERSION=$GIT_TAG
+if [[ -z "$dirty" && -n "$git_tag" ]]; then
+    readonly VERSION=$git_tag
 else
-    VERSION="dev"
+    readonly VERSION="dev"
 fi

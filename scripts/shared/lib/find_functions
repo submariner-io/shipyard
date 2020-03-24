@@ -1,21 +1,21 @@
 function find_go_pkg_dirs() {
-    local BASE EXCLUDED_PKG_DIRS FIND_EXCLUDE PACKAGE_DIRS
+    local base excluded_pkg_dirs find_exclude package_dirs
 
-    BASE=${2:-.}
-    EXCLUDED_PKG_DIRS=${EXCLUDE_PKG_DIRS:-vendor test .git .trash-cache bin}
+    base=${2:-.}
+    excluded_pkg_dirs=${EXCLUDE_PKG_DIRS:-vendor test .git .trash-cache bin}
 
-    for excldir in $EXCLUDED_PKG_DIRS; do
-        FIND_EXCLUDE="-path ./$excldir -prune -o $FIND_EXCLUDE"
+    for excldir in $excluded_pkg_dirs; do
+        find_exclude="-path ./$excldir -prune -o $find_exclude"
     done
 
 
-    PACKAGE_DIRS="$(find . $FIND_EXCLUDE -path './*/*.go' -print | \
+    package_dirs="$(find . $find_exclude -path './*/*.go' -print | \
                       cut -f2 -d/ | \
                       sort -u)"
 
     if [[ "x$1" != "x--no-trailing-dots" ]]; then
-        PACKAGE_DIRS=$(echo "$PACKAGE_DIRS" | sed -e 's![^ ]*!./&/...!g')
+        package_dirs=$(echo "$package_dirs" | sed -e 's![^ ]*!./&/...!g')
     fi
 
-    echo "$BASE $PACKAGE_DIRS"
+    echo "$base $package_dirs"
 }

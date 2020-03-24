@@ -12,7 +12,7 @@ readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
 # Mask kubectl to use cluster context if the variable is set and context isn't specified,
 # otherwise use the config context as always.
 function kubectl() {
-    context_flag=""
+    local context_flag=""
     if [[ -n "${cluster}" && ! "${@}" =~ "context" ]]; then
         context_flag="--context=${cluster}"
     fi
@@ -34,8 +34,8 @@ function with_context() {
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
-    clusters=$(eval echo "$1")
-    cmnd=$2
+    local clusters=$(eval echo "$1")
+    local cmnd=$2
     declare -A pids
     for i in ${clusters}; do
         ( with_context "cluster${i}" $cmnd "${@:3}" | sed "s/^/[cluster${i}] /" ) &
