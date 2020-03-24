@@ -15,17 +15,18 @@ function import_image() {
 }
 
 function get_globalip() {
-    svcname=$1
+    local svc_name=$1
+
     # It takes a while for globalIp annotation to show up on a service
-    for i in {0..30}
-    do
-        gip=$(kubectl get svc $svcname -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
+    for i in {0..30}; do
+        local gip=$(kubectl get svc $svc_name -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
         if [[ -n ${gip} ]]; then
-          echo $gip
-          return
+            echo $gip
+            return
         fi
         sleep 1
     done
+
     echo "Max attempts reached, failed to get globalIp!"
     exit 1
 }
@@ -41,13 +42,13 @@ function get_svc_ip() {
 }
 
 function test_connection() {
-    nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
+    local nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
     if [[ -z "$nginx_svc_ip" ]]; then
         echo "Failed to get nginx-demo IP"
         exit 1
     fi
 
-    netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+    local netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
     echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_svc_ip_cluster3 nginx service cluster3"
 
@@ -81,8 +82,8 @@ function prepare_cluster() {
 }
 
 function deploy_resource() {
-    resource_file=$1
-    resource_name=$(basename "$resource_file" ".yaml")
+    local resource_file=$1
+    local resource_name=$(basename "$resource_file" ".yaml")
     kubectl apply -f ${resource_file}
     echo "Waiting for ${resource_name} pods to be ready."
     kubectl rollout status deploy/${resource_name} --timeout=120s

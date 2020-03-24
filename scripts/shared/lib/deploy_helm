@@ -36,16 +36,13 @@ function setup_broker() {
         helm --kube-context ${cluster} install submariner-latest/submariner-k8s-broker --name ${SUBMARINER_BROKER_NS} --namespace ${SUBMARINER_BROKER_NS}
     fi
 
-    SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-    SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
-    SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
+    submariner_broker_url=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+    submariner_broker_ca=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+    submariner_broker_token=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
 }
 
 function helm_install_subm() {
-    crd_create=$1
-    cluster_cidr=${cluster_CIDRs[$cluster]}
-    service_cidr=${service_CIDRs[$cluster]}
-    global_cidr=${global_CIDRs[$cluster]}
+    local crd_create=$1
 
     if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n $SUBM_NS --timeout=60s > /dev/null 2>&1; then
         echo "Submariner already installed, skipping installation..."
@@ -57,14 +54,14 @@ function helm_install_subm() {
         --name submariner \
         --namespace submariner \
         --set ipsec.psk="${SUBMARINER_PSK}" \
-        --set broker.server="${SUBMARINER_BROKER_URL}" \
-        --set broker.token="${SUBMARINER_BROKER_TOKEN}" \
+        --set broker.server="${submariner_broker_url}" \
+        --set broker.token="${submariner_broker_token}" \
         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
-        --set broker.ca="${SUBMARINER_BROKER_CA}" \
+        --set broker.ca="${submariner_broker_ca}" \
         --set submariner.clusterId="${cluster}" \
-        --set submariner.clusterCidr="${cluster_cidr}" \
-        --set submariner.serviceCidr="${service_cidr}" \
-        --set submariner.globalCidr="${global_cidr}" \
+        --set submariner.clusterCidr="${cluster_CIDRs[$cluster]}" \
+        --set submariner.serviceCidr="${service_CIDRs[$cluster]}" \
+        --set submariner.globalCidr="${global_CIDRs[$cluster]}" \
         --set serviceAccounts.globalnet.create=${globalnet} \
         --set submariner.natEnabled="false" \
         --set routeAgent.image.repository="localhost:5000/submariner-route-agent" \

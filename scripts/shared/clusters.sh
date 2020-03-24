@@ -11,10 +11,10 @@ function render_template() {
 }
 
 function generate_cluster_yaml() {
-    pod_cidr="${cluster_CIDRs[${cluster}]}"
-    service_cidr="${service_CIDRs[${cluster}]}"
-    dns_domain="${cluster}.local"
-    disable_cni="true"
+    local pod_cidr="${cluster_CIDRs[${cluster}]}"
+    local service_cidr="${service_CIDRs[${cluster}]}"
+    local dns_domain="${cluster}.local"
+    local disable_cni="true"
     if [[ "${cluster}" = "cluster1" ]]; then
         disable_cni="false"
     fi
@@ -23,7 +23,7 @@ function generate_cluster_yaml() {
 }
 
 function kind_fixup_config() {
-    master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${cluster}-control-plane | head -n 1)
+    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${cluster}-control-plane | head -n 1)
     sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" $KUBECONFIG
     sed -i -- "s/user: kind-.*/user: ${cluster}/g" $KUBECONFIG
     sed -i -- "s/name: kind-.*/name: ${cluster}/g" $KUBECONFIG
@@ -43,7 +43,7 @@ function create_kind_cluster() {
 
     echo "Creating KIND cluster..."
     generate_cluster_yaml
-    image_flag=''
+    local image_flag=''
     if [[ -n ${version} ]]; then
         image_flag="--image=kindest/node:v${version}"
     fi
