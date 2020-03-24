@@ -8,34 +8,48 @@ source ${SCRIPTS_DIR}/lib/utils
 ### Functions ###
 
 function delete_cluster() {
-    if [[ $(kind get clusters | grep ${cluster} | wc -l) -gt 0  ]]; then
+    if kind get clusters | grep -q ${cluster}; then
         kind delete cluster --name=${cluster};
     fi
 }
 
-function cleanup {
-    run_parallel "{1..3}" delete_cluster
-
-    echo Removing local KIND registry...
+function stop_local_registry {
     if registry_running; then
+        echo "Stopping local KIND registry..."
         docker stop $KIND_REGISTRY
     fi
+}
 
-    if [[ $(docker ps -qf status=exited | wc -l) -gt 0 ]]; then
-        echo Cleaning containers...
-        docker ps -qf status=exited | xargs docker rm -f
+function cleanup_containers {
+    local containers=$(docker ps -qf status=exited)
+    if [[ -n ${containers} ]]; then
+        echo "Cleaning containers..."
+        docker rm -f ${containers}
     fi
-    if [[ $(docker images -qf dangling=true | wc -l) -gt 0 ]]; then
-        echo Cleaning images...
-        docker images -qf dangling=true | xargs docker rmi -f
+}
+
+function cleanup_images {
+    local dangling_images=$(docker images -qf dangling=true)
+    if [[ -n ${dangling_images} ]]; then
+        echo "Cleaning images..."
+        docker rmi -f ${dangling_images}
     fi
-    if [[ $(docker volume ls -qf dangling=true | wc -l) -gt 0 ]]; then
-        echo Cleaning volumes...
-        docker volume ls -qf dangling=true | xargs docker volume rm -f
+}
+
+function cleanup_volumes {
+    local dangling_volumes=$(docker volume ls -qf dangling=true)
+    if [[ -n ${dangling_volumes} ]]; then
+        echo "Cleaning volumes..."
+        docker volume rm -f ${dangling_volumes}
     fi
 }
 
 
 ### Main ###
 
-cleanup
+run_parallel "{1..3}" delete_cluster
+stop_local_registry
+cleanup_containers
+cleanup_images
+cleanup_volumes
+
