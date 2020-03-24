@@ -14,10 +14,8 @@ function generate_cluster_yaml() {
     local pod_cidr="${cluster_CIDRs[${cluster}]}"
     local service_cidr="${service_CIDRs[${cluster}]}"
     local dns_domain="${cluster}.local"
-    local disable_cni="true"
-    if [[ "${cluster}" = "cluster1" ]]; then
-        disable_cni="false"
-    fi
+    local disable_cni="false"
+    [[ "${cluster}" = "cluster1" ]] || disable_cni="true"
 
     render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/${cluster}-config.yaml
 }
@@ -43,11 +41,9 @@ function create_kind_cluster() {
 
     echo "Creating KIND cluster..."
     generate_cluster_yaml
-    local image_flag=''
-    if [[ -n ${version} ]]; then
-        image_flag="--image=kindest/node:v${version}"
-    fi
 
+    local image_flag=''
+    [[ -z ${version} ]] || image_flag="--image=kindest/node:v${version}"
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
 }

@@ -14,10 +14,10 @@ function delete_cluster() {
 }
 
 function stop_local_registry {
-    if registry_running; then
-        echo "Stopping local KIND registry..."
-        docker stop $KIND_REGISTRY
-    fi
+    registry_running || return 0
+
+    echo "Stopping local KIND registry..."
+    docker stop $KIND_REGISTRY
 }
 
 

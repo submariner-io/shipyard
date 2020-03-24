@@ -20,11 +20,9 @@ function get_globalip() {
     # It takes a while for globalIp annotation to show up on a service
     for i in {0..30}; do
         local gip=$(kubectl get svc $svc_name -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
-        if [[ -n ${gip} ]]; then
-            echo $gip
-            return
-        fi
-        sleep 1
+        [[ -n ${gip} ]] || { sleep 1; continue; }
+        echo $gip
+        return
     done
 
     echo "Max attempts reached, failed to get globalIp!"
@@ -43,10 +41,7 @@ function get_svc_ip() {
 
 function test_connection() {
     local nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
-    if [[ -z "$nginx_svc_ip" ]]; then
-        echo "Failed to get nginx-demo IP"
-        exit 1
-    fi
+    [[ -n "$nginx_svc_ip" ]] || { echo "Failed to get nginx-demo IP"; exit 1; }
 
     local netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
@@ -91,10 +86,7 @@ function deploy_resource() {
 
 function load_deploytool() {
     local deploy_lib=${SCRIPTS_DIR}/lib/deploy_${deploytool}
-    if [[ ! -f $deploy_lib ]]; then
-        echo "Unknown deploy method: ${deploytool}"
-        exit 1
-    fi
+    [[ -f $deploy_lib ]] || { echo "Unknown deploy method: ${deploytool}"; exit 1; }
 
     echo "Will deploy submariner using ${deploytool}"
     . $deploy_lib
