@@ -32,7 +32,6 @@ function deploytool_prereqs() {
 function setup_broker() {
     echo "Installing broker..."
     (
-        cluster=$1
         cd ${OUTPUT_DIR}
         subctl --kubeconfig ${KUBECONFIGS_DIR}/kind-config-$cluster deploy-broker --no-dataplane
     )
@@ -58,5 +57,5 @@ function deploytool_postreqs() {
     # FIXME: Make this unnecessary using subctl v0.0.4 --no-label flag
     # subctl wants a gateway node labeled, or it will ask, but this script is not interactive,
     # and E2E expects cluster1 to not have the gateway configured at start, so we remove it
-    del_subm_gateway_label cluster1
+    with_context cluster1 del_subm_gateway_label
 }

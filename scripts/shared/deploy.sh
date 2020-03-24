@@ -23,11 +23,10 @@ function import_images() {
 
 function get_globalip() {
     svcname=$1
-    context=$2
     # It takes a while for globalIp annotation to show up on a service
     for i in {0..30}
     do
-        gip=$(kubectl --context=$context get svc $svcname -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
+        gip=$(kubectl get svc $svcname -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
         if [[ -n ${gip} ]]; then
           echo $gip
           return
@@ -38,24 +37,30 @@ function get_globalip() {
     exit 1
 }
 
-function test_connection() {
-    if [[ $globalnet = "true" ]]; then
-        nginx_svc_ip_cluster3=$(get_globalip nginx-demo cluster3)
-    else
-        nginx_svc_ip_cluster3=$(kubectl --context=cluster3 get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
-    fi
+function get_svc_ip() {
+    local svc_name=$1
 
-    if [[ -z "$nginx_svc_ip_cluster3" ]]; then
+    if [[ $globalnet = "true" ]]; then
+        get_globalip ${svc_name}
+    else
+        kubectl --context=$cluster get svc -l app=${svc_name} | awk 'FNR == 2 {print $3}'
+    fi
+}
+
+function test_connection() {
+    nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
+    if [[ -z "$nginx_svc_ip" ]]; then
         echo "Failed to get nginx-demo IP"
         exit 1
     fi
-    netshoot_pod=$(kubectl --context=cluster2 get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+
+    netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
     echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_svc_ip_cluster3 nginx service cluster3"
 
     attempt_counter=0
     max_attempts=5
-    until $(kubectl --context=cluster2 exec ${netshoot_pod} -- curl --output /dev/null -m 30 --silent --head --fail ${nginx_svc_ip_cluster3}); do
+    until $(kubectl exec ${netshoot_pod} -- curl --output /dev/null -m 30 --silent --head --fail ${nginx_svc_ip}); do
         if [[ ${attempt_counter} -eq ${max_attempts} ]];then
           echo "Max attempts reached, connection test failed!"
           exit 1
@@ -66,13 +71,11 @@ function test_connection() {
 }
 
 function add_subm_gateway_label() {
-    context=$1
-    kubectl --context=$context label node $context-worker "submariner.io/gateway=true" --overwrite
+    kubectl label node $cluster-worker "submariner.io/gateway=true" --overwrite
 }
 
 function del_subm_gateway_label() {
-    context=$1
-    kubectl --context=$context label node $context-worker "submariner.io/gateway-" --overwrite
+    kubectl label node $cluster-worker "submariner.io/gateway-" --overwrite
 }
 
 function prepare_cluster() {
@@ -82,17 +85,15 @@ function prepare_cluster() {
             kubectl delete pods -n $SUBM_NS -l app=$app
         fi
     done
-    add_subm_gateway_label $cluster
+    add_subm_gateway_label
 }
 
 function deploy_resource() {
-    cluster=$1
-    resource_file=$2
-    resource_name=$(basename "$2" ".yaml")
+    resource_file=$1
+    resource_name=$(basename "$resource_file" ".yaml")
     kubectl apply -f ${resource_file}
     echo "Waiting for ${resource_name} pods to be ready."
     kubectl rollout status deploy/${resource_name} --timeout=120s
-    unset cluster
 }
 
 function load_deploytool() {
@@ -146,13 +147,13 @@ deploytool_prereqs
 
 run_parallel "{1..3}" prepare_cluster
 
-setup_broker cluster1
+with_context cluster1 setup_broker
 install_subm_all_clusters
 
 deploytool_postreqs
 
-deploy_resource "cluster2" "${RESOURCES_DIR}/netshoot.yaml"
-deploy_resource "cluster3" "${RESOURCES_DIR}/nginx-demo.yaml"
+with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
+with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 
-test_connection
+with_context cluster2 test_connection
 
