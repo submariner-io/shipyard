@@ -31,7 +31,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: bash scripts/release
+    script: make release
     on:
       branch: master
       condition: $DEPLOY = true
