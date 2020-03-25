@@ -1,5 +1,6 @@
-#!/bin/bash
-. ${BASH_SOURCE%/*}/source_only
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
 
 ### Constants ###
 
@@ -8,6 +9,7 @@ readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
 readonly SUBM_ENGINE_IMAGE_REPO=localhost:5000
 readonly SUBM_ENGINE_IMAGE_TAG=local
+# shellcheck disable=SC2034 # this variable is used elsewhere
 readonly SUBM_NS=submariner-operator
 
 ### Functions ###
@@ -23,8 +25,9 @@ function travis_retry() {
 
 function deploytool_prereqs() {
     test -x /go/bin/subctl && return
-    local version=$(travis_retry get_latest_subctl_tag || echo v0.1.0)
-    curl -L https://github.com/submariner-io/submariner-operator/releases/download/${version}/subctl-${version}-linux-amd64 \
+    local version
+    version=$(travis_retry get_latest_subctl_tag || echo v0.1.0)
+    curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${version}/subctl-${version}-linux-amd64" \
          -o /go/bin/subctl
     chmod a+x /go/bin/subctl
 }
@@ -32,21 +35,21 @@ function deploytool_prereqs() {
 function setup_broker() {
     echo "Installing broker..."
     (
-        cd ${OUTPUT_DIR}
-        subctl --kubeconfig ${KUBECONFIGS_DIR}/kind-config-$cluster deploy-broker --no-dataplane
+        cd "${OUTPUT_DIR}" && \
+        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane
     )
 }
 
 function subctl_install_subm() {
-    subctl join --kubeconfig ${KUBECONFIGS_DIR}/kind-config-$cluster \
-                --clusterid ${cluster} \
-                --repository ${SUBM_ENGINE_IMAGE_REPO} \
-                --version ${SUBM_ENGINE_IMAGE_TAG} \
-                --nattport ${CE_IPSEC_NATTPORT} \
-                --ikeport ${CE_IPSEC_IKEPORT} \
-                --colorcodes ${SUBM_COLORCODES} \
+    subctl join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+                --clusterid "${cluster}" \
+                --repository "${SUBM_ENGINE_IMAGE_REPO}" \
+                --version "${SUBM_ENGINE_IMAGE_TAG}" \
+                --nattport "${CE_IPSEC_NATTPORT}" \
+                --ikeport "${CE_IPSEC_IKEPORT}" \
+                --colorcodes "${SUBM_COLORCODES}" \
                 --disable-nat \
-                ${OUTPUT_DIR}/broker-info.subm
+                "${OUTPUT_DIR}"/broker-info.subm
 }
 
 function install_subm_all_clusters() {

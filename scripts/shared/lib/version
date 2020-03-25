@@ -1,4 +1,6 @@
-. ${BASH_SOURCE%/*}/source_only
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
 
 if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
     dirty="-dirty"
@@ -6,6 +8,7 @@ fi
 
 git_tag=$(git tag -l --contains HEAD | head -n 1)
 
+# shellcheck disable=SC2034 # VERSION is used in other scripts which source this one
 if [[ -z "$dirty" && -n "$git_tag" ]]; then
     readonly VERSION=$git_tag
 else

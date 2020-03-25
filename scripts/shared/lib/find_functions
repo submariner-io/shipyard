@@ -1,3 +1,4 @@
+# shellcheck shell=bash
 function find_go_pkg_dirs() {
     local base excluded_pkg_dirs find_exclude package_dirs
 
@@ -9,11 +10,13 @@ function find_go_pkg_dirs() {
     done
 
 
-    package_dirs="$(find . $find_exclude -path './*/*.go' -print | \
+    package_dirs="$(find . "$find_exclude" -path './*/*.go' -print | \
                       cut -f2 -d/ | \
                       sort -u)"
 
     if [[ "x$1" != "x--no-trailing-dots" ]]; then
+        # this can’t be done as simply with parameter substitution
+        # shellcheck disable=SC2001
         package_dirs=$(echo "$package_dirs" | sed -e 's![^ ]*!./&/...!g')
     fi
 
