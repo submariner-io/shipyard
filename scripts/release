@@ -1,21 +1,8 @@
 #!/usr/bin/env bash
 set -e
 
-DEPLOY="${DEPLOY:-false}"
-
-
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/version
-
-
-# This flag is passed from travis, so only the right jobs will deploy the
-# container images to quay
-
-if [ "$DEPLOY" != "true" ] ; then
-    echo "We don't need to deploy from this job, if you're trying to deploy manually set DEPLOY=true"
-    exit 0
-fi
-
 
 DOCKER_TAG=${1:-latest}
 REPO=${REPO:-quay.io/submariner}
