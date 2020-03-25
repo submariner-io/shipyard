@@ -13,4 +13,4 @@ load_image quay.io/submariner/submariner
 load_image quay.io/submariner/submariner-route-agent
 load_image quay.io/submariner/submariner-globalnet
 
-/opt/shipyard/scripts/deploy.sh "$@"
+${SCRIPTS_DIR}/deploy.sh "$@"
