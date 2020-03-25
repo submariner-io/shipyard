@@ -2,7 +2,7 @@ k8s_version ?= 1.14.6
 globalnet ?= false
 deploytool ?= operator
 
-TARGETS := $(shell ls scripts)
+TARGETS := $(shell ls -p scripts | grep -v /)
 
 .dapper:
 	@echo Downloading dapper
