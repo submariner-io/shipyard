@@ -4,8 +4,6 @@ set -e
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/find_functions
 
-cd $(dirname $0)/..
-
 EXCLUDE_PKG_DIRS=".git .trash-cache vendor bin"
 PACKAGES="$(find_go_pkg_dirs --no-trailing-dots "*.go")"
 

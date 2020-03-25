@@ -3,5 +3,4 @@ set -e
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 
-cd $(dirname $0)
-./validate
+$(dirname $0)/validate
