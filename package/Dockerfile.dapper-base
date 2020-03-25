@@ -32,10 +32,11 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
+# ShellCheck     | shell script linting
 RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports && \
+                   findutils upx jq golang-x-tools-goimports ShellCheck && \
     dnf -y remove libsemanage && \
     rpm -e --nodeps selinux-policy-targeted && \
     dnf -y clean all && \

@@ -1,9 +1,13 @@
-. ${BASH_SOURCE%/*}/source_only
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
 
 ### Constants ###
 
 readonly KIND_REGISTRY=kind-registry
+# shellcheck disable=SC2034 # this variable is used elsewhere
 readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
+# shellcheck disable=SC2034 # this variable is used elsewhere
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
 
@@ -12,11 +16,11 @@ readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
 # Mask kubectl to use cluster context if the variable is set and context isn't specified,
 # otherwise use the config context as always.
 function kubectl() {
-    local context_flag=""
-    if [[ -n "${cluster}" && ! "${@}" =~ "context" ]]; then
-        context_flag="--context=${cluster}"
+    if [[ -n "${cluster}" && ! "${*}" =~ "context" ]]; then
+        command kubectl --context="${cluster}" "$@"
+    else
+        command kubectl "$@"
     fi
-    command kubectl ${context_flag} "$@"
 }
 
 # Run a command with the given cluster as the context, which will be unset once finished
@@ -34,15 +38,16 @@ function with_context() {
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
-    local clusters=$(eval echo "$1")
-    local cmnd=$2
+    local clusters cmnd
+    clusters=$(eval echo "$1")
+    cmnd=$2
     declare -A pids
     for i in ${clusters}; do
-        ( with_context "cluster${i}" $cmnd "${@:3}" | sed "s/^/[cluster${i}] /" ) &
+        ( with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /" ) &
         pids["${i}"]=$!
     done
 
-    for i in ${!pids[@]}; do
+    for i in "${!pids[@]}"; do
         wait ${pids[$i]}
     done
 }
@@ -62,6 +67,7 @@ function add_cluster_cidrs() {
 }
 
 function declare_cidrs() {
+    # shellcheck disable=SC2034 # these variables are used elsewhere
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
 
     for i in {1..3}; do
@@ -70,5 +76,6 @@ function declare_cidrs() {
 }
 
 function declare_kubeconfig() {
-    export KUBECONFIG=$(echo ${KUBECONFIGS_DIR}/kind-config-cluster{1..3} | sed 's/ /:/g')
+    export KUBECONFIG
+    KUBECONFIG=$(echo "${KUBECONFIGS_DIR}"/kind-config-cluster{1..3} | sed 's/ /:/g')
 }
