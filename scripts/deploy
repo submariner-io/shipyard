@@ -4,8 +4,6 @@ set -e
 source $(dirname $0)/shared/lib/debug_functions
 source $(dirname $0)/shared/lib/version
 
-cd $(dirname $0)
-
 function load_image() {
     docker pull ${1}:latest
     docker tag ${1}:latest ${1}:$VERSION
