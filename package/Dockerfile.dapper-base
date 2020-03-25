@@ -28,7 +28,7 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # ginkgo         | tests
 # goimports      | code formatting
 # make           | OLM installation
-# findutils      | e2e cleanup (xargs)
+# findutils      | validate (find go packages)
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
