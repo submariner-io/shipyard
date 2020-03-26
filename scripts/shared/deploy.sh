@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+## Process command line flags ##
+
+source /usr/share/shflags/shflags
+DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
+DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
+FLAGS "$@" || exit $?
+eval set -- "${FLAGS_ARGV}"
+
+globalnet="${FLAGS_globalnet}"
+deploytool="${FLAGS_deploytool}"
+echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
+
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
@@ -102,32 +115,6 @@ function load_deploytool() {
 
 
 ### Main ###
-
-LONGOPTS=globalnet:,deploytool:
-# Only accept longopts, but must pass null shortopts or first param after "--" will be incorrectly used
-SHORTOPTS=""
-! PARSED=$(getopt --options=$SHORTOPTS --longoptions=$LONGOPTS --name "$0" -- "$@")
-eval set -- "$PARSED"
-
-while true; do
-    case "$1" in
-        --globalnet)
-            globalnet="$2"
-            ;;
-        --deploytool)
-            deploytool="$2"
-            ;;
-        --)
-            break
-            ;;
-        *)
-            echo "Ignoring unknown option: $1 $2"
-            ;;
-    esac
-    shift 2
-done
-
-echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
 
 declare_cidrs
 declare_kubeconfig

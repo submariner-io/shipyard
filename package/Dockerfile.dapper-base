@@ -29,6 +29,7 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # goimports      | code formatting
 # make           | OLM installation
 # findutils      | validate (find go packages)
+# shflags        | shell script flags
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
@@ -36,7 +37,7 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports ShellCheck && \
+                   findutils upx jq golang-x-tools-goimports ShellCheck shflags && \
     dnf -y remove libsemanage && \
     rpm -e --nodeps selinux-policy-targeted && \
     dnf -y clean all && \
