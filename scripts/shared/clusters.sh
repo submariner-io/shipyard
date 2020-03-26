@@ -1,4 +1,17 @@
 #!/usr/bin/env bash
+
+## Process command line flags ##
+
+source /usr/share/shflags/shflags
+DEFINE_string 'k8s_version' '' 'Version of K8s to use'
+DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
+FLAGS "$@" || exit $?
+eval set -- "${FLAGS_ARGV}"
+
+version="${FLAGS_k8s_version}"
+globalnet="${FLAGS_globalnet}"
+echo "Running with: k8s_version=${version}, globalnet=${globalnet}"
+
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
@@ -81,32 +94,6 @@ function run_local_registry() {
 
 
 ### Main ###
-
-LONGOPTS=k8s_version:,globalnet:
-# Only accept longopts, but must pass null shortopts or first param after "--" will be incorrectly used
-SHORTOPTS=""
-! PARSED=$(getopt --options=$SHORTOPTS --longoptions=$LONGOPTS --name "$0" -- "$@")
-eval set -- "$PARSED"
-
-while true; do
-    case "$1" in
-        --k8s_version)
-            version="$2"
-            ;;
-        --globalnet)
-            globalnet="$2"
-            ;;
-        --)
-            break
-            ;;
-        *)
-            echo "Ignoring unknown option: $1 $2"
-            ;;
-    esac
-    shift 2
-done
-
-echo "Running with: k8s_version=${version}, globalnet=${globalnet}"
 
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
