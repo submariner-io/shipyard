@@ -2,7 +2,7 @@ k8s_version ?= 1.14.6
 globalnet ?= false
 deploytool ?= operator
 
-TARGETS := $(shell ls -p scripts | grep -v / | grep -v release)
+TARGETS := $(shell ls -p scripts | grep -v -e / -e clusters -e deploy)
 
 .dapper:
 	@echo Downloading dapper
@@ -14,13 +14,13 @@ TARGETS := $(shell ls -p scripts | grep -v / | grep -v release)
 shell:
 	./.dapper -m bind -s
 
-# Deployment needs clusters installed
+clusters: .dapper dapper-image
+	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet)
+
 deploy: .dapper dapper-image clusters
+	./.dapper -m bind $@ --globalnet $(globalnet) --deploytool $(deploytool)
 
 $(TARGETS): .dapper dapper-image
-	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet) --deploytool $(deploytool)
-
-release: .dapper dapper-image
 	./.dapper -m bind $@
 
 .DEFAULT_GOAL := ci
