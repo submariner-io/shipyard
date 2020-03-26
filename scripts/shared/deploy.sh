@@ -23,7 +23,12 @@ source ${SCRIPTS_DIR}/lib/utils
 function import_image() {
     local orig_image="$1:$VERSION"
     local local_image="localhost:5000/${1##*/}:local"
-    docker tag ${orig_image} ${local_image}
+    if ! docker tag "${orig_image}" "${local_image}"; then
+        # The project doesn't build this image, pull it
+        docker pull "${1}:latest"
+        docker tag "${1}:latest" "${orig_image}"
+        docker tag "${orig_image}" "${local_image}"
+    fi
     docker push ${local_image}
 }
 
