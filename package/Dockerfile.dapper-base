@@ -55,3 +55,4 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
 COPY scripts/shared/ .
+COPY Makefile.inc ${SHIPYARD_DIR}

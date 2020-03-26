@@ -1,28 +1,13 @@
-k8s_version ?= 1.14.6
-globalnet ?= false
-deploytool ?= operator
-registry_inmemory ?= true
+include Makefile.inc
 
-TARGETS := $(shell ls -p scripts | grep -v -e / -e clusters -e deploy)
-
-.dapper:
-	@echo Downloading dapper
-	@curl -sL https://releases.rancher.com/dapper/latest/dapper-`uname -s`-`uname -m` > .dapper.tmp
-	@@chmod +x .dapper.tmp
-	@./.dapper.tmp -v
-	@mv .dapper.tmp .dapper
-
-shell:
-	./.dapper -m bind -s
-
-clusters: .dapper dapper-image
-	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet) --registry_inmemory $(registry_inmemory)
-
-deploy: .dapper dapper-image clusters
-	./.dapper -m bind $@ --globalnet $(globalnet) --deploytool $(deploytool)
+TARGETS := $(shell ls -p scripts | grep -v -e /)
 
 $(TARGETS): .dapper dapper-image
 	./.dapper -m bind $@
+
+# We need the latest image for these targets in shipyard
+clusters: dapper-image
+deploy: dapper-image
 
 .DEFAULT_GOAL := ci
 
