@@ -1,6 +1,7 @@
 k8s_version ?= 1.14.6
 globalnet ?= false
 deploytool ?= operator
+registry_inmemory ?= true
 
 TARGETS := $(shell ls -p scripts | grep -v -e / -e clusters -e deploy)
 
@@ -15,7 +16,7 @@ shell:
 	./.dapper -m bind -s
 
 clusters: .dapper dapper-image
-	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet)
+	./.dapper -m bind $@ --k8s_version $(k8s_version) --globalnet $(globalnet) --registry_inmemory $(registry_inmemory)
 
 deploy: .dapper dapper-image clusters
 	./.dapper -m bind $@ --globalnet $(globalnet) --deploytool $(deploytool)
