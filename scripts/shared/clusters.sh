@@ -5,12 +5,14 @@
 source /usr/share/shflags/shflags
 DEFINE_string 'k8s_version' '' 'Version of K8s to use'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
+DEFINE_string 'registry_inmemory' 'true' "Run local registry in memory to speed up the image loading."
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 version="${FLAGS_k8s_version}"
 globalnet="${FLAGS_globalnet}"
-echo "Running with: k8s_version=${version}, globalnet=${globalnet}"
+registry_inmemory="${FLAGS_registry_inmemory}"
+echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}"
 
 set -em
 
@@ -85,7 +87,9 @@ function run_local_registry() {
         echo "Local registry $KIND_REGISTRY already running."
     else
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
-        docker run -d -p 5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        local volume_flag
+        [[ $registry_inmemory != "true" ]] || volume_flag="-v /dev/shm/${KIND_REGISTRY}:/var/lib/registry"
+        docker run -d $volume_flag -p 5000:5000 --restart=always --name $KIND_REGISTRY registry:2
     fi
 
     # This IP is consumed by kind to point the registry mirror correctly to the local registry
