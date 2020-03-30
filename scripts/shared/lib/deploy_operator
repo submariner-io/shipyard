@@ -33,10 +33,12 @@ function deploytool_prereqs() {
 }
 
 function setup_broker() {
+    local gn
+    [[ $globalnet != true ]] || gn="--globalnet"
     echo "Installing broker..."
     (
         cd "${OUTPUT_DIR}" && \
-        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane
+        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn}
     )
 }
 
@@ -53,7 +55,20 @@ function subctl_install_subm() {
 }
 
 function install_subm_all_clusters() {
-    run_parallel "{1..3}" subctl_install_subm
+    if [[ $globalnet = "true" ]]; then
+        # When Globalnet is enabled, each cluster gets a non-overlapping globalCIDR from
+        # globalnet-cidr-range and this globalCIDR is stored in the clusterCRD for each
+        # cluster. When globalnet is deployed via subctl/Operator, during join operation,
+        # subctl first queries the existing clusters that are associated with the Broker
+        # and allocates a non-overlapping chunk of globalCIDR to the newly joining cluster.
+        # Due to this, we cannot install submariner globalnet (via subctl) in parallel and
+        # it has to be done sequentially.
+        run_parallel "1" subctl_install_subm
+        run_parallel "2" subctl_install_subm
+        run_parallel "3" subctl_install_subm
+    else
+        run_parallel "{1..3}" subctl_install_subm
+    fi
 }
 
 function deploytool_postreqs() {
