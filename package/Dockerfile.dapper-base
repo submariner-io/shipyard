@@ -49,8 +49,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     GOFLAGS="" go get -v golang.org/x/tools/cmd/goimports && \
-    ls /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,protoc-gen-gogoctrd,runc} | xargs upx && \
-    find /usr/lib/golang/pkg/tool/* -type f -executable | xargs upx && \
+    upx /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,protoc-gen-gogoctrd,runc} /usr/lib/golang/pkg/tool/*/* && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
