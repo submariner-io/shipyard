@@ -9,6 +9,4 @@ $(TARGETS): .dapper dapper-image
 clusters: dapper-image
 deploy: dapper-image
 
-.DEFAULT_GOAL := ci
-
 .PHONY: $(TARGETS)
