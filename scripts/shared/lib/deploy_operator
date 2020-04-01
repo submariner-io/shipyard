@@ -10,7 +10,6 @@ readonly SUBM_COLORCODES=blue
 readonly SUBM_ENGINE_IMAGE_REPO=localhost:5000
 readonly SUBM_ENGINE_IMAGE_TAG=local
 # shellcheck disable=SC2034 # this variable is used elsewhere
-readonly SUBM_NS=submariner-operator
 
 ### Functions ###
 
