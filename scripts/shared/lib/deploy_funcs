@@ -21,7 +21,7 @@ function get_globalip() {
     local svc_name=$1
 
     # It takes a while for globalIp annotation to show up on a service
-    for i in {0..30}; do
+    for _ in {0..30}; do
         local gip
         gip=$(kubectl get svc "$svc_name" -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
         if [[ -n "${gip}" ]]; then
