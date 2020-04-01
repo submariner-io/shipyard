@@ -61,7 +61,7 @@ function run_sequential() {
     clusters=$(eval echo "$1")
     cmnd=$2
     for i in ${clusters}; do
-        ( with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /" )
+        with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /"
     done
 }
 
