@@ -33,6 +33,8 @@ if [[ "${CHANGED_FILES_PR[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
    [[ "${CHANGED_FILES_LOCAL[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
    [[ "${CHANGED_FILES_PR[@]}" =~ "scripts/shared/" ]] ||
    [[ "${CHANGED_FILES_LOCAL[@]}" =~ "scripts/shared/" ]] ||
+   [[ "${CHANGED_FILES_PR[@]}" =~ "Makefile.inc" ]] ||
+   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "Makefile.inc" ]] ||
    [[ "${LAST_COMMIT_LOCAL}" == "${LAST_COMMIT_MASTER}" ]]; then
       echo "Dockerfile.dapper-base was modified, rebuilding dapper image"
       docker build -t ${DAPPER_BASE_IMAGE} -f package/Dockerfile.dapper-base .
