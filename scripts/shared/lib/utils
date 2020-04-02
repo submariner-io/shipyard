@@ -10,6 +10,7 @@ readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
 # shellcheck disable=SC2034 # this variable is used elsewhere
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
+export SUBM_NS=submariner-operator
 
 ### Functions ###
 

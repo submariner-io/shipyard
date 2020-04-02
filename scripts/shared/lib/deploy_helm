@@ -6,7 +6,6 @@
 
 readonly SUBMARINER_BROKER_NS=submariner-k8s-broker
 readonly SUBMARINER_PSK=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 64 | head -n 1)
-readonly SUBM_NS=submariner
 
 ### Functions ###
 
@@ -45,7 +44,7 @@ function setup_broker() {
 function helm_install_subm() {
     local crd_create=$1
 
-    if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n $SUBM_NS --timeout=60s > /dev/null 2>&1; then
+    if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
         echo "Submariner already installed, skipping installation..."
         return
     fi
@@ -53,7 +52,7 @@ function helm_install_subm() {
     echo "Installing Submariner..."
     helm --kube-context "${cluster}" install submariner-latest/submariner \
         --name submariner \
-        --namespace submariner \
+        --namespace "${SUBM_NS}" \
         --set ipsec.psk="${SUBMARINER_PSK}" \
         --set broker.server="${submariner_broker_url}" \
         --set broker.token="${submariner_broker_token}" \
