@@ -1,0 +1,9 @@
+. "${SCRIPTS_DIR}"/lib/source_only
+
+# For shipyard we need a very minimal setup to verify the deployment works
+cluster_nodes['cluster1']="control-plane"
+cluster_nodes['cluster2']="control-plane worker"
+cluster_nodes['cluster3']="control-plane worker"
+
+# Don't install submariner where we don't need it
+cluster_subm['cluster1']="false"
