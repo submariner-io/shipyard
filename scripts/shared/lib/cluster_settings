@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034 # We declare some shared variables here
 # shellcheck source=scripts/shared/lib/source_only
 . "${BASH_SOURCE%/*}"/source_only
 
@@ -9,5 +10,12 @@ declare -gA cluster_nodes
 
 cluster_nodes['cluster1']="control-plane worker"
 cluster_nodes['cluster2']="control-plane worker"
-# shellcheck disable=SC2034 # this variable is used elsewhere
 cluster_nodes['cluster3']="control-plane worker worker"
+
+# Map of cluster names to values specifying if submariner should be installed.
+# Only "true" string means its installed, otherwise it's not.
+declare -gA cluster_subm
+
+cluster_subm['cluster1']="true"
+cluster_subm['cluster2']="true"
+cluster_subm['cluster3']="true"

@@ -3,6 +3,7 @@
 ## Process command line flags ##
 
 source /usr/share/shflags/shflags
+DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 FLAGS "$@" || exit $?
@@ -10,7 +11,8 @@ eval set -- "${FLAGS_ARGV}"
 
 globalnet="${FLAGS_globalnet}"
 deploytool="${FLAGS_deploytool}"
-echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}"
+cluster_settings="${FLAGS_cluster_settings}"
+echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}"
 
 set -em
 
@@ -18,6 +20,10 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/version
 source ${SCRIPTS_DIR}/lib/utils
 source ${SCRIPTS_DIR}/lib/deploy_funcs
+
+# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
+source "${SCRIPTS_DIR}/lib/cluster_settings"
+[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
 ### Main ###
 

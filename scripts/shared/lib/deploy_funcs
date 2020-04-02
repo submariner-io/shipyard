@@ -69,15 +69,18 @@ function connectivity_tests() {
 }
 
 function add_subm_gateway_label() {
+    [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
     kubectl label node "${cluster}-worker" "submariner.io/gateway=true" --overwrite
 }
 
 function del_subm_gateway_label() {
+    [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
     kubectl label node "${cluster}-worker" "submariner.io/gateway-" --overwrite
 }
 
 function prepare_cluster() {
     local namespace=$1
+    [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
     for app in submariner-engine submariner-routeagent submariner-globalnet; do
         if kubectl wait --for=condition=Ready pods -l "app=$app" -n "$namespace" --timeout=60s > /dev/null 2>&1; then
             echo "Removing $app pods..."

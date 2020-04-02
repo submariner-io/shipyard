@@ -2,6 +2,9 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
+CLUSTERS_ARGS = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
+DEPLOY_ARGS = $(CLUSTERS_ARGS)
+
 include $(SHIPYARD_DIR)/Makefile.inc
 
 TARGETS := $(shell ls -p scripts | grep -v -e /)

@@ -28,6 +28,11 @@ function setup_broker() {
 }
 
 function subctl_install_subm() {
+    if [[ ${cluster_subm[$cluster]} != "true" ]]; then
+        echo "Skipping installation as requested in cluster settings"
+        return
+    fi
+
     subctl join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                 --clusterid "${cluster}" \
                 --repository "${SUBM_ENGINE_IMAGE_REPO}" \
