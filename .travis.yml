@@ -10,9 +10,9 @@ git:
 
 jobs:
   include:
-  - env: CMD="make validate" DEPLOY=true
+  - env: CMD="make validate"
   - env: CMD="make deploy deploytool=helm"
-  - env: CMD="make deploy deploytool=operator"
+  - env: CMD="make deploy deploytool=operator" DEPLOY=true
 
 install:
   - sudo apt-get install moreutils # make ts available
