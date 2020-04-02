@@ -48,16 +48,23 @@ function get_svc_ip() {
 }
 
 function test_connection() {
-    local nginx_address=$1
-    local netshoot_pod
-    netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+    local source_pod=$1
+    local target_address=$2
 
-    echo "Attempting connectivity between clusters - $netshoot_pod cluster2 --> $nginx_address nginx service cluster3"
-    if ! kubectl exec "${netshoot_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${nginx_address}"; then
+    echo "Attempting connectivity between clusters - $source_pod (cluster2) --> $target_address (service on cluster3)"
+    if ! kubectl exec "${source_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${target_address}"; then
         return 1
     fi
 
     echo "Connection test was successful!"
+}
+
+function connectivity_tests() {
+    local netshoot_pod nginx_svc_ip
+    netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+    nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
+
+    with_retries 5 test_connection "$netshoot_pod" "$nginx_svc_ip"
 }
 
 function add_subm_gateway_label() {
