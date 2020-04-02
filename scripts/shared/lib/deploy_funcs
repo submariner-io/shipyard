@@ -14,6 +14,7 @@ function import_image() {
         docker tag "${orig_image}:latest" "${versioned_image}"
         docker tag "${versioned_image}" "${local_image}"
     fi
+
     docker push "${local_image}"
 }
 
