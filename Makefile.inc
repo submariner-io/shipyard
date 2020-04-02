@@ -13,3 +13,10 @@ clusters:
 
 deploy: clusters
 	$(SCRIPTS_DIR)/deploy.sh --globalnet $(globalnet) --deploytool $(deploytool) $(DEPLOY_ARGS)
+
+ifeq (go.mod,$(wildcard go.mod))
+# If go.mod exists (as determined above), assume we're vendoring
+vendor/modules.txt: go.mod
+	go mod download
+	go mod vendor
+endif
