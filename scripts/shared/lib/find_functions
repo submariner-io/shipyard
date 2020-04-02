@@ -6,11 +6,11 @@ function find_go_pkg_dirs() {
     excluded_pkg_dirs=${EXCLUDE_PKG_DIRS:-vendor .git .trash-cache bin}
 
     for excldir in $excluded_pkg_dirs; do
-        find_exclude="-path ./$excldir -prune -o $find_exclude"
+        find_exclude=(-path "./$excldir" -prune -o "${find_exclude[@]}")
     done
 
 
-    package_dirs="$(find . "$find_exclude" -path './*/*.go' -print | \
+    package_dirs="$(find . "${find_exclude[@]}" -path './*/*.go' -print | \
                       cut -f2 -d/ | \
                       sort -u)"
 
