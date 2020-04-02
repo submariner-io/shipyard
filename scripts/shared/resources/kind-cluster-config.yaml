@@ -16,7 +16,4 @@ kubeadmConfigPatches:
     podSubnet: ${pod_cidr}
     serviceSubnet: ${service_cidr}
     dnsDomain: ${dns_domain}
-nodes:
-- role: control-plane
-- role: worker
-- role: worker
+nodes:${nodes}

@@ -6,18 +6,21 @@ source /usr/share/shflags/shflags
 DEFINE_string 'k8s_version' '' 'Version of K8s to use'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'registry_inmemory' 'true' "Run local registry in memory to speed up the image loading."
+DEFINE_string 'cluster_settings' "${SCRIPTS_DIR}/lib/cluster_settings" "Settings file to customize cluster deployments"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 version="${FLAGS_k8s_version}"
 globalnet="${FLAGS_globalnet}"
 registry_inmemory="${FLAGS_registry_inmemory}"
-echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}"
+cluster_settings="${FLAGS_cluster_settings}"
+echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}"
 
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
+source ${cluster_settings}
 
 ### Functions ###
 
@@ -33,6 +36,9 @@ function generate_cluster_yaml() {
     if [[ "${cluster}" = "cluster1" ]]; then
         disable_cni="false"
     fi
+
+    local nodes
+    for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
 
     render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/${cluster}-config.yaml
 }
