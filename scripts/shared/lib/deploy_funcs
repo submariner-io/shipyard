@@ -19,20 +19,14 @@ function import_image() {
 
 function get_globalip() {
     local svc_name=$1
-
-    # It takes a while for globalIp annotation to show up on a service
-    for _ in {0..30}; do
-        local gip
-        gip=$(kubectl get svc "$svc_name" -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
-        if [[ -n "${gip}" ]]; then
-            echo "$gip"
-            return
-        fi
+    local gip
+    gip=$(kubectl get svc "$svc_name" -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
+    if [[ -z "${gip}" ]]; then
         sleep 1
-    done
+        return 1
+    fi
 
-    echo "Max attempts reached, failed to get globalIp!"
-    exit 1
+    echo "$gip"
 }
 
 function get_svc_ip() {
@@ -40,7 +34,7 @@ function get_svc_ip() {
     local svc_ip
 
     if [[ $globalnet = "true" ]]; then
-        svc_ip=$(get_globalip "${svc_name}")
+        svc_ip=$(with_retries 30 get_globalip "${svc_name}")
     else
         svc_ip=$(kubectl --context="$cluster" get svc -l "app=${svc_name}" | awk 'FNR == 2 {print $3}')
     fi
@@ -58,17 +52,12 @@ function test_connection() {
     local netshoot_pod
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
-    echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_address nginx service cluster3"
+    echo "Attempting connectivity between clusters - $netshoot_pod cluster2 --> $nginx_address nginx service cluster3"
+    if ! kubectl exec "${netshoot_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${nginx_address}"; then
+        return 1
+    fi
 
-    for _ in {1..5}; do
-        if kubectl exec "${netshoot_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${nginx_address}"; then
-            echo "Connection test was successful!"
-            return
-        fi
-    done
-
-    echo "Max attempts reached, connection test failed!"
-    exit 1
+    echo "Connection test was successful!"
 }
 
 function add_subm_gateway_label() {
