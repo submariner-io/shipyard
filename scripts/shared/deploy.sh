@@ -42,5 +42,5 @@ with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
 with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 
 nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
-with_context cluster2 test_connection $nginx_svc_ip
+with_retries 5 with_context cluster2 test_connection $nginx_svc_ip
 

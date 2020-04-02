@@ -23,6 +23,24 @@ function kubectl() {
     fi
 }
 
+# Run a command and retry it if it fails, up to the given amount of retries
+# 1st argument is the amount of times to retry the command.
+# 2nd argument is the command to execute.
+# 3rd argument and so forth get passed to the command.
+function with_retries() {
+    local retries=$(eval echo "{1..$1}")
+    local cmnd=$2
+
+    for _ in ${retries}; do
+        if $cmnd "${@:3}"; then
+            return 0
+        fi
+    done
+
+    echo "Max attempts reached, failed to run ${cmnd}!"
+    exit 1
+}
+
 # Run a command with the given cluster as the context, which will be unset once finished
 # 1st argument is the context which will be set to $cluster global variable.
 # 2nd argument is the command to execute.
