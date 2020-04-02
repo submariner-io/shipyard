@@ -37,29 +37,31 @@ function get_globalip() {
 
 function get_svc_ip() {
     local svc_name=$1
+    local svc_ip
 
     if [[ $globalnet = "true" ]]; then
-        get_globalip "${svc_name}"
+        svc_ip=$(get_globalip "${svc_name}")
     else
-        kubectl --context="$cluster" get svc -l "app=${svc_name}" | awk 'FNR == 2 {print $3}'
+        svc_ip=$(kubectl --context="$cluster" get svc -l "app=${svc_name}" | awk 'FNR == 2 {print $3}')
     fi
-}
 
-function test_connection() {
-    local nginx_svc_ip
-    nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
-    if [[ -z "$nginx_svc_ip" ]]; then
-        echo "Failed to get nginx-demo IP"
+    if [[ -z "$svc_ip" ]]; then
+        echo "Failed to get ${svc_name} IP"
         exit 1
     fi
 
+    echo "$svc_ip"
+}
+
+function test_connection() {
+    local nginx_address=$1
     local netshoot_pod
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
 
-    echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_svc_ip_cluster3 nginx service cluster3"
+    echo "Testing connectivity between clusters - $netshoot_pod cluster2 --> $nginx_address nginx service cluster3"
 
     for _ in {1..5}; do
-        if kubectl exec "${netshoot_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${nginx_svc_ip}"; then
+        if kubectl exec "${netshoot_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${nginx_address}"; then
             echo "Connection test was successful!"
             return
         fi
