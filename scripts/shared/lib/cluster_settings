@@ -1,0 +1,13 @@
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
+
+# Map of cluster names to a space separated string, representing a list of nodes to deploy.
+# Possible node types are 'control-plane' and 'worker'.
+# e.g. cluster_nodes['multi-master']="control-plane control-plane worker worker worker"
+declare -gA cluster_nodes
+
+cluster_nodes['cluster1']="control-plane worker"
+cluster_nodes['cluster2']="control-plane worker"
+# shellcheck disable=SC2034 # this variable is used elsewhere
+cluster_nodes['cluster3']="control-plane worker worker"
