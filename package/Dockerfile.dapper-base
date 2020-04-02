@@ -6,6 +6,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     HELM_VERSION=v2.14.1 \
     KIND_VERSION=v0.6.1 \
     KUBEFED_VERSION=0.1.0-rc3 \
+    SUBCTL_VERSION=v0.2.0 \
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARCH} \
@@ -30,6 +31,7 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # make           | OLM installation
 # findutils      | validate (find go packages)
 # shflags        | shell script flags
+# subctl *       | Submariner's deploy tool (operator)
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
@@ -47,6 +49,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     curl -L "https://github.com/kubernetes-sigs/kubefed/releases/download/v${KUBEFED_VERSION}/kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz" | tar -xzf - && \
     mv kubefedctl /usr/bin/ && chmod a+x /usr/bin/kubefedctl && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
+    curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-amd64" && chmod a+x /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     GOFLAGS="" go get -v golang.org/x/tools/cmd/goimports && \
     upx /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,protoc-gen-gogoctrd,runc} /usr/lib/golang/pkg/tool/*/* && \
