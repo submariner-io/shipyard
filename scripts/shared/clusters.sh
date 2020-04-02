@@ -6,7 +6,7 @@ source /usr/share/shflags/shflags
 DEFINE_string 'k8s_version' '' 'Version of K8s to use'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'registry_inmemory' 'true' "Run local registry in memory to speed up the image loading."
-DEFINE_string 'cluster_settings' "${SCRIPTS_DIR}/lib/cluster_settings" "Settings file to customize cluster deployments"
+DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -20,7 +20,10 @@ set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
-source ${cluster_settings}
+
+# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
+source "${SCRIPTS_DIR}/lib/cluster_settings"
+[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
 ### Functions ###
 
