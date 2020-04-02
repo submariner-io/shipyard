@@ -28,7 +28,8 @@ function kubectl() {
 # 2nd argument is the command to execute.
 # 3rd argument and so forth get passed to the command.
 function with_retries() {
-    local retries=$(eval echo "{1..$1}")
+    local retries
+    retries=$(eval echo "{1..$1}")
     local cmnd=$2
 
     for _ in ${retries}; do
