@@ -12,20 +12,21 @@ import (
 type contextArray []string
 
 type TestContextType struct {
-	KubeConfigs         []string // KubeConfigs provides an alternative to KubeConfig + KubeContexts
-	KubeConfig          string
-	KubeContexts        contextArray
-	ClusterIDs          []string
-	ReportDir           string
-	ReportPrefix        string
-	SubmarinerNamespace string
-	ConnectionTimeout   uint
-	ConnectionAttempts  uint
-	OperationTimeout    uint
-	GlobalnetEnabled    bool
-	ClientQPS           float32
-	ClientBurst         int
-	GroupVersion        *schema.GroupVersion
+	KubeConfigs                 []string // KubeConfigs provides an alternative to KubeConfig + KubeContexts
+	KubeConfig                  string
+	KubeContexts                contextArray
+	ClusterIDs                  []string
+	ReportDir                   string
+	ReportPrefix                string
+	SubmarinerNamespace         string
+	ConnectionTimeout           uint
+	RedundancyConnectionTimeout uint
+	ConnectionAttempts          uint
+	OperationTimeout            uint
+	GlobalnetEnabled            bool
+	ClientQPS                   float32
+	ClientBurst                 int
+	GroupVersion                *schema.GroupVersion
 }
 
 func (contexts *contextArray) String() string {
@@ -50,8 +51,9 @@ func init() {
 	flag.StringVar(&TestContext.ReportDir, "report-dir", "", "Path to the directory where the JUnit XML reports should be saved. Default is empty, which doesn't generate these reports.")
 	flag.StringVar(&TestContext.SubmarinerNamespace, "submariner-namespace", "submariner", "Namespace in which the submariner components are deployed.")
 	flag.UintVar(&TestContext.ConnectionTimeout, "connection-timeout", 6, "The timeout in seconds per connection attempt when verifying communication between clusters.")
+	flag.UintVar(&TestContext.RedundancyConnectionTimeout, "redundancy-connection-timeout", 18, "The timeout in seconds per connection attempt during redundancy tests")
 	flag.UintVar(&TestContext.ConnectionAttempts, "connection-attempts", 10, "The number of connection attempts when verifying communication between clusters.")
-	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 60, "The general operation timeout in seconds.")
+	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 120, "The general operation timeout in seconds.")
 }
 
 func ValidateFlags(t *TestContextType) {
