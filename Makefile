@@ -19,8 +19,8 @@ else
 # Not running in Dapper
 
 # Shipyard-specific starts
-clusters: dapper-image
-deploy: dapper-image
+# Ensure we rebuild the base image if contents have changed
+clusters deploy validate: $(shell scripts/base-needs-rebuild Makefile.inc scripts/shared)
 
 dapper-image:
 	SCRIPTS_DIR=./scripts/shared ./scripts/dapper-image

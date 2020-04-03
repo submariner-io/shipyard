@@ -1,0 +1,25 @@
+#!/bin/bash
+set -e
+
+# No debugging, we're producing output for Make
+
+# Shared files and/or paths should be specified, assume .
+if [ $# = 0 ]; then
+    set .
+fi
+
+# Retrieve the base image
+docker pull quay.io/submariner/shipyard-dapper-base:latest 1>&2
+
+# Make a stamp file with the same timestamp as the image
+dapperbasedate=$(docker images quay.io/submariner/shipyard-dapper-base:latest --format "{{.CreatedAt}}")
+if [ -n "${dapperbasedate}" ]; then
+    touch -d "${dapperbasedate% *}" dapper-image-stamp
+    if [ $(find "$@" -newer dapper-image-stamp | wc -l) -gt 0 ]; then
+	echo dapper-image
+    fi
+    rm -f dapper-image-stamp
+else
+    # No base image, build
+    echo dapper-image
+fi
