@@ -38,8 +38,5 @@ install_subm_all_clusters
 
 deploytool_postreqs
 
-with_context cluster2 deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
-with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
-
 with_context cluster2 connectivity_tests
 
