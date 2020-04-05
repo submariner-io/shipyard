@@ -61,11 +61,17 @@ function test_connection() {
 }
 
 function connectivity_tests() {
+    deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
+    with_context cluster3 deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+
     local netshoot_pod nginx_svc_ip
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
     nginx_svc_ip=$(with_context cluster3 get_svc_ip nginx-demo)
 
     with_retries 5 test_connection "$netshoot_pod" "$nginx_svc_ip"
+
+    remove_resource "${RESOURCES_DIR}/netshoot.yaml"
+    with_context cluster3 remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 }
 
 function add_subm_gateway_label() {
@@ -97,6 +103,11 @@ function deploy_resource() {
     kubectl apply -f "${resource_file}"
     echo "Waiting for ${resource_name} pods to be ready."
     kubectl rollout status "deploy/${resource_name}" --timeout=120s
+}
+
+function remove_resource() {
+    local resource_file=$1
+    kubectl delete -f "$resource_file"
 }
 
 function load_deploytool() {
