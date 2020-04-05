@@ -1,16 +1,15 @@
 # shellcheck shell=bash
 # shellcheck source=scripts/shared/lib/source_only
+# shellcheck disable=SC2034 # We declare some shared variables here 
 . "${BASH_SOURCE%/*}"/source_only
 
 ### Constants ###
 
 readonly KIND_REGISTRY=kind-registry
-# shellcheck disable=SC2034 # this variable is used elsewhere
 readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
-# shellcheck disable=SC2034 # this variable is used elsewhere
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
-export SUBM_NS=submariner-operator
+readonly SUBM_NS=submariner-operator
 
 ### Functions ###
 
