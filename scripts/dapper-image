@@ -17,6 +17,9 @@ SUFFIX=""
 TAG=${TAG:-${VERSION}${SUFFIX}}
 REPO=${REPO:-quay.io/submariner}
 
+BASE_DEPS_IMAGE_NAME=shipyard-dapper-base-deps
+BASE_DEPS_IMAGE_DOCKERFILE=package/Dockerfile.base-deps
+BASE_DEPS_IMAGE=${REPO}/${BASE_DEPS_IMAGE_NAME}:${TAG}
 DAPPER_BASE_IMAGE=${REPO}/shipyard-dapper-base:${TAG}
 
 # always compare with upstream master, which is the source for the published dapper image
@@ -27,22 +30,26 @@ CHANGED_FILES_LOCAL=$(git diff --name-only remotes/$UPSTREAM_REMOTE/master)
 LAST_COMMIT_LOCAL=$(git rev-parse HEAD)
 LAST_COMMIT_MASTER=$(git rev-parse remotes/$UPSTREAM_REMOTE/master)
 
+function rebuild_image_if_changed() {
+    local image_name=$1
+    local image_file=$2
+    shift 2
+    local changed_files=("${image_file}" "${@}")
+    local latest_image="${REPO}/${image_name}:latest"
+    local local_image="${REPO}/${image_name}:${TAG}"
 
+    for check_file in "${changed_files}"; do
+        if [[ "${CHANGED_FILES_PR[@]}" =~ "${changed_file}" ]] ||
+           [[ "${CHANGED_FILES_LOCAL[@]}" =~ "${changed_file}" ]] ||
+           [[ "${LAST_COMMIT_LOCAL}" = "${LAST_COMMIT_MASTER}" ]]; then
+            echo "${image_file} was modified, rebuilding image"
+            docker build -t ${local_image} -f ${image_file} .
+            docker tag ${local_image} ${latest_image}
+            return
+        fi
+    done
+}
 
-if [[ "${CHANGED_FILES_PR[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
-   [[ "${CHANGED_FILES_PR[@]}" =~ "scripts/shared/" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "scripts/shared/" ]] ||
-   [[ "${CHANGED_FILES_PR[@]}" =~ "Makefile.inc" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "Makefile.inc" ]] ||
-   [[ "${LAST_COMMIT_LOCAL}" == "${LAST_COMMIT_MASTER}" ]]; then
-      echo "Dockerfile.dapper-base was modified, rebuilding dapper image"
-      docker build -t ${DAPPER_BASE_IMAGE} -f package/Dockerfile.dapper-base .
-      docker tag ${DAPPER_BASE_IMAGE} ${REPO}/shipyard-dapper-base:latest
-else
-      docker pull ${REPO}/shipyard-dapper-base:latest || :
-      # make sure the tag is also available for release, even if no changes happened
-      docker tag ${REPO}/shipyard-dapper-base:latest ${DAPPER_BASE_IMAGE}
-fi
-
+rebuild_image_if_changed shipyard-dapper-base-deps package/Dockerfile.base-deps
+rebuild_image_if_changed shipyard-dapper-base package/Dockerfile.dapper-base package/Dockerfile.base-deps scripts/shared/ Makefile.inc
 
