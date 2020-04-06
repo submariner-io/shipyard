@@ -55,7 +55,9 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     upx /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,protoc-gen-gogoctrd,runc} /usr/lib/golang/pkg/tool/*/* && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
+# Copy shared makefile so that downstream projects can use it
+COPY Makefile.inc ${SHIPYARD_DIR}
+
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
 COPY scripts/shared/ .
-COPY Makefile.inc ${SHIPYARD_DIR}
