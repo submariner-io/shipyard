@@ -2,6 +2,8 @@ k8s_version ?= 1.14.6
 globalnet ?= false
 deploytool ?= operator
 registry_inmemory ?= true
+image_tag ?= latest
+repo ?= quay.io/submariner
 
 SCRIPTS_DIR ?= /opt/shipyard/scripts
 
@@ -13,6 +15,9 @@ clusters:
 
 deploy: clusters
 	$(SCRIPTS_DIR)/deploy.sh --globalnet $(globalnet) --deploytool $(deploytool) $(DEPLOY_ARGS)
+
+release:
+	$(SCRIPTS_DIR)/release.sh --tag $(image_tag) --repo $(repo) $(images)
 
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring
