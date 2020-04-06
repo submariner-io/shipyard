@@ -4,8 +4,6 @@ deploytool ?= operator
 registry_inmemory ?= true
 
 SCRIPTS_DIR ?= /opt/shipyard/scripts
-CLUSTERS_ARGS ?= ''
-DEPLOY_ARGS ?= ''
 
 cleanup:
 	$(SCRIPTS_DIR)/cleanup.sh
