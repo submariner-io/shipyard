@@ -16,33 +16,14 @@ SUFFIX=""
 
 TAG=${TAG:-${VERSION}${SUFFIX}}
 REPO=${REPO:-quay.io/submariner}
+local_image=${REPO}/shipyard-dapper-base:${TAG}
+latest_image=${REPO}/shipyard-dapper-base:latest
 
-DAPPER_BASE_IMAGE=${REPO}/shipyard-dapper-base:${TAG}
+# Always pull latest image from the repo, so that it's layers may be reused.
+docker pull ${latest_image}
+docker tag ${latest_image} ${local_image}
 
-# always compare with upstream master, which is the source for the published dapper image
-UPSTREAM_REMOTE=$(git remote -v | grep submariner-io/shipyard | awk '{ print $1 }' | head -n 1)
-CHANGED_FILES_LOCAL=$(git diff --name-only remotes/$UPSTREAM_REMOTE/master)
-
-# Detect when we are on a merged patch
-LAST_COMMIT_LOCAL=$(git rev-parse HEAD)
-LAST_COMMIT_MASTER=$(git rev-parse remotes/$UPSTREAM_REMOTE/master)
-
-
-
-if [[ "${CHANGED_FILES_PR[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "package/Dockerfile.dapper-base" ]] ||
-   [[ "${CHANGED_FILES_PR[@]}" =~ "scripts/shared/" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "scripts/shared/" ]] ||
-   [[ "${CHANGED_FILES_PR[@]}" =~ "Makefile.inc" ]] ||
-   [[ "${CHANGED_FILES_LOCAL[@]}" =~ "Makefile.inc" ]] ||
-   [[ "${LAST_COMMIT_LOCAL}" == "${LAST_COMMIT_MASTER}" ]]; then
-      echo "Dockerfile.dapper-base was modified, rebuilding dapper image"
-      docker build -t ${DAPPER_BASE_IMAGE} -f package/Dockerfile.dapper-base .
-      docker tag ${DAPPER_BASE_IMAGE} ${REPO}/shipyard-dapper-base:latest
-else
-      docker pull ${REPO}/shipyard-dapper-base:latest || :
-      # make sure the tag is also available for release, even if no changes happened
-      docker tag ${REPO}/shipyard-dapper-base:latest ${DAPPER_BASE_IMAGE}
-fi
-
+# Rebuild the image to update any changed layers and tag it back so it will be used.
+docker build -t ${local_image} -f package/Dockerfile.dapper-base .
+docker tag ${local_image} ${latest_image}
 
