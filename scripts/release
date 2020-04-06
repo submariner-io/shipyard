@@ -8,6 +8,8 @@ DOCKER_TAG=${1:-latest}
 REPO=${REPO:-quay.io/submariner}
 
 echo "$QUAY_PASSWORD" | docker login quay.io -u "$QUAY_USERNAME" --password-stdin
+docker tag ${REPO}/shipyard-dapper-base-deps:${VERSION} ${REPO}/shipyard-dapper-base-deps:${DOCKER_TAG#"v"}
+docker tag ${REPO}/shipyard-dapper-base-deps:${VERSION} ${REPO}/shipyard-dapper-base-deps:"${TRAVIS_COMMIT:0:7}"
 docker tag ${REPO}/shipyard-dapper-base:${VERSION} ${REPO}/shipyard-dapper-base:${DOCKER_TAG#"v"}
 docker tag ${REPO}/shipyard-dapper-base:${VERSION} ${REPO}/shipyard-dapper-base:"${TRAVIS_COMMIT:0:7}"
 for i in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "${REPO}/.*:(${DOCKER_TAG#v}|${TRAVIS_COMMIT:0:7})"); do docker push $i; done
