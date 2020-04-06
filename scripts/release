@@ -7,7 +7,15 @@ source ${SCRIPTS_DIR}/lib/version
 DOCKER_TAG=${1:-latest}
 REPO=${REPO:-quay.io/submariner}
 
+function release_image() {
+    local image=$1
+    local images=(${image}:${DOCKER_TAG#"v"} ${image}:"${TRAVIS_COMMIT:0:7}")
+
+    for target_image in "${images[@]}"; do
+        docker tag ${image}:${VERSION} ${target_image}
+        docker push ${target_image}
+    done
+}
+
 echo "$QUAY_PASSWORD" | docker login quay.io -u "$QUAY_USERNAME" --password-stdin
-docker tag ${REPO}/shipyard-dapper-base:${VERSION} ${REPO}/shipyard-dapper-base:${DOCKER_TAG#"v"}
-docker tag ${REPO}/shipyard-dapper-base:${VERSION} ${REPO}/shipyard-dapper-base:"${TRAVIS_COMMIT:0:7}"
-for i in $(docker images --format "{{.Repository}}:{{.Tag}}" | grep -E "${REPO}/.*:(${DOCKER_TAG#v}|${TRAVIS_COMMIT:0:7})"); do docker push $i; done
+release_image ${REPO}/shipyard-dapper-base
