@@ -11,7 +11,7 @@ git:
 jobs:
   include:
   - env: CMD="make validate"
-  - env: CMD="make deploy deploytool=helm"
+  - env: CMD="make deploy deploytool=helm globalnet=true"
   - env: CMD="make deploy deploytool=operator" DEPLOY=true
 
 install:
