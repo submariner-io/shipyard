@@ -19,11 +19,15 @@ REPO=${REPO:-quay.io/submariner}
 local_image=${REPO}/shipyard-dapper-base:${TAG}
 latest_image=${REPO}/shipyard-dapper-base:latest
 
+# Enable BuildKit
+DOCKER_BUILDKIT=1
+export DOCKER_BUILDKIT
+
 # Always pull latest image from the repo, so that it's layers may be reused.
 docker pull ${latest_image}
 docker tag ${latest_image} ${local_image}
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
-docker build -t ${local_image} --cache-from ${latest_image} -f package/Dockerfile.dapper-base .
+docker build -t ${local_image} --cache-from ${latest_image} -f package/Dockerfile.dapper-base --build-arg BUILDKIT_INLINE_CACHE=1 .
 docker tag ${local_image} ${latest_image}
 

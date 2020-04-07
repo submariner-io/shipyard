@@ -1,4 +1,4 @@
-dist: xenial
+dist: bionic
 language: go
 
 branches:
@@ -14,11 +14,20 @@ jobs:
   - env: CMD="make deploy deploytool=helm"
   - env: CMD="make deploy deploytool=operator" DEPLOY=true
 
-install:
-  - sudo apt-get install moreutils # make ts available
+before_install:
+  - curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+  - sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+  - sudo apt-get update
+  - sudo apt-get -y -o Dpkg::Options::="--force-confnew" install moreutils docker-ce
 
 services:
   - docker
+
+#addons:
+#  apt:
+#    packages:
+#      - docker-ce
+#      - moreutils
 
 script:
   - set -o pipefail;
