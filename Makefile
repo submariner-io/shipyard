@@ -25,8 +25,10 @@ else
 # Shipyard-specific starts
 clusters deploy release validate: dapper-image
 
+dapper-image: export SCRIPTS_DIR=./scripts/shared
+
 dapper-image:
-	SCRIPTS_DIR=./scripts/shared ./scripts/dapper-image
+	$(SCRIPTS_DIR)/build_image.sh -i shipyard-dapper-base -f package/Dockerfile.dapper-base
 
 .DEFAULT_GOAL := validate
 # Shipyard-specific ends

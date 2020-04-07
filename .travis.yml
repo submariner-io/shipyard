@@ -15,7 +15,8 @@ jobs:
   - env: CMD="make deploy deploytool=operator" DEPLOY=true
 
 install:
-  - sudo apt-get install moreutils # make ts available
+  - sudo apt-get install curl moreutils # make ts available
+  - curl https://codeload.github.com/kward/shflags/tar.gz/v1.2.3 | tar -xzf - && sudo mv shflags-1.2.3 /usr/share/shflags
 
 services:
   - docker
