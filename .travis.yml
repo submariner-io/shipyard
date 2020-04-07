@@ -36,3 +36,8 @@ deploy:
     on:
       branch: master
       condition: $DEPLOY = true
+  - provider: script
+    script: make dapper-image release image_tag=$TRAVIS_TAG images="shipyard-dapper-base" dapper_image_flags="--nocache"
+    on:
+      tags: true
+      condition: $DEPLOY = true
