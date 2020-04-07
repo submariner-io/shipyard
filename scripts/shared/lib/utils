@@ -95,7 +95,7 @@ function add_cluster_cidrs() {
     [[ $globalnet != "true" ]] || val="0"
     cluster_CIDRs[$idx]="10.24${val}.0.0/16"
     service_CIDRs[$idx]="100.9${val}.0.0/16"
-    [[ $globalnet != "true" ]] || global_CIDRs[$idx]="169.254.${1}.0/24"
+    [[ $globalnet != "true" ]] || global_CIDRs[$idx]="169.254.$((val-2)).0/24"
 }
 
 function declare_cidrs() {
