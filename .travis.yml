@@ -32,7 +32,7 @@ after_success:
 
 deploy:
   - provider: script
-    script: make release images="shipyard-dapper-base"
+    script: make dapper-image release images="shipyard-dapper-base" dapper_image_flags="--nocache"
     on:
       branch: master
       condition: $DEPLOY = true
