@@ -47,22 +47,27 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 	Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Config.Data))
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring(listenerPod.Config.Data))
 
-	// Normally, Submariner preserves the sourceIP for inter-cluster traffic. However, when a POD is using the
-	// HostNetwork, it does not get an IPAddress from the podCIDR and it uses the HostIP. Submariner, for such PODs,
-	// would MASQUERADE the external traffic from that POD to the corresponding CNI interface ip-address on that
-	// Host. So, we skip source-ip validation for PODs using HostNetworking.
-	if p.Networking == framework.PodNetworking && p.ToEndpointType != GlobalIP {
-		By("Verifying the output of listener pod which must contain the source IP")
-		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
-	}
-
-	// When Globalnet is enabled (i.e., remoteEndpoint is a globalIP), Globalnet Controller MASQUERADEs
-	// the source-ip of the POD to the corresponding global-ip that is assigned to the POD.
-	if p.ToEndpointType == GlobalIP {
-		By("Verifying the output of listener pod which must contain the globalIP of the connector POD")
+	if p.Networking == framework.PodNetworking {
+		if p.ToEndpointType == GlobalIP {
+			// When Globalnet is enabled (i.e., remoteEndpoint is a globalIP) and POD uses PodNetworking,
+			// Globalnet Controller MASQUERADEs the source-ip of the POD to the corresponding global-ip
+			// that is assigned to the POD.
+			By("Verifying the output of listener pod which must contain the globalIP of the connector POD")
+			podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
+			Expect(podGlobalIP).ToNot(Equal(""))
+			Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
+		} else if p.ToEndpointType != GlobalIP {
+			By("Verifying the output of listener pod which must contain the source IP")
+			Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
+		}
+	} else if p.Networking == framework.HostNetworking {
+		// when a POD is using the HostNetwork, it does not get an IPAddress from the podCIDR
+		// but it uses the HostIP. Submariner, for such PODs, would MASQUERADE the sourceIP of
+		// the outbound traffic (destined to remoteCluster) to the corresponding CNI interface
+		// ip-address on that Host and globalIP will NOT be annotated on the POD.
+		By("Verifying that globalIP annotation does not exist on the connector POD")
 		podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
-		Expect(podGlobalIP).ToNot(Equal(""))
-		Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
+		Expect(podGlobalIP).To(Equal(""))
 	}
 
 	// Return the pods in case further verification is needed
