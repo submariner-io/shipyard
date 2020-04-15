@@ -122,3 +122,23 @@ function load_deploytool() {
     . "$deploy_lib"
 }
 
+function find_submariner_namespace() {
+    local namespace
+    namespace="$(kubectl get pods --all-namespaces | awk '/submariner/{ print $1 }' | grep -v broker | head -n 1)"
+    if [[ "${namespace}" == "" ]]; then
+        echo "Could not find a submariner deployment namespace" >&2
+        exit 1
+    fi
+    echo "${namespace}"
+}
+
+function reload_pods() {
+    local resource_type=$1 # the resource type can be deployment or daemonset
+    local resource_name=$2 # the name of the resource
+    local namespace
+    namespace="$(find_submariner_namespace)"
+
+    kubectl patch -n "${namespace}" "${resource_type}" "${resource_name}" \
+              --type='json' \
+              -p='[{"op": "replace", "path": "/spec/template/spec/containers/0/imagePullPolicy", "value": "Always" },{"op": "replace", "path": "/spec/template/metadata/labels/modified", "value": "'"$(date +%s)"'"}]'
+}
