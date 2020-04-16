@@ -52,7 +52,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     GOFLAGS="" go get -v golang.org/x/tools/cmd/goimports && \
-    upx /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,protoc-gen-gogoctrd,runc} /usr/lib/golang/pkg/tool/*/* && \
+    upx /go/bin/{ginkgo,golangci-lint} /usr/bin/{containerd*,ctr,docker*,goimports,helm,kind,kube*,runc} /usr/lib/golang/pkg/tool/*/* && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy shared makefile so that downstream projects can use it
