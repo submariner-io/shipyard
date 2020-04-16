@@ -62,7 +62,10 @@ function run_parallel() {
     cmnd=$2
     declare -A pids
     for i in ${clusters}; do
-        ( with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /" ) &
+        (
+           set -o pipefail
+           with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /"
+        ) &
         pids["${i}"]=$!
     done
 
