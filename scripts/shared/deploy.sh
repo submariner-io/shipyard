@@ -6,13 +6,21 @@ source /usr/share/shflags/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
+DEFINE_string 'cable_driver' '' "Cable driver implementation"
+
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 globalnet="${FLAGS_globalnet}"
 deploytool="${FLAGS_deploytool}"
 cluster_settings="${FLAGS_cluster_settings}"
-echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}"
+cable_driver="${FLAGS_cable_driver}"
+
+if [[ -z "${cable_driver}" ]]; then
+  echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}"
+else
+  echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}, cable_driver=${cable_driver}"
+fi
 
 set -em
 
