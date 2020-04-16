@@ -33,15 +33,21 @@ function subctl_install_subm() {
         return
     fi
 
-    subctl join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
-                --clusterid "${cluster}" \
-                --repository "${SUBM_ENGINE_IMAGE_REPO}" \
-                --version "${SUBM_ENGINE_IMAGE_TAG}" \
-                --nattport "${CE_IPSEC_NATTPORT}" \
-                --ikeport "${CE_IPSEC_IKEPORT}" \
-                --colorcodes "${SUBM_COLORCODES}" \
-                --disable-nat \
-                "${OUTPUT_DIR}"/broker-info.subm
+    local flags=( --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+                  --clusterid "${cluster}" \
+                  --repository "${SUBM_ENGINE_IMAGE_REPO}" \
+                  --version "${SUBM_ENGINE_IMAGE_TAG}" \
+                  --nattport "${CE_IPSEC_NATTPORT}" \
+                  --ikeport "${CE_IPSEC_IKEPORT}" \
+                  --colorcodes "${SUBM_COLORCODES}" \
+                  --disable-nat )
+
+    if [[ ! -z "${cable_driver}" ]]; then
+        flags+=( --cable-driver "${cable_driver}" )
+    fi
+
+    subctl join "${flags[@]}" "${OUTPUT_DIR}"/broker-info.subm
+
 }
 
 function install_subm_all_clusters() {

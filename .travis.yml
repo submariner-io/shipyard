@@ -12,11 +12,16 @@ jobs:
   include:
   - env: CMD="make validate"
   - env: CMD="make deploy deploytool=helm globalnet=true"
+  - env: CMD="make deploy deploytool=operator cable_driver=wireguard"
   - env: CMD="make deploy deploytool=operator" DEPLOY=true
 
 install:
   - sudo apt-get install curl moreutils # make ts available
   - curl https://codeload.github.com/kward/shflags/tar.gz/v1.2.3 | tar -xzf - && sudo mv shflags-1.2.3 /usr/share/shflags
+  - sudo add-apt-repository -y ppa:wireguard/wireguard # add WireGuard support
+  - sudo apt-get update
+  - sudo apt-get install linux-headers-`uname -r` wireguard -y
+  - sudo modprobe wireguard
 
 services:
   - docker
