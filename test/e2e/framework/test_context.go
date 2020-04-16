@@ -55,11 +55,11 @@ func init() {
 }
 
 func ValidateFlags(t *TestContextType) {
-	if len(t.KubeConfig) == 0 {
+	if len(t.KubeConfig) == 0 && len(t.KubeConfigs) == 0 {
 		klog.Fatalf("kubeconfig parameter or KUBECONFIG environment variable is required")
 	}
 
-	if len(t.KubeContexts) < 2 {
+	if len(t.KubeContexts) < 2 && len(t.KubeConfigs) < 2 {
 		klog.Fatalf("several kubernetes contexts are necessary east, west, etc..")
 	}
 }
