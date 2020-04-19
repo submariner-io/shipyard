@@ -16,11 +16,7 @@ deploytool="${FLAGS_deploytool}"
 cluster_settings="${FLAGS_cluster_settings}"
 cable_driver="${FLAGS_cable_driver}"
 
-if [[ -z "${cable_driver}" ]]; then
-  echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}"
-else
-  echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}, cable_driver=${cable_driver}"
-fi
+echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}, cable_driver=${cable_driver}"
 
 set -em
 
