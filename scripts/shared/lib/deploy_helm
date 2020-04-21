@@ -78,8 +78,13 @@ function helm_install_subm() {
         --set globalnet.image.repository="localhost:5000/submariner-globalnet" \
         --set globalnet.image.tag="local" \
         --set globalnet.image.pullPolicy="IfNotPresent" \
-        --set crd.create="${crd_create}" \
         --set "submariner.cableDriver=${cable_driver}"
+        --set submariner.serviceDiscovery="${lighthouse}" \
+        --set serviceAccounts.lighthouse.create="${lighthouse}" \
+        --set lighthouse.image.repository="localhost:5000/lighthouse-agent" \
+        --set lighthouse.image.tag="local" \
+        --set lighthouse.image.pullPolicy="IfNotPresent" \
+        --set crd.create="${crd_create}"
 }
 
 

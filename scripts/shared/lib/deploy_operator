@@ -18,12 +18,13 @@ function deploytool_prereqs() {
 }
 
 function setup_broker() {
-    local gn
+    local gn lh
     [[ $globalnet != true ]] || gn="--globalnet"
+    [[ $lighthouse != true ]] || lh="--service-discovery"
     echo "Installing broker..."
     (
         cd "${OUTPUT_DIR}" && \
-        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn}
+        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn}$ ${lh}
     )
 }
 
