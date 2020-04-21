@@ -1,6 +1,7 @@
 /vendor
 .dapper
 .idea
+.shflags
 /bin
 output
 dist

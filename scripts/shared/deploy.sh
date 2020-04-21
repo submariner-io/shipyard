@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source /usr/share/shflags/shflags
+source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"

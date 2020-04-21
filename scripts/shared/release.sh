@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source /usr/share/shflags/shflags
+source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'tag' '' "Additional tag to use for the image (prefix 'v' will be stripped)"
 DEFINE_string 'repo' '' "Quay.io repo to deploy to"
 FLAGS_HELP="USAGE: $0 [--tag v1.2.3] [--repo quay.io/myrepo] image [image ...]"

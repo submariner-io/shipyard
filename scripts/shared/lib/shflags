@@ -1,0 +1,17 @@
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
+
+if [ -f /usr/share/shflags/shflags ]; then
+    . /usr/share/shflags/shflags
+elif [ ! -f .shflags ]; then
+    echo "Downloading shflags ${SHFLAGS_VERSION:=1.2.3}"
+    if ! (curl -L "https://github.com/kward/shflags/archive/v${SHFLAGS_VERSION}.tar.gz" | tar -xzf - shflags-${SHFLAGS_VERSION}/shflags &&
+          mv shflags-${SHFLAGS_VERSION}/shflags .shflags); then
+        echo This program needs shflags in /usr/share/shflags/shflags or locally as .shflags. 1>&2
+        echo It was unable to download it; please install it and try again. 1>&2
+        exit 1
+    fi
+fi
+
+. ./.shflags

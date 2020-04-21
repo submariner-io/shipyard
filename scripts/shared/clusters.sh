@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source /usr/share/shflags/shflags
+source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' '' 'Version of K8s to use'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'registry_inmemory' 'true' "Run local registry in memory to speed up the image loading."
