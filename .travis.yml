@@ -12,8 +12,8 @@ jobs:
   include:
   - env: CMD="make validate"
   - env: CMD="make deploy deploytool=helm globalnet=true"
-  - env: CMD="make deploy deploytool=operator cable_driver=wireguard"
   - env: CMD="make deploy deploytool=operator" DEPLOY=true
+  - env: CMD="make deploy cable_driver=wireguard"
 
 install:
   - sudo apt-get install curl moreutils # make ts available
