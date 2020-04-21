@@ -8,7 +8,7 @@ SUFFIX=""
 
 ## Process command line flags ##
 
-source /usr/share/shflags/shflags
+source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'tag' "${VERSION}${SUFFIX}" "Tag to set for the local image"
 DEFINE_string 'repo' 'quay.io/submariner' "Quay.io repo to use for the image"
 DEFINE_string 'image' '' "Image name to build" 'i'
