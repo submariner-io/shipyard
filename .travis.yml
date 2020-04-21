@@ -16,8 +16,6 @@ jobs:
   - env: CMD="make deploy cable_driver=wireguard"
 
 install:
-  - sudo apt-get install curl moreutils # make ts available
-  - curl https://codeload.github.com/kward/shflags/tar.gz/v1.2.3 | tar -xzf - && sudo mv shflags-1.2.3 /usr/share/shflags
   - sudo add-apt-repository -y ppa:wireguard/wireguard # add WireGuard support
   - sudo apt-get update
   - sudo apt-get install linux-headers-`uname -r` wireguard -y
@@ -25,6 +23,12 @@ install:
 
 services:
   - docker
+
+addons:
+  apt:
+    packages:
+      - curl
+      - moreutils # make ts available
 
 script:
   - set -o pipefail;
