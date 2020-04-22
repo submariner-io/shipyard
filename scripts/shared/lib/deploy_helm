@@ -33,7 +33,7 @@ function setup_broker() {
         echo "Submariner CRDs already exist, skipping broker creation..."
     else
         echo "Installing submariner broker..."
-        helm --kube-context "${cluster}" install submariner-latest/submariner-k8s-broker --name "${SUBMARINER_BROKER_NS}" --namespace "${SUBMARINER_BROKER_NS}"
+        helm --kube-context "${cluster}" install submariner-latest/submariner-k8s-broker --name "${SUBMARINER_BROKER_NS}" --namespace "${SUBMARINER_BROKER_NS}" --set submariner.serviceDiscovery="${lighthouse}"
     fi
 
     submariner_broker_url=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -78,9 +78,8 @@ function helm_install_subm() {
         --set globalnet.image.repository="localhost:5000/submariner-globalnet" \
         --set globalnet.image.tag="local" \
         --set globalnet.image.pullPolicy="IfNotPresent" \
-        --set "submariner.cableDriver=${cable_driver}"
+        --set "submariner.cableDriver=${cable_driver}" \
         --set submariner.serviceDiscovery="${lighthouse}" \
-        --set serviceAccounts.lighthouse.create="${lighthouse}" \
         --set lighthouse.image.repository="localhost:5000/lighthouse-agent" \
         --set lighthouse.image.tag="local" \
         --set lighthouse.image.pullPolicy="IfNotPresent" \

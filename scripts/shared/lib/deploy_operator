@@ -24,7 +24,7 @@ function setup_broker() {
     echo "Installing broker..."
     (
         cd "${OUTPUT_DIR}" && \
-        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn}$ ${lh}
+        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn} ${lh}
     )
 }
 

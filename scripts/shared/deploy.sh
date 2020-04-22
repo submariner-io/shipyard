@@ -7,7 +7,7 @@ DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployme
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
 DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'cable_driver' '' "Cable driver implementation"
-DEFINE_string 'lighthouse' 'false' "Deploy with serice discovery enabled (set to 'true' to enable)"
+DEFINE_boolean 'lighthouse' false "Deploy with service discovery enabled (set to 'true' to enable)"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -15,6 +15,7 @@ globalnet="${FLAGS_globalnet}"
 deploytool="${FLAGS_deploytool}"
 cluster_settings="${FLAGS_cluster_settings}"
 cable_driver="${FLAGS_cable_driver}"
+[[ "${FLAGS_lighthouse}" = "${FLAGS_TRUE}" ]] && lighthouse=true || lighthouse=false
 echo "Running with: globalnet=${globalnet}, deploytool=${deploytool}, cluster_settings=${cluster_settings}, cable_driver=${cable_driver}, lighthouse=${lighthouse}"
 
 set -em
@@ -36,7 +37,7 @@ declare_kubeconfig
 import_image quay.io/submariner/submariner
 import_image quay.io/submariner/submariner-route-agent
 [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
-[[ $lighthouse != "true" ]] || import_image quay.io/submariner/lighthouse-agent
+[[ $lighthouse != true ]] || import_image quay.io/submariner/lighthouse-agent
 load_deploytool $deploytool
 deploytool_prereqs
 
