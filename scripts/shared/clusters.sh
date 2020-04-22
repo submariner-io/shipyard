@@ -60,6 +60,7 @@ function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
     if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
+        rm -f "$KUBECONFIG"
         kind export kubeconfig --name=${cluster}
         kind_fixup_config
         return
@@ -113,7 +114,7 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-run_parallel "{1..3}" create_kind_cluster
+with_retries 3 run_parallel "{1..3}" create_kind_cluster
 declare_kubeconfig
 run_parallel "2 3" deploy_weave_cni
 
