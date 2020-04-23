@@ -25,6 +25,13 @@ source ${SCRIPTS_DIR}/lib/utils
 source "${SCRIPTS_DIR}/lib/cluster_settings"
 [[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
+cat << EOM
+Cluster settings::
+  clusters - ${clusters[*]@Q}
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+
 ### Functions ###
 
 function render_template() {
@@ -123,3 +130,4 @@ with_retries 3 run_all_clusters create_kind_cluster
 declare_kubeconfig
 run_subm_clusters deploy_weave_cni
 
+print_clusters_message
