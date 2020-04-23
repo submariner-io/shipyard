@@ -11,13 +11,13 @@ The Shipyard project provides tooling for creating K8s clusters with [kind](K8s 
 - [docker]
 
 ## Usage
-To use shipyard for your project, it's easiest to use dapper and make.
-To use dapper you'll need a specific Dockerfile that dapper consumes to create a consistent environment based upon shipyard's base image.
-To use make you'll need some commands to enable dapper and also include the targets which ship in the base image.
+To use Shipyard for your project, it's easiest to use Dapper and Make.
+To use Dapper, you'll need a specific Dockerfile that Dapper consumes to create a consistent environment based upon Shipyard's base image.
+To use Make, you'll need some commands to enable Dapper and also include the targets which ship in the base image.
 
 ### Dockerfile.dapper
 
-The dockerfile should build upon `quay.io/submariner/shipyard-dapper-base`.
+The Dockerfile should build upon `quay.io/submariner/shipyard-dapper-base`.
 For example:
 
 ```Dockerfile
@@ -37,7 +37,7 @@ You can also refer to the project's own [Dockerfile.dapper](Dockerfile.dapper) a
 
 ### Makefile
 
-The makefile should include targets to run everything in dapper, they're defined in [Makefile.dapper](Makefile.dapper) and can be copied as is and included. To use shipyard's target simply include the [Makefile.inc](Makefile.inc) file in your own Makefile.
+The Makefile should include targets to run everything in Dapper. They're defined in [Makefile.dapper](Makefile.dapper) and can be copied as-is and included. To use Shipyard's target, simply include the [Makefile.inc](Makefile.inc) file in your own Makefile.
 
 The simplest Makefile would look like this:
 
