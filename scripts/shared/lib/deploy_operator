@@ -21,9 +21,14 @@ function setup_broker() {
     local gn
     [[ $globalnet != true ]] || gn="--globalnet"
     echo "Installing broker..."
+    # shellcheck disable=SC2086 # Split on purpose
     (
         cd "${OUTPUT_DIR}" && \
-        subctl --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" deploy-broker --no-dataplane ${gn}
+        subctl deploy-broker \
+               --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+               --no-dataplane \
+               ${gn} \
+               ${deploytool_broker_args}
     )
 }
 
@@ -33,6 +38,7 @@ function subctl_install_subm() {
         return
     fi
 
+    # shellcheck disable=SC2086 # Split on purpose
     subctl join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                 --clusterid "${cluster}" \
                 --repository "${SUBM_ENGINE_IMAGE_REPO}" \
@@ -42,6 +48,7 @@ function subctl_install_subm() {
                 --colorcodes "${SUBM_COLORCODES}" \
                 --disable-nat \
                 --cable-driver "${cable_driver}" \
+                ${deploytool_submariner_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
 }
 
