@@ -2,8 +2,9 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-CLUSTERS_ARGS = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
-DEPLOY_ARGS = $(CLUSTERS_ARGS)
+CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
+CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
+DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
