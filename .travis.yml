@@ -14,7 +14,7 @@ jobs:
   - env: CMD="make deploy"
          CLUSTERS_ARGS="--globalnet --timeout 1m"
          DEPLOY_ARGS="--globalnet --deploytool helm --timeout 2m"
-  - env: CMD="make deploy"
+  - env: CMD="make e2e"
          CLUSTERS_ARGS="--timeout 1m"
          DEPLOY_ARGS="--timeout 2m"
          RELEASE=true
