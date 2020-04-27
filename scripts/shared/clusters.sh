@@ -4,14 +4,14 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' '' 'Version of K8s to use'
-DEFINE_string 'globalnet' 'false' "Deploy with operlapping CIDRs (set to 'true' to enable)"
+DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 version="${FLAGS_k8s_version}"
-globalnet="${FLAGS_globalnet}"
+[[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false 
 cluster_settings="${FLAGS_cluster_settings}"
 echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}"

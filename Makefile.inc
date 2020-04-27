@@ -1,5 +1,4 @@
 k8s_version ?= 1.14.6
-globalnet ?= false
 deploytool ?= operator
 release_tag ?= latest
 repo ?= quay.io/submariner
@@ -11,10 +10,10 @@ cleanup:
 	$(SCRIPTS_DIR)/cleanup.sh
 
 clusters:
-	$(SCRIPTS_DIR)/clusters.sh --k8s_version $(k8s_version) --globalnet $(globalnet) $(CLUSTERS_ARGS)
+	$(SCRIPTS_DIR)/clusters.sh --k8s_version $(k8s_version) $(CLUSTERS_ARGS)
 
 deploy: clusters
-	$(SCRIPTS_DIR)/deploy.sh --globalnet $(globalnet) --deploytool $(deploytool) --cable_driver $(cable_driver) $(DEPLOY_ARGS)
+	$(SCRIPTS_DIR)/deploy.sh --deploytool $(deploytool) --cable_driver $(cable_driver) $(DEPLOY_ARGS)
 
 release:
 	$(SCRIPTS_DIR)/release.sh --tag $(release_tag) --repo $(repo) $(release_images) $(RELEASE_ARGS)
