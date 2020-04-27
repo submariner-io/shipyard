@@ -1,6 +1,6 @@
 FROM fedora:31
 
-ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard/
+ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     LINT_VERSION=v1.18.0 \
     HELM_VERSION=v2.14.1 \
@@ -55,7 +55,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy shared makefile so that downstream projects can use it
-COPY Makefile.inc ${SHIPYARD_DIR}
+COPY Makefile.inc ${SHIPYARD_DIR}/
 
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
