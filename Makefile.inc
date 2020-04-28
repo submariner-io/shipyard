@@ -1,7 +1,6 @@
 k8s_version ?= 1.14.6
 globalnet ?= false
 deploytool ?= operator
-registry_inmemory ?= true
 release_tag ?= latest
 repo ?= quay.io/submariner
 cable_driver ?= ''
@@ -12,7 +11,7 @@ cleanup:
 	$(SCRIPTS_DIR)/cleanup.sh
 
 clusters:
-	$(SCRIPTS_DIR)/clusters.sh --k8s_version $(k8s_version) --globalnet $(globalnet) --registry_inmemory $(registry_inmemory) $(CLUSTERS_ARGS)
+	$(SCRIPTS_DIR)/clusters.sh --k8s_version $(k8s_version) --globalnet $(globalnet) $(CLUSTERS_ARGS)
 
 deploy: clusters
 	$(SCRIPTS_DIR)/deploy.sh --globalnet $(globalnet) --deploytool $(deploytool) --cable_driver $(cable_driver) $(DEPLOY_ARGS)
