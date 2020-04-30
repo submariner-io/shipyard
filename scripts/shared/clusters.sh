@@ -83,6 +83,11 @@ function deploy_weave_cni(){
         return
     fi
 
+    if [[ "${cluster}" = "cluster1" ]]; then
+       echo "Not deploying weave on broker cluster"
+       return
+    fi
+
     echo "Applying weave network..."
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
@@ -114,7 +119,7 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-with_retries 3 run_parallel "{1..3}" create_kind_cluster
+with_retries 3 run_all_clusters create_kind_cluster
 declare_kubeconfig
-run_parallel "2 3" deploy_weave_cni
+run_subm_clusters deploy_weave_cni
 
