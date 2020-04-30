@@ -47,7 +47,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
     curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /usr/bin /go/bin /usr/lib/golang -type f -executable -size +5M ! -name subctl ! -name hyperkube | xargs upx && \
+    find /usr/bin /go/bin /usr/lib/golang /usr/libexec -type f -executable -size +1M ! -name subctl ! -name hyperkube | xargs upx && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy kubecfg to always run on the shell
