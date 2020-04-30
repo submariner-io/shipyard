@@ -54,7 +54,7 @@ function subctl_install_subm() {
 }
 
 function install_subm_all_clusters() {
-    run_parallel "{1..3}" subctl_install_subm
+    run_subm_clusters subctl_install_subm
 }
 
 function deploytool_postreqs() {

@@ -23,7 +23,7 @@ function stop_local_registry {
 
 ### Main ###
 
-run_parallel "{1..3}" delete_cluster
+run_all_clusters delete_cluster
 stop_local_registry
 docker system prune --volumes -f
 

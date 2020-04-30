@@ -25,7 +25,7 @@ function install_helm() {
 function deploytool_prereqs() {
     helm init --client-only
     helm repo add submariner-latest https://submariner-io.github.io/submariner-charts/charts
-    run_parallel "{1..3}" install_helm
+    run_all_clusters install_helm
 }
 
 function setup_broker() {
@@ -47,12 +47,8 @@ function setup_broker() {
 }
 
 function helm_install_subm() {
-    local crd_create=$1
-
-    if [[ ${cluster_subm[$cluster]} != "true" ]]; then
-        echo "Skipping installation as requested in cluster settings"
-        return
-    fi
+    local crd_create=false
+    [[ "${cluster}" = "cluster1" ]] || crd_create=true
 
     if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
         echo "Submariner already installed, skipping installation..."
@@ -91,9 +87,7 @@ function helm_install_subm() {
 
 
 function install_subm_all_clusters() {
-    with_context cluster1 helm_install_subm false
-
-    run_parallel "2 3" helm_install_subm true
+    run_subm_clusters helm_install_subm
 }
 
 function deploytool_postreqs() {
