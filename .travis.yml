@@ -12,7 +12,7 @@ jobs:
   include:
   - env: CMD="make validate"
   - env: CMD="make deploy"
-         CLUSTERS_ARGS="--globalnet true"
+         CLUSTERS_ARGS="--globalnet"
          DEPLOY_ARGS="${CLUSTERS_ARGS} --deploytool helm"
   - env: CMD="make deploy"
          DEPLOY_ARGS="--cable_driver wireguard"
