@@ -73,19 +73,21 @@ function create_kind_cluster() {
 
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
+
+    if ! deploy_cni; then
+        echo "Failed to deploy custom CNI, removing the cluster"
+        kind delete cluster --name=${cluster}
+        return 1
+    fi
+}
+
+function deploy_cni() {
+    [[ -n "${cluster_cni[$cluster]}" ]] || return 0
+
+    eval "deploy_${cluster_cni[$cluster]}_cni"
 }
 
 function deploy_weave_cni(){
-    if [[ "${cluster_cni[$cluster]}" != "weave" ]]; then
-       echo "Not deploying weave on the cluster, since it wasn't requested"
-       return
-    fi
-
-    if kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=3s > /dev/null 2>&1; then
-        echo "Weave already deployed."
-        return
-    fi
-
     echo "Applying weave network..."
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
@@ -118,6 +120,4 @@ mkdir -p ${KUBECONFIGS_DIR}
 run_local_registry
 declare_cidrs
 with_retries 3 run_all_clusters create_kind_cluster
-declare_kubeconfig
-run_subm_clusters deploy_weave_cni
 
