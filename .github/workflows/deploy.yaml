@@ -1,0 +1,64 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v**'
+
+name: Test Scripts
+jobs:
+  deploy:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        globalnet: ['', '--globalnet']
+        deploytool: ['operator', 'helm']
+        cable_driver: ['', 'wireguard']
+        exclude:
+          - deploytool: 'helm'
+            cable_driver: 'wireguard'
+    steps:
+      - name: Checkout the repository
+        uses: actions/checkout@master
+
+      - name: Install wireguard module
+        if: matrix.cable_driver == 'wireguard'
+        run: |
+          sudo add-apt-repository -y ppa:wireguard/wireguard # add WireGuard support
+          sudo apt-get update
+          sudo apt-get install linux-headers-`uname -r` wireguard -y
+          sudo modprobe wireguard
+
+#          sudo apt-get clean
+#          sudo apt-get autoremove --purge
+      - name: Reclaim free space!
+        run: |
+          df -h
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          docker system prune --volumes --all --force
+          df -h
+
+      - name: Run deploy
+        run: make deploy CLUSTER_ARGS="${{ matrix.globalnet }}" DEPLOY_ARGS="${{ matrix.globalnet }} --deploytool ${{ matrix.deploytool }} --cable_driver '${{ matrix.cable_driver }}'"
+#        run: make deploy
+
+      - name: Post Mortem
+        if: failure()
+        run: |
+          export KUBECONFIG=$(find output/kubeconfigs/ -type f | tr '\n' ':')
+          for cluster in cluster{1..3}; do
+              echo Post mortem $cluster
+              kubectl --context=$cluster get pods -A
+              for pod in $(kubectl --context=$cluster get pods -A | grep CreateContainerError | sed 's/  */;/g'); do
+                  ns=$(echo $pod | cut -f1 -d';')
+                  name=$(echo $pod | cut -f2 -d';')
+                  echo "======================= $name - $ns ============================"
+                  kubectl --context=$cluster -n $ns describe pod $name
+                  echo "===================== END $name - $ns =========================="
+              done
+          done
