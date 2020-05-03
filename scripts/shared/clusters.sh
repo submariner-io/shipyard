@@ -78,7 +78,7 @@ function create_kind_cluster() {
 }
 
 function deploy_weave_cni(){
-    if kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=60s > /dev/null 2>&1; then
+    if kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=3s > /dev/null 2>&1; then
         echo "Weave already deployed."
         return
     fi
@@ -91,9 +91,9 @@ function deploy_weave_cni(){
     echo "Applying weave network..."
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
-    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=300s
+    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=60s
     echo "Waiting for core-dns deployment to be ready..."
-    kubectl -n kube-system rollout status deploy/coredns --timeout=300s
+    kubectl -n kube-system rollout status deploy/coredns --timeout=60s
 }
 
 function run_local_registry() {
