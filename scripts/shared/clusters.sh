@@ -35,10 +35,8 @@ function generate_cluster_yaml() {
     local pod_cidr="${cluster_CIDRs[${cluster}]}"
     local service_cidr="${service_CIDRs[${cluster}]}"
     local dns_domain="${cluster}.local"
-    local disable_cni="true"
-    if [[ "${cluster}" = "cluster1" ]]; then
-        disable_cni="false"
-    fi
+    local disable_cni="false"
+    [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
@@ -78,14 +76,14 @@ function create_kind_cluster() {
 }
 
 function deploy_weave_cni(){
+    if [[ "${cluster_cni[$cluster]}" != "weave" ]]; then
+       echo "Not deploying weave on the cluster, since it wasn't requested"
+       return
+    fi
+
     if kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=3s > /dev/null 2>&1; then
         echo "Weave already deployed."
         return
-    fi
-
-    if [[ "${cluster}" = "cluster1" ]]; then
-       echo "Not deploying weave on broker cluster"
-       return
     fi
 
     echo "Applying weave network..."
