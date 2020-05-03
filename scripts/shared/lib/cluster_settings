@@ -19,3 +19,11 @@ declare -gA cluster_subm
 cluster_subm['cluster1']="true"
 cluster_subm['cluster2']="true"
 cluster_subm['cluster3']="true"
+
+# Map of cluster names to values specifying which CNI to install.
+# Empty (or not set) value means default CNI.
+# Currently only "weave" is supported.
+declare -gA cluster_cni
+
+cluster_cni['cluster2']="weave"
+cluster_cni['cluster3']="weave"
