@@ -39,7 +39,7 @@ function with_retries() {
         fi
     done
 
-    echo "Max attempts reached, failed to run ${cmnd}!"
+    echo "Max attempts reached, failed to run '${*:2}'!"
     exit 1
 }
 
@@ -65,7 +65,7 @@ function run_parallel() {
     for i in ${clusters}; do
         (
            set -o pipefail
-           with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /"
+           with_context "cluster${i}" "$cmnd" "${@:3}" |& sed "/\[cluster${i}]/!s/^/[cluster${i}] /"
         ) &
         pids["${i}"]=$!
     done
