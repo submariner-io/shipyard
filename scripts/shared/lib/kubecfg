@@ -1,0 +1,1 @@
+export KUBECONFIG=$(find ${DAPPER_OUTPUT:-output}/kubeconfigs -type f | tr '\n' ':')
