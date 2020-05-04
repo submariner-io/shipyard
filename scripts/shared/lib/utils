@@ -33,7 +33,8 @@ function with_retries() {
     local cmnd=$2
 
     for _ in ${retries}; do
-        if $cmnd "${@:3}"; then
+        ( $cmnd "${@:3}"; ) &
+        if wait $!; then
             return 0
         fi
     done
