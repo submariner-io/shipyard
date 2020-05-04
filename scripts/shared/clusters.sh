@@ -56,9 +56,10 @@ function kind_fixup_config() {
 
 function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
+    rm -f "$KUBECONFIG"
+
     if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        rm -f "$KUBECONFIG"
         kind export kubeconfig --name=${cluster}
         kind_fixup_config
         return
@@ -74,7 +75,8 @@ function create_kind_cluster() {
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
 
-    if ! deploy_cni; then
+    ( deploy_cni; ) &
+    if ! wait $! ; then
         echo "Failed to deploy custom CNI, removing the cluster"
         kind delete cluster --name=${cluster}
         return 1
@@ -119,5 +121,5 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-with_retries 3 run_all_clusters create_kind_cluster
+run_all_clusters with_retries 3 create_kind_cluster
 
