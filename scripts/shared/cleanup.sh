@@ -24,6 +24,7 @@ function stop_local_registry {
 ### Main ###
 
 run_all_clusters delete_cluster
+[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf ${DAPPER_OUTPUT}/*
 stop_local_registry
 docker system prune --volumes -f
 
