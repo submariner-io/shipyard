@@ -126,5 +126,5 @@ function declare_cidrs() {
 }
 
 function declare_kubeconfig() {
-    source ${SCRIPTS_DIR}/lib/kubecfg
+    source "${SCRIPTS_DIR}"/lib/kubecfg
 }

@@ -1,1 +1,3 @@
-export KUBECONFIG=$(find ${DAPPER_OUTPUT:-output}/kubeconfigs -type f | tr '\n' ':')
+#!/usr/bin/env bash
+export KUBECONFIG
+KUBECONFIG=$(find "${DAPPER_OUTPUT:-output}"/kubeconfigs -type f | tr '\n' ':')
