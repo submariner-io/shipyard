@@ -18,6 +18,9 @@ deploy: clusters
 release:
 	$(SCRIPTS_DIR)/release.sh --tag $(release_tag) --repo $(repo) $(release_images) $(RELEASE_ARGS)
 
+post-mortem:
+	$(SCRIPTS_DIR)/post_mortem.sh
+
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring
 vendor/modules.txt: go.mod
