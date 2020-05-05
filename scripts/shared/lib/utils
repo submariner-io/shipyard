@@ -126,6 +126,5 @@ function declare_cidrs() {
 }
 
 function declare_kubeconfig() {
-    export KUBECONFIG
-    KUBECONFIG=$(echo "${KUBECONFIGS_DIR}"/kind-config-cluster{1..3} | sed 's/ /:/g')
+    source "${SCRIPTS_DIR}"/lib/kubecfg
 }

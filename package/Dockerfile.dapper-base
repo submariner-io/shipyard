@@ -54,6 +54,9 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     find /usr/bin /go/bin /usr/lib/golang -type f -executable -size +5M ! -name subctl ! -name hyperkube | xargs upx && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
+# Copy kubecfg to always run on the shell
+COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
+
 # Copy shared makefile so that downstream projects can use it
 COPY Makefile.inc ${SHIPYARD_DIR}/
 
