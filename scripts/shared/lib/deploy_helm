@@ -81,7 +81,6 @@ function helm_install_subm() {
         --set globalnet.image.tag="local" \
         --set globalnet.image.pullPolicy="IfNotPresent" \
         --set crd.create="${crd_create}" \
-        --set "submariner.cableDriver=${cable_driver}" \
         ${deploytool_submariner_args}
 }
 
