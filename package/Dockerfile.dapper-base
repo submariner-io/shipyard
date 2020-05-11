@@ -39,7 +39,7 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq golang-x-tools-goimports ShellCheck shflags && \
     dnf -y remove libsemanage && \
-    rpm -qa "selinux*" | xargs rpm -r -e --nodeps && \
+    rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     curl -L https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
