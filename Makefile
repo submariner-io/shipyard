@@ -24,7 +24,7 @@ else
 # Not running in Dapper
 
 # Shipyard-specific starts
-clusters deploy release validate: dapper-image
+clusters deploy post-mortem release validate: dapper-image
 
 dapper-image: export SCRIPTS_DIR=./scripts/shared
 

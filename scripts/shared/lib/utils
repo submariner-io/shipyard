@@ -33,12 +33,13 @@ function with_retries() {
     local cmnd=$2
 
     for _ in ${retries}; do
-        if $cmnd "${@:3}"; then
+        ( $cmnd "${@:3}"; ) &
+        if wait $!; then
             return 0
         fi
     done
 
-    echo "Max attempts reached, failed to run ${cmnd}!"
+    echo "Max attempts reached, failed to run '${*:2}'!"
     exit 1
 }
 
@@ -53,52 +54,48 @@ function with_context() {
 }
 
 # Run cluster commands in parallel.
-# 1st argument is the numbers of the clusters to run for, supports "1 2 3" or "{1..3}" for range
+# 1st argument is the cluster names for which to run.
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
-    local clusters cmnd
-    clusters=$(eval echo "$1")
-    cmnd=$2
+    local cmnd=$2
     declare -A pids
-    for i in ${clusters}; do
+    for cluster in $(eval echo "$1"); do
         (
            set -o pipefail
-           with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /"
+           $cmnd "${@:3}" |& sed "/\[cluster${i}]/!s/^/[cluster${i}] /"
         ) &
-        pids["${i}"]=$!
+        pids["${cluster}"]=$!
     done
 
-    for i in "${!pids[@]}"; do
-        wait ${pids[$i]}
+    for pid in "${pids[@]}"; do
+        wait $pid
     done
 }
 
 # Run the given command (with any arguments) in parallel on all the clusters.
 function run_all_clusters() {
-    run_parallel "{1..3}" "$@"
+    run_parallel "${clusters[*]}" "$@"
 }
 
 # Run the given command (with any arguments) in parallel on the clusters that install submariner.
 function run_subm_clusters() {
     declare -a subm_clusters
-    for i in {1..3}; do
-        [[ "${cluster_subm[cluster$i]}" != "true" ]] || subm_clusters+=( "$i" )
+    for cluster in "${clusters[@]}"; do
+        [[ "${cluster_subm[${cluster}]}" != "true" ]] || subm_clusters+=( "${cluster}" )
     done
 
     run_parallel "${subm_clusters[*]}" "$@"
 }
 
 # Run cluster commands sequentially.
-# 1st argument is the numbers of the clusters to run for, supports "1 2 3" or "{1..3}" for range
+# 1st argument is the numbers of the clusters names for which to run.
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_sequential() {
-    local clusters cmnd
-    clusters=$(eval echo "$1")
-    cmnd=$2
-    for i in ${clusters}; do
-        with_context "cluster${i}" "$cmnd" "${@:3}" | sed "s/^/[cluster${i}] /"
+    local cmnd=$2
+    for cluster in $(eval echo "$1"); do
+        $cmnd "${@:3}" | sed "s/^/[${cluster}] /" 
     done
 }
 
@@ -108,8 +105,8 @@ function registry_running() {
 }
 
 function add_cluster_cidrs() {
-    local idx="cluster${1}"
     local val=$1
+    local idx=$2
     [[ $globalnet != "true" ]] || val="0"
     cluster_CIDRs[$idx]="10.24${val}.0.0/16"
     service_CIDRs[$idx]="100.9${val}.0.0/16"
@@ -120,12 +117,25 @@ function declare_cidrs() {
     # shellcheck disable=SC2034 # these variables are used elsewhere
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
 
-    for i in {1..3}; do
-        add_cluster_cidrs $i
+    i=1
+    for cluster in "${clusters[@]}"; do
+        add_cluster_cidrs "$i" "$cluster"
+        i=$(("$i"+1))
     done
 }
 
 function declare_kubeconfig() {
-    export KUBECONFIG
-    KUBECONFIG=$(echo "${KUBECONFIGS_DIR}"/kind-config-cluster{1..3} | sed 's/ /:/g')
+    source "${SCRIPTS_DIR}"/lib/kubecfg
+}
+
+function print_clusters_message() {
+    cat << EOM
+Your virtual cluster(s) are deployed and working properly and can be accessed with:
+
+export KUBECONFIG=\$(find \$(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f | -printf %p:)
+
+$ kubectl config use-context cluster1 # or cluster2, cluster3..
+
+To clean everthing up, just run: make cleanup
+EOM
 }

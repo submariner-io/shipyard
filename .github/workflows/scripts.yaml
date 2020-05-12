@@ -1,0 +1,56 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v**'
+
+name: Test the Scripts
+jobs:
+  clusters:
+    timeout-minutes: 20
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - run: make clusters
+
+      - name: Post Mortem
+        if: failure()
+        run: make post-mortem
+
+      - run: make cleanup
+
+  deploy:
+    timeout-minutes: 30
+    continue-on-error: true
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        globalnet: ['', '--globalnet']
+        deploytool: ['operator', 'helm']
+    steps:
+      - uses: actions/checkout@master
+
+      - name: Reclaim free space!
+        run: |
+          df -h
+          sudo swapoff -a
+          sudo rm -f /swapfile
+          docker system prune --volumes --all --force
+          df -h
+
+      - name: Run the deploy script
+        env:
+          CLUSTERS_ARGS: ${{ matrix.globalnet }}
+          DEPLOY_ARGS: ${{ matrix.globalnet }} --deploytool ${{ matrix.deploytool }}
+        run: make deploy
+
+      - name: Post Mortem
+        if: failure()
+        run: make post-mortem
+
+      - run: make cleanup
