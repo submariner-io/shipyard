@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: netshoot
-          image: nicolaka/netshoot
+          image: localhost:5000/nettest:local
           imagePullPolicy: IfNotPresent
           command:
             - sleep

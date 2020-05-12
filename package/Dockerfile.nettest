@@ -1,0 +1,11 @@
+FROM alpine
+
+WORKDIR /app
+
+RUN apk add --no-cache \
+	bash \
+	bind-tools \
+	curl \
+	iputils
+
+CMD ["/bin/bash","-l"]
