@@ -7,6 +7,7 @@ DEFINE_string 'k8s_version' '' 'Version of K8s to use'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
+DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -14,7 +15,8 @@ version="${FLAGS_k8s_version}"
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false 
 cluster_settings="${FLAGS_cluster_settings}"
-echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}"
+timeout="${FLAGS_timeout}"
+echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
 
 set -em
 
@@ -100,9 +102,9 @@ function deploy_weave_cni(){
     echo "Applying weave network..."
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
-    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=60s
+    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
-    kubectl -n kube-system rollout status deploy/coredns --timeout=60s
+    kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
 }
 
 function run_local_registry() {

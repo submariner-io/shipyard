@@ -15,7 +15,9 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - run: make clusters
+      - env:
+          CLUSTERS_ARGS: --timeout 1m
+        run: make clusters
 
       - name: Post Mortem
         if: failure()
@@ -45,8 +47,8 @@ jobs:
 
       - name: Run the deploy script
         env:
-          CLUSTERS_ARGS: ${{ matrix.globalnet }}
-          DEPLOY_ARGS: ${{ matrix.globalnet }} --deploytool ${{ matrix.deploytool }}
+          CLUSTERS_ARGS: ${{ matrix.globalnet }} --timeout 1m
+          DEPLOY_ARGS: ${{ matrix.globalnet }} --deploytool ${{ matrix.deploytool }} --timeout 2m
         run: make deploy
 
       - name: Post Mortem

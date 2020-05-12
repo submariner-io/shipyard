@@ -12,9 +12,11 @@ jobs:
   include:
   - env: CMD="make validate"
   - env: CMD="make deploy"
-         CLUSTERS_ARGS="--globalnet"
-         DEPLOY_ARGS="${CLUSTERS_ARGS} --deploytool helm"
+         CLUSTERS_ARGS="--globalnet --timeout 1m"
+         DEPLOY_ARGS="--globalnet --deploytool helm --timeout 2m"
   - env: CMD="make deploy"
+         CLUSTERS_ARGS="--timeout 1m"
+         DEPLOY_ARGS="--timeout 2m"
          RELEASE=true
 
 services:
