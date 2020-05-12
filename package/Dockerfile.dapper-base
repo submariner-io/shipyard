@@ -33,9 +33,12 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
 # ShellCheck     | shell script linting
-RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
+RUN dnf -y install --nodocs --setopt=install_weak_deps=False findutils && \
+    fing_args="/usr/bin /usr/libexec -type f -executable -size +1M" && \
+    find $fing_args > /tmp/existing_executables && \
+    dnf -y install --nodocs --setopt=install_weak_deps=False \
                    git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports ShellCheck shflags && \
+                   upx jq golang-x-tools-goimports ShellCheck shflags && \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     rpm -e --nodeps gcc cpp binutils binutils-gold && \
@@ -46,7 +49,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
     curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /usr/bin /go/bin /usr/lib/golang /usr/libexec -type f -executable -size +1M ! -name subctl ! -name hyperkube | xargs upx && \
+    find /go/bin /usr/lib/golang $fing_args ! -name subctl ! -name hyperkube | grep -vFf /tmp/existing_executables | xargs upx && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 # Copy kubecfg to always run on the shell
