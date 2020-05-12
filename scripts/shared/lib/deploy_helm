@@ -48,7 +48,7 @@ function setup_broker() {
 
 function helm_install_subm() {
     local crd_create=false
-    [[ "${cluster}" = "cluster1" ]] || crd_create=true
+    [[ "${cluster}" = "${broker}" ]] || crd_create=true
 
     if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
         echo "Submariner already installed, skipping installation..."

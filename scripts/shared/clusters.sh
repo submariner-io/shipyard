@@ -29,6 +29,7 @@ source "${SCRIPTS_DIR}/lib/cluster_settings"
 
 cat << EOM
 Cluster settings::
+  broker - ${broker@Q}
   clusters - ${clusters[*]@Q}
   nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
   install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
