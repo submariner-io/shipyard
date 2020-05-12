@@ -25,6 +25,13 @@ source ${SCRIPTS_DIR}/lib/utils
 source "${SCRIPTS_DIR}/lib/cluster_settings"
 [[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
+cat << EOM
+Cluster settings::
+  clusters - ${clusters[*]@Q}
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+
 ### Functions ###
 
 function render_template() {
@@ -123,3 +130,4 @@ run_local_registry
 declare_cidrs
 run_all_clusters with_retries 3 create_kind_cluster
 
+print_clusters_message

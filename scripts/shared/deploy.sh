@@ -50,5 +50,9 @@ install_subm_all_clusters
 
 deploytool_postreqs
 
-with_context cluster2 connectivity_tests
+if [ "${#clusters[@]}" -gt 2 ]; then
+    with_context "${clusters[1]}" connectivity_tests
+else
+    echo "Not executing connectivity tests - requires at least 3 clusters"
+fi
 
