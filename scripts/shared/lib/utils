@@ -63,7 +63,7 @@ function run_parallel() {
     for cluster in $(eval echo "$1"); do
         (
            set -o pipefail
-           $cmnd "${@:3}" |& sed "/\[cluster${i}]/!s/^/[cluster${i}] /"
+           $cmnd "${@:3}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
         ) &
         pids["${cluster}"]=$!
     done
