@@ -39,6 +39,7 @@ function deploy_env_once() {
     fi
 
     make deploy
+    declare_kubeconfig
 }
 
 function generate_context_flags() {
