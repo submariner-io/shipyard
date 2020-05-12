@@ -1,4 +1,4 @@
-FROM fedora:31
+FROM fedora:32
 
 ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
@@ -28,7 +28,6 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # goimports      | code formatting
 # make           | OLM installation
 # findutils      | validate (find go packages)
-# shflags        | shell script flags
 # subctl *       | Submariner's deploy tool (operator)
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
@@ -37,7 +36,7 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
     dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports ShellCheck shflags && \
+                   findutils upx jq golang-x-tools-goimports ShellCheck && \
     dnf -y remove libsemanage && \
     rpm -e --nodeps selinux-policy-targeted && \
     dnf -y clean all && \
