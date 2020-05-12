@@ -42,10 +42,8 @@ function generate_cluster_yaml() {
     local pod_cidr="${cluster_CIDRs[${cluster}]}"
     local service_cidr="${service_CIDRs[${cluster}]}"
     local dns_domain="${cluster}.local"
-    local disable_cni="true"
-    if [[ "${cluster}" = "cluster1" ]]; then
-        disable_cni="false"
-    fi
+    local disable_cni="false"
+    [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
@@ -65,9 +63,10 @@ function kind_fixup_config() {
 
 function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
+    rm -f "$KUBECONFIG"
+
     if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        rm -f "$KUBECONFIG"
         kind export kubeconfig --name=${cluster}
         kind_fixup_config
         return
@@ -82,25 +81,28 @@ function create_kind_cluster() {
 
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
+
+    ( deploy_cni; ) &
+    if ! wait $! ; then
+        echo "Failed to deploy custom CNI, removing the cluster"
+        kind delete cluster --name=${cluster}
+        return 1
+    fi
+}
+
+function deploy_cni() {
+    [[ -n "${cluster_cni[$cluster]}" ]] || return 0
+
+    eval "deploy_${cluster_cni[$cluster]}_cni"
 }
 
 function deploy_weave_cni(){
-    if kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=60s > /dev/null 2>&1; then
-        echo "Weave already deployed."
-        return
-    fi
-
-    if [[ "${cluster}" = "cluster1" ]]; then
-       echo "Not deploying weave on broker cluster"
-       return
-    fi
-
     echo "Applying weave network..."
     kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
-    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=300s
+    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout=60s
     echo "Waiting for core-dns deployment to be ready..."
-    kubectl -n kube-system rollout status deploy/coredns --timeout=300s
+    kubectl -n kube-system rollout status deploy/coredns --timeout=60s
 }
 
 function run_local_registry() {
@@ -126,8 +128,6 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-with_retries 3 run_all_clusters create_kind_cluster
-declare_kubeconfig
-run_subm_clusters deploy_weave_cni
+run_all_clusters with_retries 3 create_kind_cluster
 
 print_clusters_message

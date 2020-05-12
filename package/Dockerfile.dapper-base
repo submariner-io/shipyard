@@ -5,7 +5,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     LINT_VERSION=v1.18.0 \
     HELM_VERSION=v2.14.1 \
     KIND_VERSION=v0.6.1 \
-    KUBEFED_VERSION=0.1.0-rc3 \
     SUBCTL_VERSION=v0.3.0-rc2 \
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
@@ -24,7 +23,6 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # kubectl        | e2e tests (in kubernetes-client)
 # golangci-lint  | code linting
 # helm           | e2e tests
-# kubefedctl     | e2e tests
 # kind           | e2e tests
 # ginkgo         | tests
 # goimports      | code formatting
@@ -41,13 +39,11 @@ RUN dnf -y distrosync --nodocs --setopt=install_weak_deps=False && \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq golang-x-tools-goimports ShellCheck shflags && \
     dnf -y remove libsemanage && \
-    rpm -e --nodeps selinux-policy-targeted && \
+    rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     curl -L https://install.goreleaser.com/github.com/golangci/golangci-lint.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
     mv linux-${ARCH}/helm /usr/bin/ && chmod a+x /usr/bin/helm && rm -rf linux-${ARCH} && \
-    curl -L "https://github.com/kubernetes-sigs/kubefed/releases/download/v${KUBEFED_VERSION}/kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz" | tar -xzf - && \
-    mv kubefedctl /usr/bin/ && chmod a+x /usr/bin/kubefedctl && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
     curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
