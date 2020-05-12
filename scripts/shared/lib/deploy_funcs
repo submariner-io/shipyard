@@ -88,7 +88,7 @@ function prepare_cluster() {
     local namespace=$1
     [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
     for app in submariner-engine submariner-routeagent submariner-globalnet; do
-        if kubectl wait --for=condition=Ready pods -l "app=$app" -n "$namespace" --timeout=60s > /dev/null 2>&1; then
+        if kubectl wait --for=condition=Ready pods -l "app=$app" -n "$namespace" --timeout="${timeout}" > /dev/null 2>&1; then
             echo "Removing $app pods..."
             kubectl delete pods -n "$namespace" -l "app=$app"
         fi
@@ -102,7 +102,7 @@ function deploy_resource() {
     resource_name=$(basename "$resource_file" ".yaml")
     kubectl apply -f "${resource_file}"
     echo "Waiting for ${resource_name} pods to be ready."
-    kubectl rollout status "deploy/${resource_name}" --timeout=120s
+    kubectl rollout status "deploy/${resource_name}" --timeout="${timeout}"
 }
 
 function remove_resource() {

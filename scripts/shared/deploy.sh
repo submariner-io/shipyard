@@ -8,6 +8,7 @@ DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)
 DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
 DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
+DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
@@ -17,8 +18,9 @@ deploytool="${FLAGS_deploytool}"
 deploytool_broker_args="${FLAGS_deploytool_broker_args}"
 deploytool_submariner_args="${FLAGS_deploytool_submariner_args}"
 cluster_settings="${FLAGS_cluster_settings}"
+timeout="${FLAGS_timeout}"
 
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}"
+echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}, timeout=${timeout}"
 
 set -em
 
