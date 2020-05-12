@@ -23,6 +23,7 @@ function stop_local_registry {
 
 clusters=($(kind get clusters))
 run_parallel "${clusters[*]}" delete_cluster
+[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf ${DAPPER_OUTPUT}/*
 
 stop_local_registry
 docker system prune --volumes -f
