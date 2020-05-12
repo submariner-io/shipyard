@@ -4,7 +4,7 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_boolean 'debug' false "Build the binary with debug information included (or stripped)"
-DEFINE_boolean 'upx' true "Use UPX to make the binary smaller"
+DEFINE_boolean 'upx' true "Use UPX to make the binary smaller (only when --nodebug)"
 DEFINE_string 'ldflags' '' "Extra flags to send to the Go compiler"
 FLAGS_HELP="USAGE: $0 [--[no]debug] [--[no]upx] [--ldflags '<flags>'] binary source"
 FLAGS "$@" || exit $?
@@ -35,5 +35,5 @@ if [ "$build_debug" = "false" ]; then
 fi
 
 CGO_ENABLED=0 go build -ldflags "${ldflags}" -o $binary $source_file
-[[ "$build_upx" = "false" ]] || upx $binary
+[[ "$build_upx" = "false" ]] || [[ "$build_debug" = "true" ]] || upx $binary
 

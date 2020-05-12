@@ -19,7 +19,7 @@ validate_ldflags "hello nobody"
 ${SCRIPTS_DIR}/compile.sh --ldflags "-X main.MYVAR=somebody" $binary hello.go --noupx
 validate_ldflags "hello somebody"
 
-${SCRIPTS_DIR}/compile.sh $binary hello.go --noupx --debug
+${SCRIPTS_DIR}/compile.sh $binary hello.go --debug
 if ! file $binary | grep "not stripped" > /dev/null; then
     echo "Debug information got stripped, even when requested!"
     exit 1
