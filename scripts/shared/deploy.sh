@@ -45,7 +45,7 @@ deploytool_prereqs
 
 run_subm_clusters prepare_cluster "$SUBM_NS"
 
-with_context cluster1 setup_broker
+with_context $broker setup_broker
 install_subm_all_clusters
 
 deploytool_postreqs

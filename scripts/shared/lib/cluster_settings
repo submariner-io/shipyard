@@ -6,6 +6,9 @@
 # Array of all cluster names that we create and deploy on.
 declare -ga clusters=(cluster{1..3})
 
+# Designation of the cluster that the broker will be installed on.
+broker="${clusters[0]}"
+
 # Map of cluster names to a space separated string, representing a list of nodes to deploy.
 # Possible node types are 'control-plane' and 'worker'.
 # e.g. cluster_nodes['multi-master']="control-plane control-plane worker worker worker"
