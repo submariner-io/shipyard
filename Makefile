@@ -17,6 +17,11 @@ $(TARGETS):
 .PHONY: $(TARGETS)
 
 # Project-specific targets go here
+deploy: nettest
+
+nettest:
+	$(SCRIPTS_DIR)/build_image.sh -i nettest -f package/Dockerfile.nettest
+
 validate: vendor/modules.txt
 
 else

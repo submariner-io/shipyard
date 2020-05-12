@@ -38,6 +38,7 @@ source "${SCRIPTS_DIR}/lib/cluster_settings"
 declare_cidrs
 declare_kubeconfig
 
+import_image quay.io/submariner/nettest
 import_image quay.io/submariner/submariner
 import_image quay.io/submariner/submariner-route-agent
 [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet

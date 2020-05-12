@@ -36,7 +36,7 @@ latest_image=${repo}/${image}:latest
 cache_flag=''
 if [[ "$cache" = true ]]; then
     cache_flag="--cache-from ${latest_image}"
-    docker pull ${latest_image}
+    docker pull ${latest_image} || :
 fi
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
