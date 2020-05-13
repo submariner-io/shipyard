@@ -42,12 +42,12 @@ after_failure:
 
 deploy:
   - provider: script
-    script: make dapper-image dapper_image_flags="--nocache" release RELEASE_ARGS="shipyard-dapper-base"
+    script: make nettest dapper-image dapper_image_flags="--nocache" release RELEASE_ARGS="shipyard-dapper-base nettest"
     on:
       branch: master
       condition: $RELEASE = true
   - provider: script
-    script: make dapper-image dapper_image_flags="--nocache" release RELEASE_ARGS="--tag $TRAVIS_TAG shipyard-dapper-base"
+    script: make nettest dapper-image dapper_image_flags="--nocache" release RELEASE_ARGS="--tag $TRAVIS_TAG shipyard-dapper-base nettest"
     on:
       tags: true
       condition: $RELEASE = true
