@@ -65,7 +65,7 @@ func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *corev1.PodList 
 
 func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 	var replicaCount int32 = 1
-	var port int32 = 80
+	var port int32 = 8080
 	nginxDeployment := &appsv1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "nginx-demo",
@@ -87,7 +87,7 @@ func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 					Containers: []corev1.Container{
 						{
 							Name:            "nginx-demo",
-							Image:           "nginx:alpine",
+							Image:           "nginxinc/nginx-unprivileged:stable-alpine",
 							ImagePullPolicy: corev1.PullAlways,
 							Ports: []corev1.ContainerPort{
 								{

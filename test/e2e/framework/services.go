@@ -67,7 +67,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 					Protocol: corev1.ProtocolTCP,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.Int,
-						IntVal: 80,
+						IntVal: 8080,
 					},
 				},
 			},
