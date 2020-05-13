@@ -15,7 +15,7 @@
 MAKEOVERRIDES =
 
 %: .dapper
-	./.dapper -m bind $(MAKE) $@ $(MAKEFLAGS)
+	+./.dapper -m bind make $@ $(MAKEFLAGS)
 
 shell: .dapper
 	./.dapper -m bind -s
