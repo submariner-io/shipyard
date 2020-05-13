@@ -47,7 +47,7 @@ func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *corev1.PodList 
 					Containers: []corev1.Container{
 						{
 							Name:            "netshoot",
-							Image:           "nicolaka/netshoot",
+							Image:           "quay.io/submariner/nettest",
 							ImagePullPolicy: corev1.PullAlways,
 							Command: []string{
 								"sleep", "600",
