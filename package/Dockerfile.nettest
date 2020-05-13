@@ -6,6 +6,7 @@ RUN apk add --no-cache \
 	bash \
 	bind-tools \
 	curl \
-	iputils
+	iputils \
+	tcpdump
 
 CMD ["/bin/bash","-l"]
