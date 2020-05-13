@@ -2,6 +2,7 @@
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
+source ${SCRIPTS_DIR}/lib/cluster_settings
 
 ### Functions ###
 
@@ -22,4 +23,4 @@ function post_analyze() {
 ### Main ###
 
 declare_kubeconfig
-run_sequential "{1..3}" post_analyze
+run_sequential "${clusters[*]}" post_analyze
