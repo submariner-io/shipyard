@@ -14,6 +14,10 @@ clusters:
 deploy: clusters
 	$(SCRIPTS_DIR)/deploy.sh --deploytool $(deploytool) $(DEPLOY_ARGS)
 
+# Will call `deploy` if it detects no submariner running on cluster3
+e2e:
+	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
+
 release:
 	$(SCRIPTS_DIR)/release.sh --tag $(release_tag) --repo $(repo) $(release_images) $(RELEASE_ARGS)
 
