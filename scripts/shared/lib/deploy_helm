@@ -88,8 +88,3 @@ function helm_install_subm() {
 function install_subm_all_clusters() {
     run_subm_clusters helm_install_subm
 }
-
-function deploytool_postreqs() {
-    # This function must exist for parity with Operator deploys, but does nothing for Helm
-    :
-}

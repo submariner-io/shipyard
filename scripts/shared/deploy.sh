@@ -51,11 +51,10 @@ run_subm_clusters prepare_cluster "$SUBM_NS"
 with_context $broker setup_broker
 install_subm_all_clusters
 
-deploytool_postreqs
-
-if [ "${#clusters[@]}" -gt 2 ]; then
-    with_context "${clusters[1]}" connectivity_tests
+if [ "${#cluster_subm[@]}" -gt 1 ]; then
+    cls=(${!cluster_subm[@]})
+    with_context "${cls[0]}" connectivity_tests "${cls[1]}"
 else
-    echo "Not executing connectivity tests - requires at least 3 clusters"
+    echo "Not executing connectivity tests - requires at least two clusters with submariner installed"
 fi
 

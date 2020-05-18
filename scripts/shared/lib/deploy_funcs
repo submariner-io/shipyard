@@ -52,7 +52,7 @@ function test_connection() {
     local source_pod=$1
     local target_address=$2
 
-    echo "Attempting connectivity between clusters - $source_pod (${clusters[1]}) --> $target_address (service on ${clusters[2]})"
+    echo "Attempting connectivity between clusters - $source_pod --> $target_address"
     if ! kubectl exec "${source_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${target_address}"; then
         return 1
     fi
@@ -61,17 +61,18 @@ function test_connection() {
 }
 
 function connectivity_tests() {
+    target_cluster="$1"
     deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
-    with_context "${clusters[2]}" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+    with_context "$target_cluster" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 
     local netshoot_pod nginx_svc_ip
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
-    nginx_svc_ip=$(with_context "${clusters[2]}" get_svc_ip nginx-demo)
+    nginx_svc_ip=$(with_context "$target_cluster" get_svc_ip nginx-demo)
 
     with_retries 5 test_connection "$netshoot_pod" "$nginx_svc_ip"
 
     remove_resource "${RESOURCES_DIR}/netshoot.yaml"
-    with_context "${clusters[2]}" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+    with_context "$target_cluster" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 }
 
 function add_subm_gateway_label() {

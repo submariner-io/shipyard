@@ -55,10 +55,3 @@ function subctl_install_subm() {
 function install_subm_all_clusters() {
     run_subm_clusters subctl_install_subm
 }
-
-function deploytool_postreqs() {
-    # FIXME: Make this unnecessary using subctl v0.0.4 --no-label flag
-    # subctl wants a gateway node labeled, or it will ask, but this script is not interactive,
-    # and E2E expects cluster1 to not have the gateway configured at start, so we remove it
-    with_context cluster1 del_subm_gateway_label
-}
