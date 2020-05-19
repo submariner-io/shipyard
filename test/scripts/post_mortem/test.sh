@@ -2,7 +2,6 @@
 
 set -e
 
-source ${SCRIPTS_DIR}/lib/cluster_settings
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 
@@ -20,7 +19,8 @@ function deploy_deadshoot() {
 }
 
 declare_kubeconfig
-run_all_clusters deploy_deadshoot
+clusters=($(kind get clusters))
+run_parallel "${clusters[*]}" deploy_deadshoot
 
 post_mortem=$(make post-mortem)
 echo "$post_mortem"
