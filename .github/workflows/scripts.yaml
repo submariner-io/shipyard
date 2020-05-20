@@ -10,7 +10,6 @@ name: Test the Scripts
 jobs:
   clusters:
     timeout-minutes: 20
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -36,7 +35,6 @@ jobs:
           ./.dapper -m bind test/scripts/compile/test.sh
   deploy:
     timeout-minutes: 30
-    continue-on-error: true
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -68,7 +66,6 @@ jobs:
 
   e2e:
     timeout-minutes: 30
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
@@ -80,7 +77,6 @@ jobs:
         run: make post-mortem
 
   post_mortem:
-    continue-on-error: true
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
