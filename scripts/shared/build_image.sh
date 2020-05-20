@@ -37,6 +37,10 @@ cache_flag=''
 if [[ "$cache" = true ]]; then
     cache_flag="--cache-from ${latest_image}"
     docker pull ${latest_image} || :
+    for parent in $(grep FROM ${dockerfile} | cut -f2 -d' ' | grep -v scratch); do
+        cache_flag+=" --cache-from ${parent}"
+        docker pull ${parent} || :
+    done
 fi
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
