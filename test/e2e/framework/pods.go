@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
+	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
@@ -41,4 +42,25 @@ func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace st
 	AwaitUntil("delete pod", func() (interface{}, error) {
 		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(podName, &metav1.DeleteOptions{})
 	}, NoopCheckResult)
+}
+
+// AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
+func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
+	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (interface{}, error) {
+		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return pod, err
+	}, func(result interface{}) (bool, string, error) {
+		if result == nil {
+			return false, "No Pod found", nil
+		}
+
+		pod := result.(*v1.Pod)
+		if pod.GetAnnotations()[annotation] == "" {
+			return false, fmt.Sprintf("Pod %q does not have annotation %q yet", podName, annotation), nil
+		}
+		return true, "", nil
+	}).(*v1.Pod)
 }

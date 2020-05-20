@@ -116,7 +116,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 		if p.ToEndpointType == GlobalIP {
 			// Wait for the globalIP annotation on the service.
-			service = p.Framework.AwaitServiceByAnnotation(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
+			service = p.Framework.AwaitUntilAnnotationOnService(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
 			remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
 		}
 	}
@@ -133,6 +133,15 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		ConnectionAttempts: p.ConnectionAttempts,
 		Networking:         p.Networking,
 	})
+
+	sourceIP := connectorPod.Pod.Status.PodIP
+	if p.ToEndpointType == GlobalIP {
+		// Wait for the globalIP annotation on the connectorPod.
+		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name, connectorPod.Pod.Namespace)
+		sourceIP = connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
+	}
+
+	framework.Logf("Will send traffic from IP: %v", sourceIP)
 
 	By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
 	listenerPod.AwaitFinish()
