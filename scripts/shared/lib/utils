@@ -132,7 +132,7 @@ function print_clusters_message() {
     cat << EOM
 Your virtual cluster(s) are deployed and working properly and can be accessed with:
 
-export KUBECONFIG=\$(find \$(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f | -printf %p:)
+export KUBECONFIG=\$(find \$(git rev-parse --show-toplevel)/output/kubeconfigs/ -type f -printf %p:)
 
 $ kubectl config use-context cluster1 # or cluster2, cluster3..
 
