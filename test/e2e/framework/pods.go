@@ -44,8 +44,8 @@ func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace st
 	}, NoopCheckResult)
 }
 
-// AwaitPodByAnnotation queries the Pod and looks for the presence of annotation.
-func (f *Framework) AwaitPodByAnnotation(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
+// AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
+func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
 	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (interface{}, error) {
 		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
