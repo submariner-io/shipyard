@@ -46,10 +46,8 @@ jobs:
 
       - name: Reclaim free space!
         run: |
-          df -h
           sudo swapoff -a
           sudo rm -f /swapfile
-          docker system prune --volumes --all --force
           df -h
 
       - name: Run the deploy script
@@ -60,7 +58,9 @@ jobs:
 
       - name: Post Mortem
         if: failure()
-        run: make post-mortem
+        run: |
+          df -h
+          make post-mortem
 
       - run: make cleanup
 
