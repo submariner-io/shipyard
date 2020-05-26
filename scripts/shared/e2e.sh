@@ -53,7 +53,7 @@ function test_with_e2e_tests {
 
     go test -v -args -ginkgo.v -ginkgo.randomizeAllSpecs \
         -submariner-namespace $SUBM_NS $(generate_context_flags) \
-        -ginkgo.reportPassed \
+        -ginkgo.reportPassed -test.timeout 15m \
         -ginkgo.focus "\[${focus}\]" \
         -ginkgo.reportFile ${DAPPER_OUTPUT}/e2e-junit.xml 2>&1 | \
         tee ${DAPPER_OUTPUT}/e2e-tests.log
