@@ -4,6 +4,8 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' '1.14.6' 'Version of K8s to use'
+DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
+DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
@@ -12,11 +14,13 @@ FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
 version="${FLAGS_k8s_version}"
+olm_version="${FLAGS_olm_version}"
+[[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false 
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
-echo "Running with: k8s_version=${version}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
 
 set -em
 
@@ -85,9 +89,9 @@ function create_kind_cluster() {
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
 
-    ( deploy_cni; ) &
+    ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
-        echo "Failed to deploy custom CNI, removing the cluster"
+        echo "Failed to deploy cluster capabilities, removing the cluster"
         kind delete cluster --name=${cluster}
         return 1
     fi
@@ -123,6 +127,24 @@ function run_local_registry() {
     registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
 }
 
+function deploy_olm() {
+    echo "Applying OLM CRDs..."
+    kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$olm_version/crds.yaml --validate=false
+    echo "Applying OLM resources..."
+    kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$olm_version/olm.yaml
+
+    echo "Waiting for olm-operator deployment to be ready..."
+    kubectl rollout status deployment/olm-operator --namespace=olm --timeout="${timeout}"
+    echo "Waiting for catalog-operator deployment to be ready..."
+    kubectl rollout status deployment/catalog-operator --namespace=olm --timeout="${timeout}"
+    echo "Waiting for packageserver deployment to be ready..."
+    kubectl rollout status deployment/packageserver --namespace=olm --timeout="${timeout}"
+}
+
+function deploy_cluster_capabilities() {
+    deploy_cni
+    [[ $olm != "true" ]] || deploy_olm
+}
 
 ### Main ###
 

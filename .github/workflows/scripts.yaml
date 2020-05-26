@@ -44,12 +44,6 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Reclaim free space!
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          df -h
-
       - name: Run the deploy script
         env:
           CLUSTERS_ARGS: ${{ matrix.globalnet }} --timeout 1m
@@ -58,9 +52,7 @@ jobs:
 
       - name: Post Mortem
         if: failure()
-        run: |
-          df -h
-          make post-mortem
+        run: make post-mortem
 
       - run: make cleanup
 
