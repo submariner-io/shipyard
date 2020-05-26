@@ -51,7 +51,7 @@ function generate_context_flags() {
 function test_with_e2e_tests {
     cd ${DAPPER_SOURCE}/test/e2e
 
-    go test -v -args -ginkgo.v -ginkgo.randomizeAllSpecs \
+    go test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs \
         -submariner-namespace $SUBM_NS $(generate_context_flags) \
         -ginkgo.reportPassed -test.timeout 15m \
         -ginkgo.focus "\[${focus}\]" \
