@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source /usr/share/shflags/shflags
+source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'focus' '.*' "Ginkgo focus for the E2E tests"
 DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
