@@ -34,5 +34,5 @@ jobs:
           RELEASE_ARGS: shipyard-dapper-base nettest
           dapper_image_flags: --nocache
         run: |
-          [[ $GITHUB_REF =~ "/tags/" ]] && RELEASE_ARGS+="--tag ${GITHUB_REF##*/}"
+          [[ $GITHUB_REF =~ "/tags/" ]] && RELEASE_ARGS+=" --tag ${GITHUB_REF##*/}"
           make dapper-image nettest release
