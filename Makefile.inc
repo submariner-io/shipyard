@@ -1,5 +1,3 @@
-k8s_version ?= 1.14.6
-deploytool ?= operator
 release_tag ?= latest
 repo ?= quay.io/submariner
 
@@ -9,12 +7,12 @@ cleanup:
 	$(SCRIPTS_DIR)/cleanup.sh
 
 clusters:
-	$(SCRIPTS_DIR)/clusters.sh --k8s_version $(k8s_version) $(CLUSTERS_ARGS)
+	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
 
 deploy: clusters
-	$(SCRIPTS_DIR)/deploy.sh --deploytool $(deploytool) $(DEPLOY_ARGS)
+	$(SCRIPTS_DIR)/deploy.sh $(DEPLOY_ARGS)
 
-# Will call `deploy` if it detects no submariner running on cluster3
+# Will call `deploy` if it detects no submariner running on a cluster
 e2e:
 	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
 
