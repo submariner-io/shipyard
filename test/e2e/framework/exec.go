@@ -2,13 +2,11 @@ package framework
 
 import (
 	"bytes"
-	"fmt"
 	"io"
 	"net/url"
 	"strings"
 	"time"
 
-	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	restclient "k8s.io/client-go/rest"
@@ -36,8 +34,7 @@ type ExecOptions struct {
 func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (string, string, error) {
 	Logf("ExecWithOptions %+v", options)
 
-	config, _, err := loadConfig(TestContext.KubeConfig, TestContext.KubeContexts[index])
-	Expect(err).To(Succeed(), fmt.Sprintf("ExecWithOptions %#v", options))
+	var err error
 
 	const tty = false
 	req := KubeClients[index].CoreV1().RESTClient().Post().
@@ -59,7 +56,7 @@ func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (st
 	var stdout, stderr bytes.Buffer
 	attempts := 5
 	for ; attempts > 0; attempts-- {
-		err = execute("POST", req.URL(), config, options.Stdin, &stdout, &stderr, tty)
+		err = execute("POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
 		if err == nil {
 			break
 		}
