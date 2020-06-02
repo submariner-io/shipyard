@@ -39,16 +39,16 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        globalnet: ['', '--globalnet']
+        globalnet: ['', 'globalnet']
         deploytool: ['operator', 'helm']
     steps:
       - uses: actions/checkout@master
 
       - name: Run the deploy script
         env:
-          CLUSTERS_ARGS: ${{ matrix.globalnet }} --timeout 1m
-          DEPLOY_ARGS: ${{ matrix.globalnet }} --deploytool ${{ matrix.deploytool }} --timeout 2m
-        run: make deploy
+          CLUSTERS_ARGS: --timeout 1m
+          DEPLOY_ARGS: --timeout 2m
+        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }}"
 
       - name: Post Mortem
         if: failure()
