@@ -3,9 +3,9 @@ ifneq (,$(DAPPER_HOST_ARCH))
 # Running in Dapper
 
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
-CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) cluster1 cluster2
+override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
+override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
+override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) cluster1 cluster2
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
