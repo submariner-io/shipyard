@@ -1,7 +1,22 @@
 release_tag ?= latest
 repo ?= quay.io/submariner
+, := ,
+_using = $(subst $(,), ,$(using))
 
 SCRIPTS_DIR ?= /opt/shipyard/scripts
+
+# Process extra flags from the `using=a,b,c` optional flag
+
+ifneq (,$(filter globalnet,$(_using)))
+override CLUSTERS_ARGS += --globalnet
+override DEPLOY_ARGS += --globalnet
+endif
+
+ifneq (,$(filter helm,$(_using)))
+override DEPLOY_ARGS += --deploytool helm
+endif
+
+# Shipyard provided targets
 
 cleanup:
 	$(SCRIPTS_DIR)/cleanup.sh
