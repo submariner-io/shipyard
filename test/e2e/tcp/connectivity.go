@@ -134,7 +134,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		Networking:         p.Networking,
 	})
 
-	if p.ToEndpointType == GlobalIP {
+	if p.ToEndpointType == GlobalIP && p.Networking == framework.PodNetworking {
 		// Wait for the globalIP annotation on the connectorPod.
 		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name, connectorPod.Pod.Namespace)
 		sourceIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
