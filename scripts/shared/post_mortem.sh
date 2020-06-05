@@ -31,6 +31,17 @@ function post_analyze() {
         echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
         kubectl -n $namespace logs $pod
     done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+    for pod in $(kubectl get pods --selector=app=submariner-engine -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+        echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
+        kubectl -n $namespace logs $pod
+    done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    kubectl get Gateway -A -o yaml
+
     echo "===================== END Post mortem $cluster ====================="
 }
 
