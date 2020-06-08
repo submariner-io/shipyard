@@ -49,4 +49,7 @@ func RunE2ETests(t *testing.T) bool {
 	if config.DefaultReporterConfig.SlowSpecThreshold == 5.0 {
 		config.DefaultReporterConfig.SlowSpecThreshold = 45.0
 	}
+<<<<<<< HEAD
 }
+=======
+>>>>>>> 5d95f88799638fa6c6385ca886cda11939982c53
