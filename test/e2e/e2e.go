@@ -1,14 +1,10 @@
 package e2e
 
 import (
-	"fmt"
-	"os"
-	"path/filepath"
 	"testing"
 
 	"github.com/onsi/ginkgo"
 	"github.com/onsi/ginkgo/config"
-	"github.com/onsi/ginkgo/reporters"
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 )
@@ -53,22 +49,4 @@ func RunE2ETests(t *testing.T) bool {
 	if config.DefaultReporterConfig.SlowSpecThreshold == 5.0 {
 		config.DefaultReporterConfig.SlowSpecThreshold = 45.0
 	}
-
-	// Register the default reporter, and in addition setup the jUnit XML Reporter
-	reporterList := []ginkgo.Reporter{}
-	reportDir := framework.TestContext.ReportDir
-	if reportDir != "" {
-		// Create the directory if it doesn't already exists
-		if err := os.MkdirAll(reportDir, 0755); err != nil {
-			t.Fatalf("Failed creating jUnit report directory: %v", err)
-			return false
-		}
-	}
-	// Configure a junit reporter to write to the directory
-	junitFile := fmt.Sprintf("junit_%s_%02d.xml",
-		framework.TestContext.ReportPrefix,
-		config.GinkgoConfig.ParallelNode)
-	junitPath := filepath.Join(reportDir, junitFile)
-	reporterList = append(reporterList, reporters.NewJUnitReporter(junitPath))
-	return ginkgo.RunSpecsWithDefaultAndCustomReporters(t, "Submariner E2E suite", reporterList)
 }
