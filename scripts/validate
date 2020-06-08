@@ -4,7 +4,7 @@ set -e
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/find_functions
 
-PACKAGES="$(find_go_pkg_dirs --no-trailing-dots "*.go")"
+PACKAGES="$(find_go_pkg_dirs) *.go"
 
 if [[ $(goimports -l ${PACKAGES} | wc -l) -gt 0 ]]; then
     echo Incorrect formatting
