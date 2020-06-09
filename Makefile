@@ -23,7 +23,7 @@ deploy: nettest
 nettest:
 	$(SCRIPTS_DIR)/build_image.sh -i nettest -f package/Dockerfile.nettest
 
-e2e validate: vendor/modules.txt
+e2e: vendor/modules.txt
 
 else
 
