@@ -40,6 +40,9 @@ post-mortem:
 unit-test: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
+validate: vendor/modules.txt
+	$(SCRIPTS_DIR)/validate.sh $(VALIDATE_ARGS)
+
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring
 vendor/modules.txt: go.mod
