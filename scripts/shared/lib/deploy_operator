@@ -26,7 +26,6 @@ function setup_broker() {
         cd "${OUTPUT_DIR}" && \
         subctl deploy-broker \
                --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
-               --no-dataplane \
                ${gn} \
                ${deploytool_broker_args}
     )
