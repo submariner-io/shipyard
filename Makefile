@@ -5,7 +5,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) cluster1 cluster2
+override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
@@ -23,7 +23,7 @@ deploy: nettest
 nettest:
 	$(SCRIPTS_DIR)/build_image.sh -i nettest -f package/Dockerfile.nettest
 
-e2e: vendor/modules.txt
+e2e: vendor/modules.txt clusters
 
 else
 
