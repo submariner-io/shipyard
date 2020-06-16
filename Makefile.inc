@@ -16,6 +16,10 @@ ifneq (,$(filter helm,$(_using)))
 override DEPLOY_ARGS += --deploytool helm
 endif
 
+ifneq (,$(filter olm,$(_using)))
+override CLUSTERS_ARGS += --olm
+endif
+
 # Shipyard provided targets
 
 cleanup:
