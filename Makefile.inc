@@ -16,6 +16,10 @@ ifneq (,$(filter helm,$(_using)))
 override DEPLOY_ARGS += --deploytool helm
 endif
 
+ifneq (,$(filter olm,$(_using)))
+override CLUSTERS_ARGS += --olm
+endif
+
 # Shipyard provided targets
 
 cleanup:
@@ -36,6 +40,12 @@ release:
 
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
+
+unit-test: vendor/modules.txt
+	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
+
+validate: vendor/modules.txt
+	$(SCRIPTS_DIR)/validate.sh $(VALIDATE_ARGS)
 
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring
