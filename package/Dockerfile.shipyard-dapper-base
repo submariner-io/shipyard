@@ -52,7 +52,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
 
 # Copy shared makefile so that downstream projects can use it
-COPY Makefile.inc ${SHIPYARD_DIR}/
+COPY Makefile.* ${SHIPYARD_DIR}/
 
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR

@@ -3,6 +3,7 @@
 .idea
 .shflags
 /bin
+/package/.image.*
 output
 dist
 junit.xml

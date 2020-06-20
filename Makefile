@@ -5,7 +5,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) cluster1 cluster2
+override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
 
 include $(SHIPYARD_DIR)/Makefile.inc
 
@@ -20,22 +20,22 @@ $(TARGETS):
 # Project-specific targets go here
 deploy: nettest
 
-nettest:
-	$(SCRIPTS_DIR)/build_image.sh -i nettest -f package/Dockerfile.nettest
+nettest: package/.image.nettest
 
-e2e: vendor/modules.txt
+e2e: vendor/modules.txt clusters
 
 else
 
 # Not running in Dapper
+
+include Makefile.images
 
 # Shipyard-specific starts
 clusters deploy e2e nettest post-mortem release unit-test validate: dapper-image
 
 dapper-image: export SCRIPTS_DIR=./scripts/shared
 
-dapper-image:
-	$(SCRIPTS_DIR)/build_image.sh -i shipyard-dapper-base -f package/Dockerfile.dapper-base $(dapper_image_flags)
+dapper-image: package/.image.shipyard-dapper-base
 
 .DEFAULT_GOAL := validate
 # Shipyard-specific ends
@@ -43,6 +43,3 @@ dapper-image:
 include Makefile.dapper
 
 endif
-
-# Disable rebuilding Makefile
-Makefile Makefile.dapper Makefile.inc: ;

@@ -7,6 +7,7 @@ import (
 	"github.com/onsi/ginkgo/config"
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	"k8s.io/klog"
 )
 
 // There are certain operations we only want to run once per overall test invocation
@@ -39,6 +40,10 @@ var _ = ginkgo.SynchronizedAfterSuite(func() {
 }, func() {
 	// Run only Ginkgo on node 1
 })
+
+func init() {
+	klog.InitFlags(nil)
+}
 
 func RunE2ETests(t *testing.T) bool {
 	framework.ValidateFlags(framework.TestContext)
