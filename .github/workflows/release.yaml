@@ -32,7 +32,7 @@ jobs:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
           RELEASE_ARGS: shipyard-dapper-base nettest
-          dapper_image_flags: --nocache
+          IMAGES_ARGS: --nocache
         run: |
           [[ $GITHUB_REF =~ "/tags/" ]] && RELEASE_ARGS+=" --tag ${GITHUB_REF##*/}"
           make dapper-image nettest release

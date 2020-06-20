@@ -3,7 +3,7 @@ repo ?= quay.io/submariner
 , := ,
 _using = $(subst $(,), ,$(using))
 
-SCRIPTS_DIR ?= /opt/shipyard/scripts
+include $(SHIPYARD_DIR)/Makefile.images
 
 # Process extra flags from the `using=a,b,c` optional flag
 

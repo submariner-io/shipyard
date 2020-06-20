@@ -1,0 +1,25 @@
+# Shared target to build images.
+# To build an image, simply add a dependency on the target `package/.image.<abc>`
+# where <abc> corresponds to an existing `package/Dockerfile.<abc>` file.
+# The resulting image name will be `<abc>`.
+
+SHELL := /bin/bash
+
+# Force rebuild an image if it's not in docker
+force_image_rebuild = $(if $(shell docker images | grep '\<$(1)\W*latest\>'),,FORCE_IMAGE)
+
+# Force rebuild dynamically by calling this target
+FORCE_IMAGE: ;
+
+# Dockerfile dependencies are the file and any file copied into it
+# We have to run it through a variable in order to expand any * that might be in the COPY command
+docker_deps = $(shell files="$(1) $$(grep COPY $(1) | sed 's/COPY \(.*\) .*/\1/' )" && find $${files[*]})
+
+# Patterned recipe to use to build any image from any Dockerfile
+# An empty file is used for make to figure out if dependencies changed or not
+.SECONDEXPANSION:
+package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuild,$$*)
+	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< $(IMAGES_ARGS)
+	touch $@
+
+
