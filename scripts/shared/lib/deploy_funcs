@@ -6,7 +6,7 @@
 
 function import_image() {
     local orig_image=$1
-    local versioned_image="$1:$VERSION"
+    local versioned_image="$1:${DEV_VERSION}"
     local local_image="localhost:5000/${orig_image##*/}:local"
     if ! docker tag "${versioned_image}" "${local_image}"; then
         # The project doesn't build this image, pull it
