@@ -7,10 +7,11 @@ if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
 fi
 
 git_tag=$(git tag -l --contains HEAD | head -n 1)
+readonly DEV_VERSION="dev"
 
 # shellcheck disable=SC2034 # VERSION is used in other scripts which source this one
 if [[ -z "$dirty" && -n "$git_tag" ]]; then
     readonly VERSION=$git_tag
 else
-    readonly VERSION="dev"
+    readonly VERSION="$DEV_VERSION"
 fi

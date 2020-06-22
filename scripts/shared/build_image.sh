@@ -2,14 +2,10 @@
 
 source ${SCRIPTS_DIR}/lib/version
 
-ARCH=${ARCH:-"amd64"}
-SUFFIX=""
-[ "${ARCH}" != "amd64" ] && SUFFIX="_${ARCH}"
-
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-DEFINE_string 'tag' "${VERSION}${SUFFIX}" "Tag to set for the local image"
+DEFINE_string 'tag' "${DEV_VERSION}" "Tag to set for the local image"
 DEFINE_string 'repo' 'quay.io/submariner' "Quay.io repo to use for the image"
 DEFINE_string 'image' '' "Image name to build" 'i'
 DEFINE_string 'dockerfile' '' "Dockerfile to build from" 'f'
