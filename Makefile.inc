@@ -41,6 +41,9 @@ release:
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
+tidy:
+	go mod tidy && go mod vendor
+
 unit-test: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 

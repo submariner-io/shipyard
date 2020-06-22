@@ -1,0 +1,22 @@
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+    tags:
+      - 'v**'
+
+name: Tidyness Validation
+jobs:
+  tidy-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@master
+
+      - run: make tidy
+      - name: Check that go.mod and go.sum files are up to date
+        run: |
+          [ -n "$(git status --porcelain --untracked-files=no)" ] || exit 0
+          git diff
+          echo "##[error] The go.mod and/or go.sum files are out of date, please run 'make tidy' and update your changes"
+          exit 1
