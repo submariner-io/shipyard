@@ -2,16 +2,6 @@
 # shellcheck source=scripts/shared/lib/source_only
 . "${BASH_SOURCE%/*}"/source_only
 
-if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
-    dirty="-dirty"
-fi
-
-git_tag=$(git tag -l --contains HEAD | head -n 1)
 readonly DEV_VERSION="dev"
-
-# shellcheck disable=SC2034 # VERSION is used in other scripts which source this one
-if [[ -z "$dirty" && -n "$git_tag" ]]; then
-    readonly VERSION=$git_tag
-else
-    readonly VERSION="$DEV_VERSION"
-fi
+# shellcheck disable=SC2034 # VERSION defined here is used elsewhere
+readonly VERSION=$(git describe --tags --dirty="-${DEV_VERSION}" --exclude="devel" --exclude="latest")
