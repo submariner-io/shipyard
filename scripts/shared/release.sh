@@ -24,7 +24,7 @@ source ${SCRIPTS_DIR}/lib/version
 
 function release_image() {
     local image=$1
-    local images=("${image}:${commit_hash:0:7}" "${image}:${release_tag#v}")
+    local images=("${image}:${VERSION#v}" "${image}:${release_tag#v}")
 
     for target_image in "${images[@]}"; do
         docker tag ${image}:${DEV_VERSION} ${target_image}
