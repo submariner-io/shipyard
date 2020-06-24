@@ -9,7 +9,7 @@ echo "Looking for packages to test"
 
 # This can’t be done as simply with parameter substitution
 # shellcheck disable=SC2001
-packages=". $(find_go_pkg_dirs "$@" | sed -e 's![^ ]*!./&/...!g')"
+packages="$(find_go_pkg_dirs "$@" | sed -e 's![^ ]*!./&/...!g')"
 
 echo "Running tests in ${packages}"
 [ "${ARCH}" == "amd64" ] && race=-race
