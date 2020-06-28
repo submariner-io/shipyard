@@ -5,7 +5,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
     LINT_VERSION=v1.26.0 \
     HELM_VERSION=v2.14.1 \
     KIND_VERSION=v0.6.1 \
-    SUBCTL_VERSION=v0.3.1 \
+    SUBCTL_VERSION=v0.4.0 \
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARCH} \
@@ -43,7 +43,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
     mv linux-${ARCH}/helm /usr/bin/ && chmod a+x /usr/bin/helm && rm -rf linux-${ARCH} && \
     curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
-    curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
+    curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}.tar.xz" | tar xJf - && mv subctl-${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH} /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     find /usr/bin /go/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name subctl ! -name hyperkube | xargs upx && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
