@@ -1,0 +1,34 @@
+FROM fedora:32
+
+ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard
+ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH}
+
+# Requirements:
+# Component      | Usage
+# -----------------------------------------------------------
+# gcc            | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# git            | find the workspace root
+# curl           | download other tools
+# moby-engine    | Dapper (Docker)
+# golang         | build
+# kubectl        | e2e tests (in kubernetes-client)
+# golangci-lint  | code linting
+# helm           | e2e tests
+# kind           | e2e tests
+# ginkgo         | tests
+# goimports      | code formatting
+# make           | OLM installation
+# findutils      | validate (find go packages)
+# subctl *       | Submariner's deploy tool (operator)
+# upx            | binary compression
+# jq             | JSON processing (GitHub API)
+# diffutils      | required for goimports
+# ShellCheck     | shell script linting
+RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
+                   gcc git-core curl moby-engine make golang kubernetes-client \
+                   findutils upx jq golang-x-tools-goimports ShellCheck && \
+    dnf -y remove libsemanage && \
+    rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
+    dnf -y clean all && \
+    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs -r upx && \
+    ln -f /usr/bin/kubectl /usr/bin/hyperkube

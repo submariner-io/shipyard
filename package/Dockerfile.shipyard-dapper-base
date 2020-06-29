@@ -1,8 +1,6 @@
-FROM fedora:32
+FROM quay.io/submariner/shipyard-system-base
 
-ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard
-ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
-    LINT_VERSION=v1.26.0 \
+ENV LINT_VERSION=v1.26.0 \
     HELM_VERSION=v2.14.1 \
     KIND_VERSION=v0.6.1 \
     SUBCTL_VERSION=v0.4.0 \
@@ -12,41 +10,13 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
     GOPATH=/go GO111MODULE=on PATH=/go/bin:/usr/local/go/bin:${PATH} SHELL=/bin/bash GOFLAGS=-mod=vendor \
     GOPROXY=https://proxy.golang.org
 
-# Requirements:
-# Component      | Usage
-# -----------------------------------------------------------
-# gcc            | needed by `go test -race` (https://github.com/golang/go/issues/27089)
-# git            | find the workspace root
-# curl           | download other tools
-# moby-engine    | Dapper (Docker)
-# golang         | build
-# kubectl        | e2e tests (in kubernetes-client)
-# golangci-lint  | code linting
-# helm           | e2e tests
-# kind           | e2e tests
-# ginkgo         | tests
-# goimports      | code formatting
-# make           | OLM installation
-# findutils      | validate (find go packages)
-# subctl *       | Submariner's deploy tool (operator)
-# upx            | binary compression
-# jq             | JSON processing (GitHub API)
-# diffutils      | required for goimports
-# ShellCheck     | shell script linting
-RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
-                   gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports ShellCheck && \
-    dnf -y remove libsemanage && \
-    rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
-    dnf -y clean all && \
-    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
-    mv linux-${ARCH}/helm /usr/bin/ && chmod a+x /usr/bin/helm && rm -rf linux-${ARCH} && \
-    curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
+    mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
+    curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}.tar.xz" | tar xJf - && mv subctl-${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH} /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /usr/bin /go/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name subctl ! -name hyperkube | xargs upx && \
-    ln -f /usr/bin/kubectl /usr/bin/hyperkube
+    find /go/bin -type f -executable -newercc /proc -size +1M ! -name subctl | xargs -r upx
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh

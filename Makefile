@@ -37,6 +37,8 @@ dapper-image: export SCRIPTS_DIR=./scripts/shared
 
 dapper-image: package/.image.shipyard-dapper-base
 
+package/.image.shipyard-dapper-base: package/.image.shipyard-system-base
+
 .DEFAULT_GOAL := validate
 # Shipyard-specific ends
 
