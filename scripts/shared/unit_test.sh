@@ -13,4 +13,4 @@ packages="$(find_go_pkg_dirs "$@" | sed -e 's![^ ]*!./&/...!g')"
 
 echo "Running tests in ${packages}"
 [ "${ARCH}" == "amd64" ] && race=-race
-go test -v ${race} -cover ${packages} -ginkgo.reportPassed -ginkgo.reportFile junit.xml
+go test -v ${race} -cover ${packages} -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml
