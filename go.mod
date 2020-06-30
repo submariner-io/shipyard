@@ -7,7 +7,6 @@ require (
 	github.com/elazarl/goproxy v0.0.0-20200426045556-49ad98f6dac1 // indirect
 	github.com/gogo/protobuf v1.3.1 // indirect
 	github.com/google/gofuzz v1.1.0 // indirect
-	github.com/google/uuid v1.1.1 // indirect
 	github.com/googleapis/gnostic v0.1.0 // indirect
 	github.com/imdario/mergo v0.3.8 // indirect
 	github.com/json-iterator/go v1.1.9 // indirect
@@ -25,19 +24,19 @@ require (
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
-	k8s.io/api v0.15.7
-	k8s.io/apimachinery v0.15.13-beta.0
-	k8s.io/client-go v0.15.7
+	k8s.io/api v0.16.4
+	k8s.io/apimachinery v0.16.5-beta.1
+	k8s.io/client-go v0.16.4
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20200520001619-278ece378a50 // indirect
 	sigs.k8s.io/yaml v1.2.0 // indirect
 )
 
-// Pinned to kubernetes-1.15.7
+// Pinned to kubernetes-1.16.4
 replace (
-	k8s.io/api => k8s.io/api v0.15.7
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.15.7
-	k8s.io/apimachinery => k8s.io/apimachinery v0.15.10-beta.0
-	k8s.io/client-go => k8s.io/client-go v0.15.7
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.15.7
+	k8s.io/api => k8s.io/api v0.16.4
+	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.16.4
+	k8s.io/apimachinery => k8s.io/apimachinery v0.16.5-beta.1
+	k8s.io/client-go => k8s.io/client-go v0.16.4
+	k8s.io/cloud-provider => k8s.io/cloud-provider v0.16.4
 )
