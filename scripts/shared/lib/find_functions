@@ -1,11 +1,21 @@
 # shellcheck shell=bash
-function find_go_pkg_dirs() {
-    local find_exclude excluded_dirs="${*} vendor .git .trash-cache bin"
+function _find_pkg_dirs() {
+    local find_exclude
+    excluded_dirs+=" vendor .git .trash-cache bin"
 
     for dir in $excluded_dirs; do
         find_exclude+=" -path ./$dir -prune -o"
     done
 
     # shellcheck disable=SC2086
-    find . ${find_exclude} -path './*/*.go' -print | cut -f2 -d/ | sort -u
+    find . ${find_exclude} -path "$1" -printf "%h\n" | sort -u
+}
+
+function find_go_pkg_dirs() {
+    _find_pkg_dirs "./*/*.go"
+}
+
+function find_unit_test_dirs() {
+    local excluded_dirs="${*}"
+    _find_pkg_dirs "./*/*_test.go"
 }

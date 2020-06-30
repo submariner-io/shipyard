@@ -205,13 +205,14 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Image: "busybox",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
-					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "REMOTE_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
 						{Name: "REMOTE_IP", Value: np.Config.RemoteIP},
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
 					},
 				},
 			},
