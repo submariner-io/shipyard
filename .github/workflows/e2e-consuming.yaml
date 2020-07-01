@@ -1,12 +1,15 @@
 on:
   pull_request:
+    types: [labeled, opened, synchronize, reopened]
 
 name: E2E Tests (Consuming Projects)
 jobs:
   e2e:
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    if: contains(github.event.pull_request.labels.*.name, 'test-projects')
+    if: |
+      ( github.event.action == 'labeled' && github.event.label.name == 'test-projects' )
+      || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'test-projects') )
     strategy:
       fail-fast: false
       matrix:
