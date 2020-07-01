@@ -13,9 +13,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['submariner', 'submariner-operator', 'lighthouse']
+        project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
         deploytool: ['operator', 'helm']
         exclude:
+          - project: admiral
+            deploytool: helm
           - project: submariner-operator
             deploytool: helm
     steps:
