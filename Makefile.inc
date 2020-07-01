@@ -1,5 +1,3 @@
-release_tag ?= latest
-repo ?= quay.io/submariner
 , := ,
 _using = $(subst $(,), ,$(using))
 
@@ -36,7 +34,7 @@ e2e:
 	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
 
 release:
-	$(SCRIPTS_DIR)/release.sh --tag $(release_tag) --repo $(repo) $(release_images) $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release.sh $(RELEASE_ARGS)
 
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
