@@ -1,5 +1,7 @@
 FROM fedora:32
 
+# Unless specified otherwise, compress the fastest to save time
+ARG UPX_LEVEL=-1
 ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/local/go/bin:$PATH \
     GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${DAPPER_HOST_ARCH} \
@@ -35,7 +37,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
-    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx && \
+    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 ENV LINT_VERSION=v1.26.0 \
@@ -50,7 +52,7 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}.tar.xz" | tar xJf - && mv subctl-${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH} /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /go/bin -type f -executable -newercc /proc | xargs -r upx
+    find /go/bin -type f -executable -newercc /proc | xargs -r upx ${UPX_LEVEL}
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh

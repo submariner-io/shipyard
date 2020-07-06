@@ -34,7 +34,7 @@ jobs:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
           RELEASE_ARGS: shipyard-dapper-base nettest
-          IMAGES_ARGS: --nocache
+          IMAGES_ARGS: --nocache --buildargs 'UPX_LEVEL=-9'
         run: |
           if [[ $GITHUB_REF =~ "/tags/" ]]; then
               tags="${GITHUB_REF##*/}"
