@@ -2,6 +2,6 @@
 # shellcheck source=scripts/shared/lib/source_only
 . "${BASH_SOURCE%/*}"/source_only
 
-readonly DEV_VERSION="dev"
+readonly DEV_VERSION="devel"
 # shellcheck disable=SC2034 # VERSION defined here is used elsewhere
 readonly VERSION=$(git describe --tags --dirty="-${DEV_VERSION}" --exclude="devel" --exclude="latest")

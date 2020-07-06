@@ -40,7 +40,7 @@ jobs:
           repository: submariner-io/${{ matrix.project }}
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
-        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
+        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:devel/' Dockerfile.dapper
 
       - name: Run E2E deployment and tests
         run: make e2e using=${{ matrix.deploytool }}
