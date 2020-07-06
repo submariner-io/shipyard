@@ -51,7 +51,7 @@ func init() {
 	flag.StringVar(&TestContext.SubmarinerNamespace, "submariner-namespace", "submariner", "Namespace in which the submariner components are deployed.")
 	flag.UintVar(&TestContext.ConnectionTimeout, "connection-timeout", 18, "The timeout in seconds per connection attempt when verifying communication between clusters.")
 	flag.UintVar(&TestContext.ConnectionAttempts, "connection-attempts", 7, "The number of connection attempts when verifying communication between clusters.")
-	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 120, "The general operation timeout in seconds.")
+	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 190, "The general operation timeout in seconds.")
 }
 
 func ValidateFlags(t *TestContextType) {
