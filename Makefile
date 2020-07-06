@@ -24,6 +24,10 @@ nettest: package/.image.nettest
 
 e2e: vendor/modules.txt clusters
 
+shellcheck:
+# SC2154 is excluded to avoid false positives based on our use of global variables
+	shellcheck -e SC2154 scripts/shared/lib/*
+
 else
 
 # Not running in Dapper
