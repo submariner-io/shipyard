@@ -26,13 +26,16 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 set -e
 
 local_image=${repo}/${image}:${tag}
+cache_image=${repo}/${image}:devel
 latest_image=${repo}/${image}:latest
 
 # When using cache pull latest image from the repo, so that it's layers may be reused.
 cache_flag=''
 if [[ "$cache" = true ]]; then
-    cache_flag="--cache-from ${latest_image}"
-    docker pull ${latest_image} || :
+    cache_flag="--cache-from ${cache_image}"
+    if [[ -z "$(docker image ls -q ${cache_image})" ]]; then
+        docker pull ${cache_image} || :
+    fi
     for parent in $(grep FROM ${dockerfile} | cut -f2 -d' ' | grep -v scratch); do
         cache_flag+=" --cache-from ${parent}"
         docker pull ${parent} || :
