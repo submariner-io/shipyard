@@ -31,7 +31,7 @@ jobs:
           df -h
           free -h
 
-      - name: Built the latest Shipyard image
+      - name: Build the latest Shipyard image
         run: make dapper-image
 
       - name: Checkout the ${{ matrix.project }} repository
