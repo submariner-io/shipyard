@@ -2,6 +2,7 @@
 _using = $(subst $(,), ,$(using))
 
 include $(SHIPYARD_DIR)/Makefile.images
+include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
 

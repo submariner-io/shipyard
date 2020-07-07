@@ -2,6 +2,8 @@
 # shellcheck source=scripts/shared/lib/source_only
 . "${BASH_SOURCE%/*}"/source_only
 
+# The CUTTING_EDGE, DEV_VERSION, and VERSION are set in Makefile.inc;
+# this script is only preserved for backwards compatibility
 readonly DEV_VERSION="dev"
 readonly CUTTING_EDGE="devel"
 # shellcheck disable=SC2034 # VERSION defined here is used elsewhere
