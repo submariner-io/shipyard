@@ -28,7 +28,7 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 set -e
 
 local_image=${repo}/${image}:${tag}
-cache_image=${repo}/${image}:devel
+cache_image=${repo}/${image}:${CUTTING_EDGE}
 latest_image=${repo}/${image}:latest
 
 # When using cache pull latest image from the repo, so that it's layers may be reused.
