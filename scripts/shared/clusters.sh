@@ -3,7 +3,7 @@
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-DEFINE_string 'k8s_version' '1.16.4' 'Version of K8s to use'
+DEFINE_string 'k8s_version' '1.17.0' 'Version of K8s to use'
 DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
