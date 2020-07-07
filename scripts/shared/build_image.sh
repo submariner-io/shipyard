@@ -29,7 +29,6 @@ set -e
 
 local_image=${repo}/${image}:${tag}
 cache_image=${repo}/${image}:${CUTTING_EDGE}
-latest_image=${repo}/${image}:latest
 
 # When using cache pull latest image from the repo, so that it's layers may be reused.
 cache_flag=''
@@ -48,5 +47,5 @@ fi
 buildargs_flag=''
 [[ -z "${buildargs}" ]] || buildargs_flag="--build-arg ${buildargs}"
 docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
-docker tag ${local_image} ${latest_image}
+docker tag ${local_image} ${CUTTING_EDGE}
 
