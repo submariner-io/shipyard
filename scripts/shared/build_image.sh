@@ -47,5 +47,5 @@ fi
 buildargs_flag=''
 [[ -z "${buildargs}" ]] || buildargs_flag="--build-arg ${buildargs}"
 docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
-docker tag ${local_image} ${CUTTING_EDGE}
+docker tag ${local_image} ${cache_image}
 
