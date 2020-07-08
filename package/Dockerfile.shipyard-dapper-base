@@ -1,7 +1,8 @@
 FROM fedora:32
 
-# Unless specified otherwise, compress the fastest to save time
-ARG UPX_LEVEL=-1
+# Unless specified otherwise, compress to a medium level which gives (from experemintation) a
+# good balance between compression time and resulting image size.
+ARG UPX_LEVEL=-5
 ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/local/go/bin:$PATH \
     GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${DAPPER_HOST_ARCH} \
