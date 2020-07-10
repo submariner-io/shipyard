@@ -6,7 +6,7 @@ source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'focus' '.*' "Ginkgo focus for the E2E tests"
 DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
-DEFINE_boolean 'globalnet' false "Indicates if the globalnaet feature is enabled"
+DEFINE_boolean 'globalnet' false "Indicates if the globalnet feature is enabled"
 FLAGS_HELP="USAGE: $0 [--cluster_settings /path/to/settings] [--focus focus] [--[no]lazy_deploy] cluster [cluster ...]"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
