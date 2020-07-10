@@ -8,6 +8,7 @@ include $(SHIPYARD_DIR)/Makefile.images
 ifneq (,$(filter globalnet,$(_using)))
 override CLUSTERS_ARGS += --globalnet
 override DEPLOY_ARGS += --globalnet
+override E2E_ARGS += --globalnet
 endif
 
 ifneq (,$(filter helm,$(_using)))
