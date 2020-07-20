@@ -24,6 +24,10 @@ nettest: package/.image.nettest
 
 e2e: vendor/modules.txt clusters
 
+shellcheck:
+# SC2154 is excluded to avoid false positives based on our use of global variables
+	shellcheck -e SC2154 scripts/shared/lib/*
+
 else
 
 # Not running in Dapper
@@ -31,7 +35,7 @@ else
 include Makefile.images
 
 # Shipyard-specific starts
-clusters deploy e2e nettest post-mortem release unit-test validate: dapper-image
+clusters deploy e2e nettest post-mortem unit-test validate: dapper-image
 
 dapper-image: export SCRIPTS_DIR=./scripts/shared
 

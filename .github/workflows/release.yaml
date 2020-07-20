@@ -14,6 +14,8 @@ jobs:
       - uses: actions/checkout@master
 
       - run: make e2e
+        env:
+          IMAGES_ARGS: --nocache
 
       - name: Post Mortem
         if: failure()
@@ -26,13 +28,25 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
+        with:
+          fetch-depth: 0
+
+      - name: Tagged release detection
+        if: contains(github.ref, '/tags/')
+        run: |
+          tags="${GITHUB_REF##*/}"
+          { echo $tags | grep -q -v -; } && tags+=" latest"
+          echo "::set-env name=RELEASE_TAGS::--tag \"$tags\""
+          echo "::set-env name=UPX_FLAG::--buildargs \"UPX_LEVEL=-9\""
+
+      - name: Build new images
+        env:
+          IMAGES_ARGS: --nocache ${{ env.UPX_FLAG }}
+        run: make dapper-image nettest
 
       - name: Release the images
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: shipyard-dapper-base nettest
-          IMAGES_ARGS: --nocache
-        run: |
-          [[ $GITHUB_REF =~ "/tags/" ]] && RELEASE_ARGS+=" --tag ${GITHUB_REF##*/}"
-          make dapper-image nettest release
+          RELEASE_ARGS: shipyard-dapper-base nettest ${{ env.RELEASE_TAGS }}
+        run: make release

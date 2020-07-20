@@ -1,16 +1,13 @@
 FROM fedora:32
 
-ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard
-ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
-    LINT_VERSION=v1.26.0 \
-    HELM_VERSION=v2.14.1 \
-    KIND_VERSION=v0.6.1 \
-    SUBCTL_VERSION=v0.3.1 \
+# Unless specified otherwise, compress to a medium level which gives (from experemintation) a
+# good balance between compression time and resulting image size.
+ARG UPX_LEVEL=-5
+ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash
+ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/local/go/bin:$PATH \
+    GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${DAPPER_HOST_ARCH} \
+    GOPATH=/go GO111MODULE=on GOFLAGS=-mod=vendor GOPROXY=https://proxy.golang.org \
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
-
-ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARCH} \
-    GOPATH=/go GO111MODULE=on PATH=/go/bin:/usr/local/go/bin:${PATH} SHELL=/bin/bash GOFLAGS=-mod=vendor \
-    GOPROXY=https://proxy.golang.org
 
 # Requirements:
 # Component      | Usage
@@ -33,20 +30,30 @@ ENV GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${ARC
 # jq             | JSON processing (GitHub API)
 # diffutils      | required for goimports
 # ShellCheck     | shell script linting
+
+# This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq golang-x-tools-goimports ShellCheck && \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
-    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
-    curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
-    mv linux-${ARCH}/helm /usr/bin/ && chmod a+x /usr/bin/helm && rm -rf linux-${ARCH} && \
-    curl -Lo /usr/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /usr/bin/kind && \
-    curl -Lo /go/bin/subctl "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}" && chmod a+x /go/bin/subctl && \
-    GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /usr/bin /go/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name subctl ! -name hyperkube | xargs upx && \
+    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
+
+ENV LINT_VERSION=v1.28.0 \
+    HELM_VERSION=v2.16.9 \
+    KIND_VERSION=v0.7.0 \
+    SUBCTL_VERSION=v0.5.0-pre1
+
+# This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
+RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
+    curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
+    mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
+    curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
+    curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}.tar.xz" | tar xJf - && mv subctl-${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH} /go/bin/subctl && \
+    GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
+    find /go/bin -type f -executable -newercc /proc | xargs -r upx ${UPX_LEVEL}
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
