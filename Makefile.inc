@@ -20,6 +20,10 @@ ifneq (,$(filter olm,$(_using)))
 override CLUSTERS_ARGS += --olm
 endif
 
+ifneq (,$(filter prometheus,$(_using)))
+override CLUSTERS_ARGS += --prometheus
+endif
+
 # Shipyard provided targets
 
 cleanup:
