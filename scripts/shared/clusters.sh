@@ -6,6 +6,7 @@ source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' '1.17.0' 'Version of K8s to use'
 DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
+DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
@@ -16,8 +17,9 @@ eval set -- "${FLAGS_ARGV}"
 version="${FLAGS_k8s_version}"
 olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
+[[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
-[[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false 
+[[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
 echo "Running with: k8s_version=${version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
@@ -141,9 +143,22 @@ function deploy_olm() {
     kubectl rollout status deployment/packageserver --namespace=olm --timeout="${timeout}"
 }
 
+function deploy_prometheus() {
+    echo "Deploying Prometheus..."
+    # TODO Install in a separate namespace
+    kubectl create ns submariner-operator
+    # Bundle from prometheus-operator, namespace changed to submariner-operator
+    kubectl apply -f prometheus/bundle.yaml
+    kubectl apply -f prometheus/serviceaccount.yaml
+    kubectl apply -f prometheus/clusterrole.yaml
+    kubectl apply -f prometheus/clusterrolebinding.yaml
+    kubectl apply -f prometheus/prometheus.yaml
+}
+
 function deploy_cluster_capabilities() {
     deploy_cni
     [[ $olm != "true" ]] || deploy_olm
+    [[ $prometheus != "true" ]] || deploy_prometheus
 }
 
 ### Main ###
