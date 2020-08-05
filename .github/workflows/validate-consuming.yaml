@@ -5,7 +5,7 @@ on:
 name: Validations (Consuming Projects)
 jobs:
   validate:
-    timeout-minutes: 10
+    timeout-minutes: 15
     runs-on: ubuntu-latest
     if: |
       ( github.event.action == 'labeled' && github.event.label.name == 'validate-projects' )
