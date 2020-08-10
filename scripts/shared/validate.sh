@@ -10,3 +10,5 @@ PACKAGES="$(find_go_pkg_dirs) *.go"
 golangci-lint linters
 
 golangci-lint run --timeout 5m $@
+
+markdownlint -c .markdownlint.yml -i vendor .
