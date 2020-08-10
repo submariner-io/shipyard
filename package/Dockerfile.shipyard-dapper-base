@@ -28,11 +28,14 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
 # ShellCheck     | shell script linting
+# npm            | Required for installing markdownlint
+# markdownlint   | Markdown linting
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq ShellCheck && \
+                   findutils upx jq ShellCheck npm && \
+    npm install -g markdownlint-cli && \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
