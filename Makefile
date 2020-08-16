@@ -33,6 +33,7 @@ else
 # Not running in Dapper
 
 include Makefile.images
+include Makefile.versions
 
 # Shipyard-specific starts
 clusters deploy e2e nettest post-mortem unit-test validate: dapper-image

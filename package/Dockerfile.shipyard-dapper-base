@@ -22,19 +22,17 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # helm           | e2e tests
 # kind           | e2e tests
 # ginkgo         | tests
-# goimports      | code formatting
 # make           | OLM installation
 # findutils      | validate (find go packages)
 # subctl *       | Submariner's deploy tool (operator)
 # upx            | binary compression
 # jq             | JSON processing (GitHub API)
-# diffutils      | required for goimports
 # ShellCheck     | shell script linting
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq golang-x-tools-goimports ShellCheck && \
+                   findutils upx jq ShellCheck && \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \

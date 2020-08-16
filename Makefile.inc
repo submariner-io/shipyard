@@ -2,6 +2,7 @@
 _using = $(subst $(,), ,$(using))
 
 include $(SHIPYARD_DIR)/Makefile.images
+include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
 
@@ -17,6 +18,10 @@ endif
 
 ifneq (,$(filter olm,$(_using)))
 override CLUSTERS_ARGS += --olm
+endif
+
+ifneq (,$(filter prometheus,$(_using)))
+override CLUSTERS_ARGS += --prometheus
 endif
 
 # Shipyard provided targets

@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout the Shipyard repository
         uses: actions/checkout@master
+        with:
+          fetch-depth: 0
 
       - name: Reclaim free space!
         run: |
@@ -37,6 +39,7 @@ jobs:
       - name: Checkout the ${{ matrix.project }} repository
         uses: actions/checkout@master
         with:
+          fetch-depth: 0
           repository: submariner-io/${{ matrix.project }}
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
