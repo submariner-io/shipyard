@@ -36,7 +36,7 @@ include Makefile.images
 include Makefile.versions
 
 # Shipyard-specific starts
-clusters deploy e2e nettest post-mortem unit-test validate: dapper-image
+clusters deploy e2e gitlint nettest post-mortem unit-test validate: dapper-image
 
 dapper-image: export SCRIPTS_DIR=./scripts/shared
 

@@ -39,6 +39,9 @@ deploy: clusters
 e2e:
 	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
 
+gitlint:
+	$(SCRIPTS_DIR)/gitlint.sh
+
 release:
 	$(SCRIPTS_DIR)/release.sh $(RELEASE_ARGS)
 
