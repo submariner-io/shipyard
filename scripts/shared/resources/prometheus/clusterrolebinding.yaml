@@ -1,3 +1,4 @@
+---
 apiVersion: rbac.authorization.k8s.io/v1beta1
 kind: ClusterRoleBinding
 metadata:
@@ -7,9 +8,9 @@ roleRef:
   kind: ClusterRole
   name: prometheus
 subjects:
-- kind: ServiceAccount
-  name: prometheus
-  namespace: default
-- kind: ServiceAccount
-  name: prometheus
-  namespace: submariner-operator
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: default
+  - kind: ServiceAccount
+    name: prometheus
+    namespace: submariner-operator
