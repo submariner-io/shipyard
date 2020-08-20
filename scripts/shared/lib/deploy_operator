@@ -22,6 +22,7 @@ function setup_broker() {
     local gn
     [[ $globalnet != true ]] || gn="--globalnet"
     echo "Installing broker..."
+    subctl version
     # shellcheck disable=SC2086 # Split on purpose
     (
         cd "${OUTPUT_DIR}" && \
@@ -38,6 +39,7 @@ function subctl_install_subm() {
         return
     fi
 
+    subctl version
     # shellcheck disable=SC2086 # Split on purpose
     subctl join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                 --clusterid "${cluster}" \
