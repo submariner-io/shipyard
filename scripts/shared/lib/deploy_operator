@@ -15,6 +15,7 @@ readonly SUBM_ENGINE_IMAGE_TAG=local
 
 function deploytool_prereqs() {
     test -x /go/bin/subctl
+    /go/bin/subctl version
     import_image quay.io/submariner/submariner-operator
 }
 
