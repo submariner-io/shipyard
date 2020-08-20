@@ -148,11 +148,11 @@ function deploy_prometheus() {
     # TODO Install in a separate namespace
     kubectl create ns submariner-operator
     # Bundle from prometheus-operator, namespace changed to submariner-operator
-    kubectl apply -f prometheus/bundle.yaml
-    kubectl apply -f prometheus/serviceaccount.yaml
-    kubectl apply -f prometheus/clusterrole.yaml
-    kubectl apply -f prometheus/clusterrolebinding.yaml
-    kubectl apply -f prometheus/prometheus.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/bundle.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml
 }
 
 function deploy_cluster_capabilities() {
