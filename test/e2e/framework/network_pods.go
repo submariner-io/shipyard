@@ -25,6 +25,8 @@ const (
 	InvalidPodType NetworkPodType = iota
 	ListenerPod
 	ConnectorPod
+	ThroughputClientPod
+	ThroughputServerPod
 )
 
 type NetworkPodScheduling int
@@ -84,6 +86,11 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildTCPCheckListenerPod()
 	case ConnectorPod:
 		networkPod.buildTCPCheckConnectorPod()
+	case ThroughputClientPod:
+		networkPod.buildThroughputClientPod()
+	case ThroughputServerPod:
+		networkPod.buildThroughputServerPod()
+
 	}
 
 	return networkPod
@@ -223,6 +230,71 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 	var err error
 	np.Pod, err = pc.Create(&tcpCheckConnectorPod)
 	Expect(err).NotTo(HaveOccurred())
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will initiate iperf3 throughput test to remoteIP and write the test
+// response in the pod termination log, then
+// exit with 0 status
+func (np *NetworkPod) buildThroughputClientPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "nettest-client-pod",
+			Labels: map[string]string{
+				"run": "nettest-client-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "nettest-client-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command: []string{
+						"sh", "-c", "iperf3 -w 256K -P 10 -c $TARGET_IP >/dev/termination-log 2>&1"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+					},
+				},
+			},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will start iperf3 in server mode
+func (np *NetworkPod) buildThroughputServerPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "nettest-server-pod",
+			Labels: map[string]string{
+				"run": "nettest-server-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "nettest-server-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command:         []string{"iperf3", "-s"},
+				},
+			},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
 }
 
 func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
