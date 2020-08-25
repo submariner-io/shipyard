@@ -265,6 +265,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 	var err error
 	np.Pod, err = pc.Create(&nettestPod)
 	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
