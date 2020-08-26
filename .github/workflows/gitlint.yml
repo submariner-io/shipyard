@@ -1,3 +1,4 @@
+---
 on:
   pull_request:
   push:
@@ -6,17 +7,13 @@ on:
     tags:
       - 'v**'
 
-name: Validations
+name: Commit Message Validations
 jobs:
-  validate:
-    name: Validating
-    strategy:
-      fail-fast: false
-      matrix:
-        command: ['shellcheck', 'validate']
+  gitlint:
+    name: Gitlint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
         with:
           fetch-depth: 0
-      - run: make ${{ matrix.command }}
+      - run: make gitlint

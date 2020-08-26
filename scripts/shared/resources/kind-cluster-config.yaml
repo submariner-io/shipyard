@@ -1,3 +1,4 @@
+---
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
 networking:
@@ -5,17 +6,17 @@ networking:
   podSubnet: ${pod_cidr}
   serviceSubnet: ${service_cidr}
 containerdConfigPatches:
-- |-
-  [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5000\"]
-    endpoint = [\"http://${registry_ip}:5000\"]
+  - |-
+    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5000\"]
+      endpoint = [\"http://${registry_ip}:5000\"]
 kubeadmConfigPatches:
-- |
-  apiVersion: kubeadm.k8s.io/v1beta2
-  kind: ClusterConfiguration
-  metadata:
-    name: config
-  networking:
-    podSubnet: ${pod_cidr}
-    serviceSubnet: ${service_cidr}
-    dnsDomain: ${dns_domain}
-nodes:${nodes}
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta2
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    networking:
+      podSubnet: ${pod_cidr}
+      serviceSubnet: ${service_cidr}
+      dnsDomain: ${dns_domain}
+nodes: ${nodes}
