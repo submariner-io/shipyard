@@ -4,10 +4,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
 	corev1 "k8s.io/api/core/v1"
@@ -86,16 +84,12 @@ var (
 	KubeClients []*kubeclientset.Clientset
 )
 
-// NewFramework creates a test framework.
-func NewFramework(baseName string) *Framework {
+// NewBareFramework creates a test framework, without ginkgo dependencies
+func NewBareFramework(baseName string) *Framework {
 	f := &Framework{
 		BaseName:           baseName,
 		namespacesToDelete: map[string]bool{},
 	}
-
-	ginkgo.BeforeEach(f.BeforeEach)
-	ginkgo.AfterEach(f.AfterEach)
-
 	return f
 }
 
@@ -103,8 +97,35 @@ func AddBeforeSuite(beforeSuite func()) {
 	beforeSuiteFuncs = append(beforeSuiteFuncs, beforeSuite)
 }
 
+var By func(string)
+var Fail func(string)
+var userAgentFunction func() string
+
+func SetStatusFunction(by func(string)) {
+	By = by
+}
+func SetFailFunction(fail func(string)) {
+	Fail = fail
+}
+
+func SetUserAgentFunction(uaf func() string) {
+	userAgentFunction = uaf
+}
+
+func init() {
+	By = func(str string) {
+		fmt.Println(str)
+	}
+	Fail = func(str string) {
+		panic("Framework Fail:" + str)
+	}
+	userAgentFunction = func() string {
+		return "shipyard-framework-agent"
+	}
+}
+
 func BeforeSuite() {
-	ginkgo.By("Creating kubernetes clients")
+	By("Creating kubernetes clients")
 
 	if len(TestContext.KubeConfig) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
@@ -125,7 +146,7 @@ func BeforeSuite() {
 			RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
 		}
 	} else {
-		ginkgo.Fail("One of KubeConfig or KubeConfigs must be specified")
+		Fail("One of KubeConfig or KubeConfigs must be specified")
 	}
 
 	for _, restConfig := range RestConfigs {
@@ -143,7 +164,7 @@ func (f *Framework) BeforeEach() {
 	f.cleanupHandle = AddCleanupAction(f.AfterEach)
 
 	if !f.SkipNamespaceCreation {
-		ginkgo.By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
+		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
 		namespaceLabels := map[string]string{
 			"e2e-framework": f.BaseName,
@@ -156,9 +177,9 @@ func (f *Framework) BeforeEach() {
 				f.Namespace = namespace.GetName()
 				f.UniqueName = namespace.GetName()
 				f.AddNamespacesToDelete(namespace)
-				ginkgo.By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
+				By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
 			default: // On the other clusters we use the same name to make tracing easier
-				ginkgo.By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
+				By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
 				f.CreateNamespace(clientSet, f.Namespace, namespaceLabels)
 			}
 		}
@@ -191,14 +212,9 @@ func createRestConfig(kubeConfig, context string) *rest.Config {
 		Errorf("loadConfig err: %s", err.Error())
 		os.Exit(1)
 	}
-	testDesc := ginkgo.CurrentGinkgoTestDescription()
-	if len(testDesc.ComponentTexts) > 0 {
-		componentTexts := strings.Join(testDesc.ComponentTexts, " ")
-		restConfig.UserAgent = fmt.Sprintf(
-			"%v -- %v",
-			rest.DefaultKubernetesUserAgent(),
-			componentTexts)
-	}
+
+	restConfig.UserAgent = userAgentFunction()
+
 	restConfig.QPS = TestContext.ClientQPS
 	restConfig.Burst = TestContext.ClientBurst
 	if TestContext.GroupVersion != nil {
@@ -247,7 +263,7 @@ func (f *Framework) AfterEach() {
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	var errs []error
 	for i, clientSet := range KubeClients {
-		ginkgo.By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
 		if err := deleteNamespace(clientSet, ns); err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
