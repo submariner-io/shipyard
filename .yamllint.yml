@@ -11,5 +11,6 @@ rules:
 ignore: |
   /vendor
   /prometheus
+  /scripts/shared/resources/cluster*-config.yaml
 
 strict: true
