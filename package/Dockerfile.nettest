@@ -10,4 +10,12 @@ RUN apk add --no-cache \
 	iperf3 \
 	tcpdump
 
+RUN apk add --update --no-cache g++ make curl
+
+RUN curl -LO https://github.com/HewlettPackard/netperf/archive/netperf-2.7.0.tar.gz \
+    && tar -xzf netperf-2.7.0.tar.gz \
+    && mv netperf-netperf-2.7.0/ netperf-2.7.0
+RUN cd netperf-2.7.0 && ./configure \
+    && make && make install
+
 CMD ["/bin/bash","-l"]
