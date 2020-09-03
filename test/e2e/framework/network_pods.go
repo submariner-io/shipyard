@@ -27,6 +27,8 @@ const (
 	ConnectorPod
 	ThroughputClientPod
 	ThroughputServerPod
+	LatencyClientPod
+	LatencyServerPod
 )
 
 type NetworkPodScheduling int
@@ -90,7 +92,10 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildThroughputClientPod()
 	case ThroughputServerPod:
 		networkPod.buildThroughputServerPod()
-
+	case LatencyClientPod:
+		networkPod.buildLatencyClientPod()
+	case LatencyServerPod:
+		networkPod.buildLatencyServerPod()
 	}
 
 	return networkPod
@@ -287,6 +292,72 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"iperf3", "-s"},
+				},
+			},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will initiate netperf latency test to remoteIP and write the test
+// response in the pod termination log, then
+// exit with 0 status
+func (np *NetworkPod) buildLatencyClientPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "latency-client-pod",
+			Labels: map[string]string{
+				"run": "latency-client-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "latency-client-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command: []string{
+						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+					},
+				},
+			},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will start netserver (server of netperf)
+func (np *NetworkPod) buildLatencyServerPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "latency-server-pod",
+			Labels: map[string]string{
+				"run": "latency-server-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "latency-server-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command:         []string{"netserver", "-D"},
 				},
 			},
 		},
