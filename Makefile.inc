@@ -42,6 +42,9 @@ e2e:
 gitlint:
 	$(SCRIPTS_DIR)/gitlint.sh
 
+yamllint:
+	yamllint .
+
 release:
 	$(SCRIPTS_DIR)/release.sh $(RELEASE_ARGS)
 

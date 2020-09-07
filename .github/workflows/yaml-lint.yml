@@ -7,11 +7,7 @@ jobs:
     runs-on: ubuntu-latest
     name: YAML Linting
     steps:
-      - name: Check out code
-        uses: actions/checkout@v1
-
-      - name: Run yamllint
-        uses: ibiqlik/action-yamllint@v1
+      - uses: actions/checkout@master
         with:
-          file_or_dir: .
-          config_file: .yamllint.yml
+          fetch-depth: 0
+      - run: make yamllint
