@@ -43,6 +43,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     dnf -y remove libsemanage && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
+    rm -f /usr/bin/dockerd && \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
