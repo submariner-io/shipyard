@@ -40,7 +40,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    findutils upx jq ShellCheck npm python3-pip yamllint && \
     npm install -g markdownlint-cli && \
     pip install gitlint && \
-    dnf -y remove libsemanage && \
+    rpm -e --nodeps npm python3-pip && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     rm -f /usr/bin/dockerd && \
