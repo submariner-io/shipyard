@@ -27,6 +27,14 @@ function post_analyze() {
     echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
 
     namespace="submariner-operator"
+    for pod in $(kubectl get pods --selector=name=submariner-operator -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+        echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
+        kubectl -n $namespace logs $pod
+    done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+    namespace="submariner-operator"
     for pod in $(kubectl get pods --selector=app=submariner-globalnet -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
         echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
         kubectl -n $namespace logs $pod
@@ -40,7 +48,14 @@ function post_analyze() {
     done
 
     echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
-    kubectl get Gateway -A -o yaml
+
+    for pod in $(kubectl get pods --selector=app=submariner-routeagent -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+        echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
+        kubectl -n $namespace logs $pod
+    done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+    subctl show all
 
     echo "===================== END Post mortem $cluster ====================="
 }
