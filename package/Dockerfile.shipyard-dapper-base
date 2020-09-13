@@ -43,7 +43,8 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     rpm -e --nodeps containerd npm python3-pip && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
-    rm -f /usr/bin/dockerd && \
+    rm -f /usr/bin/{dockerd,lto-dump} \
+          /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
