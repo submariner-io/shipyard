@@ -53,6 +53,7 @@ install_subm_all_clusters
 
 if [ "${#cluster_subm[@]}" -gt 1 ]; then
     cls=(${!cluster_subm[@]})
+    with_context "${cls[0]}" verify_gw_status
     with_context "${cls[0]}" connectivity_tests "${cls[1]}"
 else
     echo "Not executing connectivity tests - requires at least two clusters with submariner installed"

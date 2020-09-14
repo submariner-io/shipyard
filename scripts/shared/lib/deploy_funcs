@@ -53,7 +53,15 @@ function test_connection() {
     local target_address=$2
 
     echo "Attempting connectivity between clusters - $source_pod --> $target_address"
+    start_time=$(date +%s)
     if ! kubectl exec "${source_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${target_address}"; then
+        end_time=$(date +%s)
+        execution_time=$(( end_time - start_time))
+        if [ $execution_time -lt 30 ]
+        then
+           echo "curl returned too soon. Sleeping for $execution_time secs"
+           sleep $execution_time
+        fi
         return 1
     fi
 
@@ -73,6 +81,24 @@ function connectivity_tests() {
 
     remove_resource "${RESOURCES_DIR}/netshoot.yaml"
     with_context "$target_cluster" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+}
+
+function verify_gw_status() {
+    sleep_duration=5
+    # helm doesn't use the operator yet, and connection status is based on the operator object
+    if subctl show connections 2>&1 | grep "the server could not find the requested resource"; then
+        return 0
+    fi
+
+    for i in {1..90}; do
+       if ! subctl show connections | grep "connected"; then
+          echo "iter: $i. Clusters not yet connected. sleeping for $sleep_duration secs"
+          sleep $sleep_duration
+       else
+          return 0
+       fi
+    done
+    return 1
 }
 
 function add_subm_gateway_label() {
