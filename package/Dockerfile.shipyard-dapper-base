@@ -12,6 +12,8 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # Requirements:
 # Component        | Usage
 # -------------------------------------------------------------
+# clang            | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# compiler-rt      | needed by `go test -msan`
 # curl             | download other tools
 # findutils        | make unit (find unit test dirs)
 # gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
@@ -36,7 +38,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
-                   gcc git-core curl moby-engine make golang kubernetes-client \
+                   clang compiler-rt git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq ShellCheck npm gitlint yamllint \
                    qemu-user-static && \
     npm install -g markdownlint-cli && \
