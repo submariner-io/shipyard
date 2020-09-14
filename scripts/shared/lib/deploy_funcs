@@ -85,6 +85,11 @@ function connectivity_tests() {
 
 function verify_gw_status() {
     sleep_duration=5
+    # helm doesn't use the operator yet, and connection status is based on the operator object
+    if subctl show connections 2>&1 | grep "the server could not find the requested resource"; then
+        return 0
+    fi
+
     for i in {1..90}; do
        if ! subctl show connections | grep "connected"; then
           echo "iter: $i. Clusters not yet connected. sleeping for $sleep_duration secs"
