@@ -1,4 +1,4 @@
-FROM fedora:32
+FROM fedora:33
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -30,17 +30,15 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # ShellCheck     | shell script linting
 # npm            | Required for installing markdownlint
 # markdownlint   | Markdown linting
-# pip            | Required for installing gitlint
 # gitlint        | Commit message linting
 # yamllint       | YAML linting
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq ShellCheck npm python3-pip yamllint && \
+                   findutils upx jq ShellCheck npm gitlint yamllint && \
     npm install -g markdownlint-cli && \
-    pip install gitlint && \
-    rpm -e --nodeps containerd npm python3-pip && \
+    rpm -e --nodeps containerd npm && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
