@@ -42,6 +42,13 @@ e2e:
 gitlint:
 	gitlint --commits origin/master..HEAD
 
+golangci-lint: vendor/modules.txt
+	golangci-lint linters
+	golangci-lint run --timeout 5m
+
+markdownlint:
+	markdownlint markdownlint -c .markdownlint.yml -i vendor .
+
 yamllint:
 	yamllint .
 
