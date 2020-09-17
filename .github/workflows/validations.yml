@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        command: ['shellcheck', 'validate']
+        command: ['shellcheck', 'markdownlint', 'golangci-lint']
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@master
