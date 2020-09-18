@@ -44,7 +44,7 @@ gitlint:
 
 golangci-lint: vendor/modules.txt
 	golangci-lint linters
-	golangci-lint run --timeout 5m
+	golangci-lint run --timeout 10m
 
 markdownlint:
 	markdownlint markdownlint -c .markdownlint.yml -i vendor .
