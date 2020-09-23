@@ -60,6 +60,10 @@ release:
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
+unit: vendor/modules.txt
+	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
+
+# TODO: Remove once all consumers are migrated to "unit"
 unit-test: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
