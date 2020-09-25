@@ -184,6 +184,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 
@@ -228,6 +229,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 
@@ -264,6 +266,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
@@ -294,6 +297,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					Command:         []string{"iperf3", "-s"},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
@@ -330,6 +334,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
@@ -360,6 +365,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 					Command:         []string{"netserver", "-D"},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
