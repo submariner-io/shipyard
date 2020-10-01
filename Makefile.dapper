@@ -12,7 +12,7 @@
 
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
-$(filter-out .dapper dapper-image shell,$(MAKECMDGOALS)): .dapper
+$(filter-out .dapper images shell,$(MAKECMDGOALS)): .dapper
 	+./.dapper -m bind make $@ $(MAKEFLAGS)
 
 shell: .dapper

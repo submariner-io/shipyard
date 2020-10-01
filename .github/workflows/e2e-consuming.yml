@@ -35,7 +35,7 @@ jobs:
           free -h
 
       - name: Build the latest Shipyard image
-        run: make dapper-image
+        run: make images
 
       - name: Checkout the ${{ matrix.project }} repository
         uses: actions/checkout@master
