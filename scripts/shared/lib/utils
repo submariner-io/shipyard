@@ -108,8 +108,8 @@ function add_cluster_cidrs() {
     local val=$1
     local idx=$2
     [[ $globalnet != "true" ]] || val="0"
-    cluster_CIDRs[$idx]="10.24${val}.0.0/16"
-    service_CIDRs[$idx]="100.9${val}.0.0/16"
+    cluster_CIDRs[$idx]="10.${val}.0.0/16"
+    service_CIDRs[$idx]="100.${val}.0.0/16"
     [[ $globalnet != "true" ]] || global_CIDRs[$idx]="169.254.${1}.0/24"
 }
 
