@@ -45,7 +45,7 @@ jobs:
       - name: Build new images
         env:
           IMAGES_ARGS: --nocache ${{ env.UPX_FLAG }}
-        run: make dapper-image nettest
+        run: make images nettest
 
       - name: Release the images
         env:

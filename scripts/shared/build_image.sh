@@ -44,8 +44,7 @@ if [[ "$cache" = true ]]; then
 fi
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
-buildargs_flag=''
-[[ -z "${buildargs}" ]] || buildargs_flag="--build-arg ${buildargs}"
-docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
+buildargs_flag='--build-arg BUILDKIT_INLINE_CACHE=1'
+[[ -z "${buildargs}" ]] || buildargs_flag="${buildargs_flag} --build-arg ${buildargs}"
+DOCKER_BUILDKIT=1 docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
 docker tag ${local_image} ${cache_image}
-

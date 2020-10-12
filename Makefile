@@ -36,11 +36,11 @@ include Makefile.images
 include Makefile.versions
 
 # Shipyard-specific starts
-clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit-test validate: dapper-image
+clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit-test validate: images
 
-dapper-image: export SCRIPTS_DIR=./scripts/shared
+images: export SCRIPTS_DIR=./scripts/shared
 
-dapper-image: package/.image.shipyard-dapper-base
+images: package/.image.shipyard-dapper-base
 
 .DEFAULT_GOAL := validate
 # Shipyard-specific ends

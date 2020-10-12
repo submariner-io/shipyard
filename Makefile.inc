@@ -44,7 +44,9 @@ gitlint:
 
 golangci-lint: vendor/modules.txt
 	golangci-lint linters
-	golangci-lint run --timeout 5m
+	golangci-lint run --timeout 10m
+
+lint: gitlint golangci-lint markdownlint yamllint
 
 markdownlint:
 	markdownlint markdownlint -c .markdownlint.yml -i vendor .
@@ -58,6 +60,10 @@ release:
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
+unit: vendor/modules.txt
+	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
+
+# TODO: Remove once all consumers are migrated to "unit"
 unit-test: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
