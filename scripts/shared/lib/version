@@ -4,7 +4,7 @@
 
 # The CUTTING_EDGE, DEV_VERSION, and VERSION are set in Makefile.inc;
 # this script is only preserved for backwards compatibility
-readonly DEV_VERSION="dev"
-readonly CUTTING_EDGE="devel"
+readonly DEV_VERSION=${DEV_VERSION:-dev}
+readonly CUTTING_EDGE=${CUTTING_EDGE:-devel}
 # shellcheck disable=SC2034 # VERSION defined here is used elsewhere
-readonly VERSION=$(git describe --tags --dirty="-${DEV_VERSION}" --exclude="${CUTTING_EDGE}" --exclude="latest")
+readonly VERSION=${VERSION:-$(git describe --tags --dirty="-${DEV_VERSION}" --exclude="${CUTTING_EDGE}" --exclude="latest")}
