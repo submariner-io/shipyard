@@ -1,34 +1,35 @@
 ---
+name: Lint Consuming Projects
+
 on:
   pull_request:
     types: [labeled, opened, synchronize, reopened]
 
-name: Validations (Consuming Projects)
 jobs:
-  validate:
+  lint-consuming:
     timeout-minutes: 15
     runs-on: ubuntu-latest
     if: |
-      ( github.event.action == 'labeled' && github.event.label.name == 'validate-projects' )
-      || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'validate-projects') )
+      ( github.event.action == 'labeled' && github.event.label.name == 'lint-projects' )
+      || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'lint-projects') )
     strategy:
       fail-fast: false
       matrix:
         project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
     steps:
-      - name: Checkout the Shipyard repository
-        uses: actions/checkout@master
+      - name: Check out the Shipyard repository
+        uses: actions/checkout@v2
 
       - name: Build the latest Shipyard image
         run: make images
 
-      - name: Checkout the ${{ matrix.project }} repository
-        uses: actions/checkout@master
+      - name: Check out the ${{ matrix.project }} repository
+        uses: actions/checkout@v2
         with:
           repository: submariner-io/${{ matrix.project }}
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
 
-      - name: Validate
-        run: make validate
+      - name: Run all linters
+        run: make lint
