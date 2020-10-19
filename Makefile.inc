@@ -39,6 +39,13 @@ deploy: clusters
 e2e:
 	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
 
+upgrade-e2e: deploy-latest deploy e2e
+
+# Deploys the latest release
+deploy-latest:
+	curl -L get.submariner.io | VERSION=latest bash
+	$(MAKE) deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="--image_tag=latest" using=$(using)
+
 gitlint:
 	gitlint --commits origin/master..HEAD
 
