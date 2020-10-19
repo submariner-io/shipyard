@@ -61,6 +61,15 @@ jobs:
       - name: Run markdownlint
         run: make markdownlint
 
+  shellcheck:
+    name: Shell
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+      - name: Run shellcheck
+        run: make shellcheck
+
   yaml-lint:
     name: YAML
     runs-on: ubuntu-latest
