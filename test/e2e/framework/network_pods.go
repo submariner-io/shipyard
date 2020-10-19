@@ -120,6 +120,10 @@ func (np *NetworkPod) AwaitReady() {
 }
 
 func (np *NetworkPod) AwaitFinish() {
+	np.AwaitFinishVerbose(true)
+}
+
+func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
@@ -142,7 +146,11 @@ func (np *NetworkPod) AwaitFinish() {
 		np.TerminationCode = np.Pod.Status.ContainerStatuses[0].State.Terminated.ExitCode
 		np.TerminationMessage = np.Pod.Status.ContainerStatuses[0].State.Terminated.Message
 
-		Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
+		if verbose {
+			Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
+		} else {
+			fmt.Printf("%s", removeDupDataplaneLines(np.TerminationMessage))
+		}
 	}
 }
 
