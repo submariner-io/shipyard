@@ -12,11 +12,13 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/dynamic"
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -187,6 +189,49 @@ func (f *Framework) BeforeEach() {
 		f.UniqueName = string(uuid.NewUUID())
 	}
 
+}
+
+func DetectGlobalnet() {
+	TestContext.GlobalnetEnabled = false
+
+	dynClient, err := dynamic.NewForConfig(RestConfigs[ClusterA])
+	Expect(err).To(Succeed())
+
+	clusters := dynClient.Resource(schema.GroupVersionResource{
+		Group:    "submariner.io",
+		Version:  "v1",
+		Resource: "clusters",
+	}).Namespace(TestContext.SubmarinerNamespace)
+
+	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
+		clusters, err := clusters.List(metav1.ListOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return clusters, err
+	}, func(result interface{}) (bool, string, error) {
+		if result == nil {
+			return false, "No Cluster found", nil
+		}
+
+		clusterList := result.(*unstructured.UnstructuredList)
+		if len(clusterList.Items) == 0 {
+			return false, "No Cluster found", nil
+		}
+
+		for _, cluster := range clusterList.Items {
+			cidrs, found, err := unstructured.NestedSlice(cluster.Object, "spec", "global_cidr")
+			if err != nil {
+				return false, "", err
+			}
+
+			if found && len(cidrs) > 0 {
+				TestContext.GlobalnetEnabled = true
+			}
+		}
+
+		return true, "", nil
+	})
 }
 
 func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
