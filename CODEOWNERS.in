@@ -2,4 +2,4 @@
 @Oats87		*
 @tpantelis	*
 @mkolesnik	/.github/workflows/ /scripts/ Makefile* Dockerfile.dapper package/
-@skitt		go.mod go.sum
+@skitt		*
