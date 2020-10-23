@@ -3,14 +3,10 @@
 from fnmatch import fnmatch
 
 with open('CODEOWNERS.in', 'r') as ins, open('CODEOWNERS', 'w') as out:
-    paths_by_owner = {}
     owners_by_path = {}
-    paths = set()
     for line in ins:
         comps = line.split()
         if len(comps) > 1:
-            paths_by_owner[comps[0]] = comps[1:]
-            paths |= set(comps[1:])
             for path in comps[1:]:
                 owners_by_path.setdefault(path, set()).add(comps[0])
     print('# Auto-generated, do not edit; see CODEOWNERS.in', file = out)
