@@ -76,3 +76,6 @@ vendor/modules.txt: go.mod
 	go mod download
 	go mod vendor
 endif
+
+CODEOWNERS: CODEOWNERS.in
+	$(SCRIPTS_DIR)/gen-codeowners
