@@ -9,6 +9,7 @@ DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the de
 DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
+DEFINE_string 'image_tag' 'local' "Tag to use for the images"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
@@ -19,8 +20,9 @@ deploytool_broker_args="${FLAGS_deploytool_broker_args}"
 deploytool_submariner_args="${FLAGS_deploytool_submariner_args}"
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
+image_tag="${FLAGS_image_tag}"
 
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}, timeout=${timeout}"
+echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}, timeout=${timeout}, image_tag=${image_tag}"
 
 set -em
 
@@ -38,10 +40,11 @@ source "${SCRIPTS_DIR}/lib/cluster_settings"
 declare_cidrs
 declare_kubeconfig
 
+# nettest is always referred to using :local
 import_image quay.io/submariner/nettest
-import_image quay.io/submariner/submariner
-import_image quay.io/submariner/submariner-route-agent
-[[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
+import_image quay.io/submariner/submariner ${image_tag}
+import_image quay.io/submariner/submariner-route-agent ${image_tag}
+[[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet ${image_tag}
 
 load_deploytool $deploytool
 deploytool_prereqs
