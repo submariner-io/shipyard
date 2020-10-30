@@ -7,7 +7,7 @@ override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
 
-include $(SHIPYARD_DIR)/Makefile.inc
+include Makefile.inc
 
 TARGETS := $(shell ls -p scripts | grep -v -e /)
 
