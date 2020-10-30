@@ -8,7 +8,7 @@ readonly CE_IPSEC_IKEPORT=500
 readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
 readonly SUBM_ENGINE_IMAGE_REPO=localhost:5000
-readonly SUBM_ENGINE_IMAGE_TAG=local
+readonly SUBM_ENGINE_IMAGE_TAG=${image_tag:-local}
 # shellcheck disable=SC2034 # this variable is used elsewhere
 
 ### Functions ###
@@ -16,7 +16,8 @@ readonly SUBM_ENGINE_IMAGE_TAG=local
 function deploytool_prereqs() {
     test -x /go/bin/subctl
     /go/bin/subctl version
-    import_image quay.io/submariner/submariner-operator
+    # shellcheck disable=SC2086 # image_tag should expand to nothing if empty
+    import_image quay.io/submariner/submariner-operator ${image_tag}
 }
 
 function setup_broker() {
