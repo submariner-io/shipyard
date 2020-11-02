@@ -42,6 +42,8 @@ import_image quay.io/submariner/nettest
 import_image quay.io/submariner/submariner
 import_image quay.io/submariner/submariner-route-agent
 [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet
+import_image quay.io/submariner/lighthouse-agent
+import_image quay.io/submariner/lighthouse-coredns
 
 load_deploytool $deploytool
 deploytool_prereqs
