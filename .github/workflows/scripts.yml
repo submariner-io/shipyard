@@ -79,7 +79,7 @@ jobs:
         run: make post-mortem
 
   post_mortem:
-    name: Post Morten
+    name: Post Mortem
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
