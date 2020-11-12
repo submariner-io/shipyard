@@ -163,6 +163,14 @@ function deploy_cluster_capabilities() {
 
 ### Main ###
 
+if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
+    echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
+    echo sudo sysctl fs.inotify.max_user_watches=524288
+    echo sudo sysctl fs.inotify.max_user_instances=512
+    echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
+    exit 1
+fi
+
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
