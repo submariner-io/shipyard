@@ -49,8 +49,8 @@ jobs:
         run: |
           tags="${GITHUB_REF##*/}"
           { echo $tags | grep -q -v -; } && tags+=" latest"
-          echo "::set-env name=RELEASE_TAGS::--tag \"$tags\""
-          echo "::set-env name=UPX_FLAG::--buildargs \"UPX_LEVEL=-9\""
+          echo "RELEASE_TAGS=--tag \"$tags\"" >> $GITHUB_ENV
+          echo "UPX_FLAG=--buildargs \"UPX_LEVEL=-9\"" >> $GITHUB_ENV
 
       - name: Build new images
         env:
