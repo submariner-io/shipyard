@@ -55,6 +55,20 @@ function post_analyze() {
     done
 
     echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+    for pod in $(kubectl get pods --selector=app=submariner-lighthouse-agent -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+        echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
+        kubectl -n $namespace logs $pod
+    done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
+
+    for pod in $(kubectl get pods --selector=app=submariner-lighthouse-coredns -n $namespace -o jsonpath='{.items[*].metadata.name}'); do
+        echo "+++++++++++++++++++++: Logs for Pod $pod in namespace $namespace :++++++++++++++++++++++"
+        kubectl -n $namespace logs $pod
+    done
+
+    echo "++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++"
     subctl show all
 
     echo "===================== END Post mortem $cluster ====================="
