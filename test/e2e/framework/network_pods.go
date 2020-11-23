@@ -160,6 +160,8 @@ func (np *NetworkPod) CheckSuccessfulFinish() {
 }
 
 func (np *NetworkPod) CreateService() *v1.Service {
+	// msg here is only for debug. will remove before PR is ready
+	By(fmt.Sprintf("Creating service using port %d", np.Config.Port))
 	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
 }
 
@@ -256,7 +258,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-client-pod",
 			Labels: map[string]string{
-				"run": "nettest-client-pod",
+				TestAppLabel: "nettest-client-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -291,7 +293,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-server-pod",
 			Labels: map[string]string{
-				"run": "nettest-server-pod",
+				TestAppLabel: "nettest-server-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -324,7 +326,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-client-pod",
 			Labels: map[string]string{
-				"run": "latency-client-pod",
+				TestAppLabel: "latency-client-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -359,7 +361,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-server-pod",
 			Labels: map[string]string{
-				"run": "latency-server-pod",
+				TestAppLabel: "latency-server-pod",
 			},
 		},
 		Spec: v1.PodSpec{
