@@ -52,6 +52,7 @@ function subctl_install_subm() {
                 --colorcodes "${SUBM_COLORCODES}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --disable-nat \
+                --cable-driver "${cable_driver}" \
                 ${deploytool_submariner_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
 }
