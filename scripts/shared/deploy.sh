@@ -10,6 +10,7 @@ DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to th
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 DEFINE_string 'image_tag' 'local' "Tag to use for the images"
+DEFINE_string 'cable_driver' 'libreswan' "Tunneling method for connections between clusters (libreswan, strongswan, wireguard requires kernel module on host)"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
@@ -21,8 +22,9 @@ deploytool_submariner_args="${FLAGS_deploytool_submariner_args}"
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
 image_tag="${FLAGS_image_tag}"
+cable_driver="${FLAGS_cable_driver}"
 
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}, timeout=${timeout}, image_tag=${image_tag}"
+echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, cluster_settings=${cluster_settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}"
 
 set -em
 
