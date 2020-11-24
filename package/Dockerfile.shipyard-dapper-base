@@ -10,28 +10,28 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 # Requirements:
-# Component      | Usage
-# -----------------------------------------------------------
-# gcc            | needed by `go test -race` (https://github.com/golang/go/issues/27089)
-# git            | find the workspace root
-# curl           | download other tools
-# moby-engine    | Dapper (Docker)
-# golang         | build
-# kubectl        | e2e tests (in kubernetes-client)
-# golangci-lint  | code linting
-# helm           | e2e tests
-# kind           | e2e tests
-# ginkgo         | tests
-# make           | OLM installation
-# findutils      | validate (find go packages)
-# subctl *       | Submariner's deploy tool (operator)
-# upx            | binary compression
-# jq             | JSON processing (GitHub API)
-# ShellCheck     | shell script linting
-# npm            | Required for installing markdownlint
-# markdownlint   | Markdown linting
-# gitlint        | Commit message linting
-# yamllint       | YAML linting
+# Component        | Usage
+# -------------------------------------------------------------
+# curl             | download other tools
+# findutils        | validate (find go packages)
+# gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# ginkgo           | tests
+# git              | find the workspace root
+# gitlint          | Commit message linting
+# golang           | build
+# golangci-lint    | code linting
+# helm             | e2e tests
+# jq               | JSON processing (GitHub API)
+# kind             | e2e tests
+# kubectl          | e2e tests (in kubernetes-client)
+# make             | OLM installation
+# markdownlint     | Markdown linting
+# moby-engine      | Dapper (Docker)
+# npm              | Required for installing markdownlint
+# ShellCheck       | shell script linting
+# subctl *         | Submariner's deploy tool (operator)
+# upx              | binary compression
+# yamllint         | YAML linting
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
