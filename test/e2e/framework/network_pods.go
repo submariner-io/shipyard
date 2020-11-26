@@ -181,7 +181,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-listener",
-					Image: "busybox",
+					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{"sh", "-c", "for i in $(seq 50); do echo [dataplane] listener says $SEND_STRING; done | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1"},
@@ -223,7 +223,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-connector",
-					Image: "busybox",
+					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
