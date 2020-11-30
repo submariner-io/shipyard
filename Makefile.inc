@@ -6,6 +6,15 @@ include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
 
+ifneq (,$(filter libreswan,$(_using)))
+override DEPLOY_ARGS += --cable_driver libreswan
+else ifneq (,$(filter strongswan,$(_using)))
+override DEPLOY_ARGS += --cable_driver strongswan
+else ifneq (,$(filter wireguard,$(_using)))
+# Wireguard requires kernel module install on the host
+override DEPLOY_ARGS += --cable_driver wireguard
+endif
+
 ifneq (,$(filter globalnet,$(_using)))
 override CLUSTERS_ARGS += --globalnet
 override DEPLOY_ARGS += --globalnet
