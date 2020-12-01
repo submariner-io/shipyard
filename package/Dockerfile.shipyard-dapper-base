@@ -13,7 +13,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # Component        | Usage
 # -------------------------------------------------------------
 # curl             | download other tools
-# findutils        | validate (find go packages)
+# findutils        | make unit (find unit test dirs)
 # gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # ginkgo           | tests
 # git              | find the workspace root

@@ -11,10 +11,6 @@ function _find_pkg_dirs() {
     find . ${find_exclude} -path "$1" -printf "%h\n" | sort -u
 }
 
-function find_go_pkg_dirs() {
-    _find_pkg_dirs "./*/*.go"
-}
-
 function find_unit_test_dirs() {
     local excluded_dirs="${*}"
     _find_pkg_dirs "./*/*_test.go"
