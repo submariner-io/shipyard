@@ -11,6 +11,7 @@ DEFINE_string 'image' '' "Image name to build" 'i'
 DEFINE_string 'dockerfile' '' "Dockerfile to build from" 'f'
 DEFINE_string 'buildargs' '' "Build arguments to pass to 'docker build'"
 DEFINE_boolean 'cache' true "Use cached layers from latest image"
+DEFINE_string 'platform' 'linux/amd64' 'Platforms to target'
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -19,6 +20,7 @@ repo="${FLAGS_repo}"
 image="${FLAGS_image}"
 dockerfile="${FLAGS_dockerfile}"
 buildargs="${FLAGS_buildargs}"
+platform="${FLAGS_platform}"
 [[ "${FLAGS_cache}" = "${FLAGS_TRUE}" ]] && cache=true || cache=false
 
 [[ -n "${image}" ]] || { echo "The image to build must be specified!"; exit 1; }
@@ -46,5 +48,6 @@ fi
 # Rebuild the image to update any changed layers and tag it back so it will be used.
 buildargs_flag='--build-arg BUILDKIT_INLINE_CACHE=1'
 [[ -z "${buildargs}" ]] || buildargs_flag="${buildargs_flag} --build-arg ${buildargs}"
-DOCKER_BUILDKIT=1 docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
+docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
+docker buildx build --load -t ${local_image} ${cache_flag} -f ${dockerfile} --platform ${platform} ${buildargs_flag} .
 docker tag ${local_image} ${cache_image}
