@@ -4,6 +4,7 @@ source ${SCRIPTS_DIR}/lib/version
 
 ## Process command line flags ##
 
+default_platform=linux/amd64
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'tag' "${DEV_VERSION}" "Tag to set for the local image"
 DEFINE_string 'repo' 'quay.io/submariner' "Quay.io repo to use for the image"
@@ -11,7 +12,7 @@ DEFINE_string 'image' '' "Image name to build" 'i'
 DEFINE_string 'dockerfile' '' "Dockerfile to build from" 'f'
 DEFINE_string 'buildargs' '' "Build arguments to pass to 'docker build'"
 DEFINE_boolean 'cache' true "Use cached layers from latest image"
-DEFINE_string 'platform' 'linux/amd64' 'Platforms to target'
+DEFINE_string 'platform' "${default_platform}" 'Platforms to target'
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -48,6 +49,14 @@ fi
 # Rebuild the image to update any changed layers and tag it back so it will be used.
 buildargs_flag='--build-arg BUILDKIT_INLINE_CACHE=1'
 [[ -z "${buildargs}" ]] || buildargs_flag="${buildargs_flag} --build-arg ${buildargs}"
-docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
-docker buildx build --load -t ${local_image} ${cache_flag} -f ${dockerfile} --platform ${platform} ${buildargs_flag} .
+if docker buildx version > /dev/null 2>&1; then
+    docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
+    docker buildx build --load -t ${local_image} ${cache_flag} -f ${dockerfile} --platform ${platform} ${buildargs_flag} .
+else
+    # Fall back to plain BuildKit
+    if [[ "${platform}" != "${default_platform}" ]]; then
+        echo "WARNING: buildx isn't available, cross-arch builds won't work as expected"
+    fi
+    DOCKER_BUILDKIT=1 docker build -t ${local_image} ${cache_flag} -f ${dockerfile} ${buildargs_flag} .
+fi
 docker tag ${local_image} ${cache_image}
