@@ -9,6 +9,4 @@ spec:
   replicas: 1
   serviceAccountName: prometheus
   serviceMonitorNamespaceSelector: {}
-  serviceMonitorSelector:
-    matchLabels:
-      name: submariner-operator
+  serviceMonitorSelector: {}
