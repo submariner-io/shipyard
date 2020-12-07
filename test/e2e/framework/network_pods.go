@@ -269,10 +269,12 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command: []string{
-						"sh", "-c", "iperf3 -w 256K -P 10 -c $TARGET_IP >/dev/termination-log 2>&1"},
+					Command: []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout 5 -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
+						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
 					},
 				},
 			},
@@ -304,7 +306,10 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					Name:            "nettest-server-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"iperf3", "-s"},
+					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+					},
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -338,9 +343,13 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
-						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
+						"sh", "-c", "for i in $(seq $CONN_TRIES); do if netperf -H $TARGET_IP -t TCP_RR -p $TARGET_PORT -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate; then break; else echo [will retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
+						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
+
 					},
 				},
 			},
@@ -372,7 +381,11 @@ func (np *NetworkPod) buildLatencyServerPod() {
 					Name:            "latency-server-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"netserver", "-D"},
+					Command:         []string{"sh", "-c", "netserver -D -p $TARGET_PORT"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+					},
+
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
