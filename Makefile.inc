@@ -51,9 +51,11 @@ e2e:
 upgrade-e2e: deploy-latest deploy e2e
 
 # Deploys the latest release
+# This uses make deploy, but forcefully ignores images so that images
+# are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="--image_tag=latest" using=$(using)
+	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=latest" using=$(using)
 
 gitlint:
 	gitlint --commits origin/master..HEAD
