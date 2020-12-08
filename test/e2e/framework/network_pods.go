@@ -160,8 +160,6 @@ func (np *NetworkPod) CheckSuccessfulFinish() {
 }
 
 func (np *NetworkPod) CreateService() *v1.Service {
-	// msg here is only for debug. will remove before PR is ready
-	By(fmt.Sprintf("Creating service using port %d", np.Config.Port))
 	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
 }
 
@@ -343,13 +341,9 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
-						"sh", "-c", "for i in $(seq $CONN_TRIES); do if netperf -H $TARGET_IP -t TCP_RR -p $TARGET_PORT -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate; then break; else echo [will retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
-						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
-						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
-						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
-
 					},
 				},
 			},
@@ -381,11 +375,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 					Name:            "latency-server-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"sh", "-c", "netserver -D -p $TARGET_PORT"},
-					Env: []v1.EnvVar{
-						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
-					},
-
+					Command:         []string{"netserver", "-D"},
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
