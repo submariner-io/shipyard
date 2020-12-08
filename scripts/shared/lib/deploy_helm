@@ -53,6 +53,7 @@ function helm_install_subm() {
         --set broker.token="${submariner_broker_token}" \
         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
         --set broker.ca="${submariner_broker_ca}" \
+        --set submariner.cableDriver="${cable_driver}" \
         --set submariner.clusterId="${cluster}" \
         --set submariner.clusterCidr="${cluster_CIDRs[$cluster]}" \
         --set submariner.serviceCidr="${service_CIDRs[$cluster]}" \
