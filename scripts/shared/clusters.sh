@@ -11,6 +11,7 @@ DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' t
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
+DEFINE_boolean 'ovn' false "Deploy with OVN as CNI"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
@@ -20,9 +21,10 @@ olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
+[[ "${FLAGS_ovn}" = "${FLAGS_TRUE}" ]] && ovn=true || ovn=false
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
-echo "Running with: k8s_version=${version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, ovn=${ovn}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
 
 set -em
 
@@ -33,10 +35,18 @@ source ${SCRIPTS_DIR}/lib/utils
 source "${SCRIPTS_DIR}/lib/cluster_settings"
 [[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
+# Override CNI if OVN is enabled
+if [[ $ovn == "true" ]]; then
+    for cluster in "${clusters[@]}"; do
+        cluster_cni[${cluster}]="ovn"
+    done
+fi
+
 cat << EOM
 Cluster settings::
   broker - ${broker@Q}
   clusters - ${clusters[*]@Q}
+  use CNI - $(typeset -p cluster_cni | cut -f 2- -d=)
   nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
   install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
 EOM
@@ -82,6 +92,10 @@ function create_kind_cluster() {
     fi
 
     echo "Creating KIND cluster..."
+    if [[ $ovn == "true" ]]; then
+        deploy_kind_ovn
+        return
+    fi
     generate_cluster_yaml
     local image_flag=''
     if [[ -n ${version} ]]; then
@@ -90,6 +104,22 @@ function create_kind_cluster() {
 
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
+
+    ( deploy_cluster_capabilities; ) &
+    if ! wait $! ; then
+        echo "Failed to deploy cluster capabilities, removing the cluster"
+        kind delete cluster --name=${cluster}
+        return 1
+    fi
+}
+
+function deploy_kind_ovn() {
+    export K8s_VERSION=${version}
+    export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
+    export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
+    pushd ovn
+    ./kind.sh --name ${cluster}
+    popd
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
@@ -112,6 +142,11 @@ function deploy_weave_cni(){
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
+}
+
+function deploy_ovn_cni(){
+    # Nothing to do here for now, all is done by ovn/kind.sh
+    echo "Deployed OVN network..."
 }
 
 function run_local_registry() {

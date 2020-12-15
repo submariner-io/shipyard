@@ -33,6 +33,10 @@ ifneq (,$(filter prometheus,$(_using)))
 override CLUSTERS_ARGS += --prometheus
 endif
 
+ifneq (,$(filter ovn,$(_using)))
+override CLUSTERS_ARGS += --ovn
+endif
+
 # Shipyard provided targets
 
 cleanup:

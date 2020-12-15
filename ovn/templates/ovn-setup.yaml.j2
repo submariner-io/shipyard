@@ -1,0 +1,110 @@
+---
+# ovn-namespace.yaml
+#
+# Setup for Kubernetes to support the ovn-kubernetes plugin
+#
+# Create the namespace for ovn-kubernetes.
+#
+# This provisioning is done as part of installation after the cluster is
+# up and before the ovn daemonsets are created.
+
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: ovn-kubernetes
+
+---
+# ovn-policy.yaml
+#
+# Setup for Kubernetes to support the ovn-kubernetes plugin
+#
+# Create the service account and policies.
+# ovnkube interacts with kubernetes and the environment
+# must be properly set up.
+# 
+# This provisioning is done as part of installation after the cluster is
+# up and before the ovn daemonsets are created.
+
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: ovn
+  namespace: ovn-kubernetes
+
+---
+
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: ovn-kubernetes
+rules:
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  - namespaces
+  - nodes
+  - endpoints
+  - services
+  - configmaps
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - extensions
+  - networking.k8s.io
+  - apps
+  resources:
+  - networkpolicies
+  - statefulsets
+  verbs: ["get", "list", "watch"]
+- apiGroups:
+  - ""
+  resources:
+  - events
+  - endpoints
+  - configmaps
+  verbs: ["create", "patch", "update"]
+- apiGroups:
+  - ""
+  resources:
+  - nodes
+  - pods
+  verbs: ["patch", "update"]
+- apiGroups:
+  - k8s.ovn.org
+  resources:
+  - egressfirewalls
+  - egressips
+  verbs: ["list", "get", "watch", "update"]
+- apiGroups:
+  - apiextensions.k8s.io
+  resources:
+  - customresourcedefinitions
+  verbs: ["list", "get", "watch"]
+
+
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: ovn-kubernetes
+roleRef:
+  name: ovn-kubernetes
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+subjects:
+- kind: ServiceAccount
+  name: ovn
+  namespace: ovn-kubernetes
+
+---
+# The network cidr and service cidr are set in the ovn-config configmap
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: ovn-config
+  namespace: ovn-kubernetes
+data:
+  net_cidr:      "{{ net_cidr }}"
+  svc_cidr:      "{{ svc_cidr }}"
+  k8s_apiserver: "{{ k8s_apiserver }}"
+  mtu:           "{{ mtu_value }}"
