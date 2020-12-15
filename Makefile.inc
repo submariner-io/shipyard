@@ -6,6 +6,15 @@ include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
 
+ifneq (,$(filter libreswan,$(_using)))
+override DEPLOY_ARGS += --cable_driver libreswan
+else ifneq (,$(filter strongswan,$(_using)))
+override DEPLOY_ARGS += --cable_driver strongswan
+else ifneq (,$(filter wireguard,$(_using)))
+# Wireguard requires kernel module install on the host
+override DEPLOY_ARGS += --cable_driver wireguard
+endif
+
 ifneq (,$(filter globalnet,$(_using)))
 override CLUSTERS_ARGS += --globalnet
 override DEPLOY_ARGS += --globalnet
@@ -42,9 +51,11 @@ e2e:
 upgrade-e2e: deploy-latest deploy e2e
 
 # Deploys the latest release
+# This uses make deploy, but forcefully ignores images so that images
+# are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="--image_tag=latest" using=$(using)
+	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=latest" using=$(using)
 
 gitlint:
 	gitlint --commits origin/master..HEAD
@@ -73,9 +84,6 @@ unit: vendor/modules.txt
 # TODO: Remove once all consumers are migrated to "unit"
 unit-test: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
-
-validate: vendor/modules.txt
-	$(SCRIPTS_DIR)/validate.sh $(VALIDATE_ARGS)
 
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring

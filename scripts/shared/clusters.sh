@@ -161,21 +161,25 @@ function deploy_cluster_capabilities() {
     [[ $prometheus != "true" ]] || deploy_prometheus
 }
 
-### Main ###
+function warn_inotify() {
+    if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
+        echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
+        echo sudo sysctl fs.inotify.max_user_watches=524288
+        echo sudo sysctl fs.inotify.max_user_instances=512
+        echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
+    fi
+}
 
-if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
-    echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
-    echo sudo sysctl fs.inotify.max_user_watches=524288
-    echo sudo sysctl fs.inotify.max_user_instances=512
-    echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
-    exit 1
-fi
+### Main ###
 
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-run_all_clusters with_retries 3 create_kind_cluster
+if ! run_all_clusters with_retries 3 create_kind_cluster; then
+    warn_inotify
+    exit 1
+fi
 
 print_clusters_message

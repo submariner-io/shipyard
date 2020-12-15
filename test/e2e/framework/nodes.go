@@ -12,6 +12,10 @@ import (
 // FindNodesByGatewayLabel finds the nodes in a given cluster by matching 'submariner.io/gateway' value. A missing label
 // is treated as false. Note the control plane node labeled as master is ignored.
 func (f *Framework) FindNodesByGatewayLabel(cluster ClusterIndex, isGateway bool) []*v1.Node {
+	return findNodesByGatewayLabel(int(cluster), isGateway)
+}
+
+func findNodesByGatewayLabel(cluster int, isGateway bool) []*v1.Node {
 	nodes := AwaitUntil("list nodes", func() (interface{}, error) {
 		// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
 		return KubeClients[cluster].CoreV1().Nodes().List(metav1.ListOptions{

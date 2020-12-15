@@ -5,8 +5,6 @@ on:
   push:
     branches:
       - master
-    tags:
-      - 'v**'
 
 jobs:
   e2e:
@@ -44,22 +42,14 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Tagged release detection
-        if: contains(github.ref, '/tags/')
-        run: |
-          tags="${GITHUB_REF##*/}"
-          { echo $tags | grep -q -v -; } && tags+=" latest"
-          echo "::set-env name=RELEASE_TAGS::--tag \"$tags\""
-          echo "::set-env name=UPX_FLAG::--buildargs \"UPX_LEVEL=-9\""
-
       - name: Build new images
         env:
-          IMAGES_ARGS: --nocache ${{ env.UPX_FLAG }}
+          IMAGES_ARGS: --nocache
         run: make images nettest
 
       - name: Release the images
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: shipyard-dapper-base nettest ${{ env.RELEASE_TAGS }}
+          RELEASE_ARGS: shipyard-dapper-base nettest
         run: make release
