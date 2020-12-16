@@ -112,14 +112,7 @@ function del_subm_gateway_label() {
 }
 
 function prepare_cluster() {
-    local namespace=$1
     [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
-    for app in submariner-engine submariner-routeagent submariner-globalnet; do
-        if kubectl wait --for=condition=Ready pods -l "app=$app" -n "$namespace" --timeout="${timeout}" > /dev/null 2>&1; then
-            echo "Removing $app pods..."
-            kubectl delete pods -n "$namespace" -l "app=$app"
-        fi
-    done
     add_subm_gateway_label
 }
 

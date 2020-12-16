@@ -51,7 +51,7 @@ import_image quay.io/submariner/submariner-route-agent ${image_tag}
 load_deploytool $deploytool
 deploytool_prereqs
 
-run_subm_clusters prepare_cluster "$SUBM_NS"
+run_subm_clusters prepare_cluster
 
 with_context $broker setup_broker
 install_subm_all_clusters
