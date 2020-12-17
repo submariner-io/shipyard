@@ -90,3 +90,16 @@ endif
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
+
+# This removes all Submariner-provided images and all untagged images
+# Use this to ensure you use current images
+# Copied from Makefile to provide this everywhere (until we can share
+# non-Dapper goals across projects)
+prune-images:
+	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
+	    if [ "$$tag" != "<none>" ]; then \
+	        docker rmi $$image:$$tag; \
+	    else \
+	        docker rmi $$hash; \
+	    fi \
+	done
