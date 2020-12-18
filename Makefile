@@ -36,7 +36,7 @@ include Makefile.images
 include Makefile.versions
 
 # Shipyard-specific starts
-clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit-test: images
+clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit: images
 
 images: export SCRIPTS_DIR=./scripts/shared
 
