@@ -177,7 +177,10 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-if ! run_all_clusters with_retries 3 create_kind_cluster; then
+
+# Run in subshell to check response, otherwise `set -e` is not honored
+( run_all_clusters with_retries 3 create_kind_cluster; ) &
+if ! wait $!; then
     warn_inotify
     exit 1
 fi
