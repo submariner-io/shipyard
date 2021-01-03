@@ -1,24 +1,40 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package framework
 
 import (
 	"encoding/json"
 	"fmt"
 	"os"
-	"strings"
 	"time"
 
-	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
+	"k8s.io/client-go/dynamic"
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
@@ -86,16 +102,12 @@ var (
 	KubeClients []*kubeclientset.Clientset
 )
 
-// NewFramework creates a test framework.
-func NewFramework(baseName string) *Framework {
+// NewBareFramework creates a test framework, without ginkgo dependencies
+func NewBareFramework(baseName string) *Framework {
 	f := &Framework{
 		BaseName:           baseName,
 		namespacesToDelete: map[string]bool{},
 	}
-
-	ginkgo.BeforeEach(f.BeforeEach)
-	ginkgo.AfterEach(f.AfterEach)
-
 	return f
 }
 
@@ -103,8 +115,35 @@ func AddBeforeSuite(beforeSuite func()) {
 	beforeSuiteFuncs = append(beforeSuiteFuncs, beforeSuite)
 }
 
+var By func(string)
+var Fail func(string)
+var userAgentFunction func() string
+
+func SetStatusFunction(by func(string)) {
+	By = by
+}
+func SetFailFunction(fail func(string)) {
+	Fail = fail
+}
+
+func SetUserAgentFunction(uaf func() string) {
+	userAgentFunction = uaf
+}
+
+func init() {
+	By = func(str string) {
+		fmt.Println(str)
+	}
+	Fail = func(str string) {
+		panic("Framework Fail:" + str)
+	}
+	userAgentFunction = func() string {
+		return "shipyard-framework-agent"
+	}
+}
+
 func BeforeSuite() {
-	ginkgo.By("Creating kubernetes clients")
+	By("Creating kubernetes clients")
 
 	if len(TestContext.KubeConfig) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
@@ -125,12 +164,14 @@ func BeforeSuite() {
 			RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
 		}
 	} else {
-		ginkgo.Fail("One of KubeConfig or KubeConfigs must be specified")
+		Fail("One of KubeConfig or KubeConfigs must be specified")
 	}
 
 	for _, restConfig := range RestConfigs {
 		KubeClients = append(KubeClients, createKubernetesClient(restConfig))
 	}
+
+	fetchClusterIDs()
 
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
@@ -143,7 +184,7 @@ func (f *Framework) BeforeEach() {
 	f.cleanupHandle = AddCleanupAction(f.AfterEach)
 
 	if !f.SkipNamespaceCreation {
-		ginkgo.By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
+		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
 		namespaceLabels := map[string]string{
 			"e2e-framework": f.BaseName,
@@ -156,9 +197,9 @@ func (f *Framework) BeforeEach() {
 				f.Namespace = namespace.GetName()
 				f.UniqueName = namespace.GetName()
 				f.AddNamespacesToDelete(namespace)
-				ginkgo.By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
+				By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
 			default: // On the other clusters we use the same name to make tracing easier
-				ginkgo.By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
+				By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
 				f.CreateNamespace(clientSet, f.Namespace, namespaceLabels)
 			}
 		}
@@ -166,6 +207,88 @@ func (f *Framework) BeforeEach() {
 		f.UniqueName = string(uuid.NewUUID())
 	}
 
+}
+
+func DetectGlobalnet() {
+	TestContext.GlobalnetEnabled = false
+
+	dynClient, err := dynamic.NewForConfig(RestConfigs[ClusterA])
+	Expect(err).To(Succeed())
+
+	clusters := dynClient.Resource(schema.GroupVersionResource{
+		Group:    "submariner.io",
+		Version:  "v1",
+		Resource: "clusters",
+	}).Namespace(TestContext.SubmarinerNamespace)
+
+	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
+		clusters, err := clusters.List(metav1.ListOptions{})
+		if apierrors.IsNotFound(err) {
+			return nil, nil
+		}
+		return clusters, err
+	}, func(result interface{}) (bool, string, error) {
+		if result == nil {
+			return false, "No Cluster found", nil
+		}
+
+		clusterList := result.(*unstructured.UnstructuredList)
+		if len(clusterList.Items) == 0 {
+			return false, "No Cluster found", nil
+		}
+
+		for _, cluster := range clusterList.Items {
+			cidrs, found, err := unstructured.NestedSlice(cluster.Object, "spec", "global_cidr")
+			if err != nil {
+				return false, "", err
+			}
+
+			if found && len(cidrs) > 0 {
+				TestContext.GlobalnetEnabled = true
+			}
+		}
+
+		return true, "", nil
+	})
+}
+
+func fetchClusterIDs() {
+	for i := range KubeClients {
+		gatewayNodes := findNodesByGatewayLabel(i, true)
+		if len(gatewayNodes) == 0 {
+			continue
+		}
+
+		name := "submariner-gateway"
+		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
+			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(name, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				return nil, nil
+			}
+
+			return ds, err
+		}, func(result interface{}) (bool, string, error) {
+			if result == nil {
+				return false, "No DaemonSet found", nil
+			}
+
+			return true, "", nil
+		}).(*appsv1.DaemonSet)
+
+		const envVarName = "SUBMARINER_CLUSTERID"
+		found := false
+		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+			if envVar.Name == envVarName {
+				By(fmt.Sprintf("Setting cluster ID %q for kube context name %q", TestContext.ClusterIDs[i], envVar.Value))
+				TestContext.ClusterIDs[i] = envVar.Value
+				found = true
+				break
+			}
+		}
+
+		Expect(found).To(BeTrue(), "Expected %q env var not found in DaemonSet %#v for kube context %q",
+			envVarName, daemonSet, TestContext.ClusterIDs[i])
+	}
 }
 
 func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
@@ -191,14 +314,9 @@ func createRestConfig(kubeConfig, context string) *rest.Config {
 		Errorf("loadConfig err: %s", err.Error())
 		os.Exit(1)
 	}
-	testDesc := ginkgo.CurrentGinkgoTestDescription()
-	if len(testDesc.ComponentTexts) > 0 {
-		componentTexts := strings.Join(testDesc.ComponentTexts, " ")
-		restConfig.UserAgent = fmt.Sprintf(
-			"%v -- %v",
-			rest.DefaultKubernetesUserAgent(),
-			componentTexts)
-	}
+
+	restConfig.UserAgent = userAgentFunction()
+
 	restConfig.QPS = TestContext.ClientQPS
 	restConfig.Burst = TestContext.ClientBurst
 	if TestContext.GroupVersion != nil {
@@ -247,7 +365,7 @@ func (f *Framework) AfterEach() {
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	var errs []error
 	for i, clientSet := range KubeClients {
-		ginkgo.By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
 		if err := deleteNamespace(clientSet, ns); err != nil {
 			switch {
 			case apierrors.IsNotFound(err):

@@ -148,17 +148,26 @@ function deploy_prometheus() {
     # TODO Install in a separate namespace
     kubectl create ns submariner-operator
     # Bundle from prometheus-operator, namespace changed to submariner-operator
-    kubectl apply -f prometheus/bundle.yaml
-    kubectl apply -f prometheus/serviceaccount.yaml
-    kubectl apply -f prometheus/clusterrole.yaml
-    kubectl apply -f prometheus/clusterrolebinding.yaml
-    kubectl apply -f prometheus/prometheus.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/bundle.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml
+    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml
 }
 
 function deploy_cluster_capabilities() {
     deploy_cni
     [[ $olm != "true" ]] || deploy_olm
     [[ $prometheus != "true" ]] || deploy_prometheus
+}
+
+function warn_inotify() {
+    if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
+        echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
+        echo sudo sysctl fs.inotify.max_user_watches=524288
+        echo sudo sysctl fs.inotify.max_user_instances=512
+        echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
+    fi
 }
 
 ### Main ###
@@ -168,6 +177,12 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 run_local_registry
 declare_cidrs
-run_all_clusters with_retries 3 create_kind_cluster
+
+# Run in subshell to check response, otherwise `set -e` is not honored
+( run_all_clusters with_retries 3 create_kind_cluster; ) &
+if ! wait $!; then
+    warn_inotify
+    exit 1
+fi
 
 print_clusters_message

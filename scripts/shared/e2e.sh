@@ -50,6 +50,12 @@ function generate_context_flags() {
     done
 }
 
+function generate_kubeconfigs() {
+    for cluster in "${context_clusters[@]}"; do
+	grep -l "current-context: ${cluster}" output/kubeconfigs/*
+    done
+}
+
 function test_with_e2e_tests {
     cd ${DAPPER_SOURCE}/test/e2e
 
@@ -61,9 +67,19 @@ function test_with_e2e_tests {
         tee ${DAPPER_OUTPUT}/e2e-tests.log
 }
 
+function test_with_subctl {
+    subctl verify --only connectivity $(generate_kubeconfigs)
+}
+
 ### Main ###
 
 declare_kubeconfig
 [[ "${lazy_deploy}" = "false" ]] || deploy_env_once
-test_with_e2e_tests
+
+if [ -d ${DAPPER_SOURCE}/test/e2e ]; then
+    test_with_e2e_tests
+else
+    test_with_subctl
+fi
+
 print_clusters_message

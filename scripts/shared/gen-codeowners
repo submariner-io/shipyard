@@ -1,0 +1,18 @@
+#!/usr/bin/env python3
+
+from fnmatch import fnmatch
+
+with open('CODEOWNERS.in', 'r') as ins, open('CODEOWNERS', 'w') as out:
+    owners_by_path = {}
+    for line in ins:
+        comps = line.split()
+        if len(comps) > 1:
+            for path in comps[1:]:
+                owners_by_path.setdefault(path, set()).add(comps[0])
+    print('# Auto-generated, do not edit; see CODEOWNERS.in', file = out)
+    for path in sorted(owners_by_path, key = str.lower):
+        owners = owners_by_path[path]
+        for extra_path in owners_by_path.keys():
+            if extra_path != path and fnmatch(path, extra_path):
+                owners |= owners_by_path[extra_path]
+        print('{0} {1}'.format(path, ' '.join(sorted(owners, key = str.lower))), file = out)

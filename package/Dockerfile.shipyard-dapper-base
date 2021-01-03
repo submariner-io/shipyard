@@ -1,4 +1,4 @@
-FROM fedora:32
+FROM fedora:33
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -10,48 +10,62 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 # Requirements:
-# Component      | Usage
-# -----------------------------------------------------------
-# gcc            | needed by `go test -race` (https://github.com/golang/go/issues/27089)
-# git            | find the workspace root
-# curl           | download other tools
-# moby-engine    | Dapper (Docker)
-# golang         | build
-# kubectl        | e2e tests (in kubernetes-client)
-# golangci-lint  | code linting
-# helm           | e2e tests
-# kind           | e2e tests
-# ginkgo         | tests
-# make           | OLM installation
-# findutils      | validate (find go packages)
-# subctl *       | Submariner's deploy tool (operator)
-# upx            | binary compression
-# jq             | JSON processing (GitHub API)
-# ShellCheck     | shell script linting
+# Component        | Usage
+# -------------------------------------------------------------
+# curl             | download other tools
+# findutils        | make unit (find unit test dirs)
+# gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# ginkgo           | tests
+# git              | find the workspace root
+# gitlint          | Commit message linting
+# golang           | build
+# golangci-lint    | code linting
+# helm             | e2e tests
+# jq               | JSON processing (GitHub API)
+# kind             | e2e tests
+# kubectl          | e2e tests (in kubernetes-client)
+# make             | OLM installation
+# markdownlint     | Markdown linting
+# moby-engine      | Dapper (Docker)
+# npm              | Required for installing markdownlint
+# qemu-user-static | Emulation (for multiarch builds)
+# ShellCheck       | shell script linting
+# subctl *         | Submariner's deploy tool (operator)
+# upx              | binary compression
+# yamllint         | YAML linting
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils upx jq ShellCheck && \
-    dnf -y remove libsemanage && \
+                   findutils upx jq ShellCheck npm gitlint yamllint \
+                   qemu-user-static && \
+    npm install -g markdownlint-cli && \
+    rpm -e --nodeps containerd npm && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
+    rm -f /usr/bin/{dockerd,lto-dump} \
+          /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 ENV LINT_VERSION=v1.28.0 \
-    HELM_VERSION=v2.16.9 \
+    HELM_VERSION=v3.4.1 \
     KIND_VERSION=v0.7.0 \
-    SUBCTL_VERSION=v0.5.0
+    BUILDX_VERSION=v0.4.2 \
+    SUBCTL_VERSION=devel
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
-    curl "https://storage.googleapis.com/kubernetes-helm/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
+    curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     curl -L "https://github.com/submariner-io/submariner-operator/releases/download/${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH}.tar.xz" | tar xJf - && mv subctl-${SUBCTL_VERSION}/subctl-${SUBCTL_VERSION}-linux-${ARCH} /go/bin/subctl && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
-    find /go/bin -type f -executable -newercc /proc | xargs -r upx ${UPX_LEVEL}
+    mkdir -p ~/.docker/cli-plugins && \
+    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
+    chmod 755 ~/.docker/cli-plugins/docker-buildx && \
+    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc | xargs -r strip && \
+    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc | xargs -r upx ${UPX_LEVEL}
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh

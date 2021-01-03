@@ -1,3 +1,18 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package framework
 
 import (
@@ -25,6 +40,10 @@ const (
 	InvalidPodType NetworkPodType = iota
 	ListenerPod
 	ConnectorPod
+	ThroughputClientPod
+	ThroughputServerPod
+	LatencyClientPod
+	LatencyServerPod
 )
 
 type NetworkPodScheduling int
@@ -84,6 +103,14 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildTCPCheckListenerPod()
 	case ConnectorPod:
 		networkPod.buildTCPCheckConnectorPod()
+	case ThroughputClientPod:
+		networkPod.buildThroughputClientPod()
+	case ThroughputServerPod:
+		networkPod.buildThroughputServerPod()
+	case LatencyClientPod:
+		networkPod.buildLatencyClientPod()
+	case LatencyServerPod:
+		networkPod.buildLatencyServerPod()
 	}
 
 	return networkPod
@@ -108,6 +135,10 @@ func (np *NetworkPod) AwaitReady() {
 }
 
 func (np *NetworkPod) AwaitFinish() {
+	np.AwaitFinishVerbose(true)
+}
+
+func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
@@ -130,7 +161,11 @@ func (np *NetworkPod) AwaitFinish() {
 		np.TerminationCode = np.Pod.Status.ContainerStatuses[0].State.Terminated.ExitCode
 		np.TerminationMessage = np.Pod.Status.ContainerStatuses[0].State.Terminated.Message
 
-		Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
+		if verbose {
+			Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
+		} else {
+			fmt.Printf("%s", removeDupDataplaneLines(np.TerminationMessage))
+		}
 	}
 }
 
@@ -161,7 +196,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-listener",
-					Image: "busybox",
+					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{"sh", "-c", "for i in $(seq 50); do echo [dataplane] listener says $SEND_STRING; done | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1"},
@@ -172,6 +207,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 
@@ -202,7 +238,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-connector",
-					Image: "busybox",
+					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
@@ -216,6 +252,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					},
 				},
 			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
 
@@ -223,6 +260,148 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 	var err error
 	np.Pod, err = pc.Create(&tcpCheckConnectorPod)
 	Expect(err).NotTo(HaveOccurred())
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will initiate iperf3 throughput test to remoteIP and write the test
+// response in the pod termination log, then
+// exit with 0 status
+func (np *NetworkPod) buildThroughputClientPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "nettest-client-pod",
+			Labels: map[string]string{
+				TestAppLabel: "nettest-client-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "nettest-client-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command: []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
+						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+					},
+				},
+			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will start iperf3 in server mode
+func (np *NetworkPod) buildThroughputServerPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "nettest-server-pod",
+			Labels: map[string]string{
+				TestAppLabel: "nettest-server-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "nettest-server-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+					},
+				},
+			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will initiate netperf latency test to remoteIP and write the test
+// response in the pod termination log, then
+// exit with 0 status
+func (np *NetworkPod) buildLatencyClientPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "latency-client-pod",
+			Labels: map[string]string{
+				TestAppLabel: "latency-client-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "latency-client-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command: []string{
+						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+					},
+				},
+			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will start netserver (server of netperf)
+func (np *NetworkPod) buildLatencyServerPod() {
+	nettestPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "latency-server-pod",
+			Labels: map[string]string{
+				TestAppLabel: "latency-server-pod",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            "latency-server-pod",
+					Image:           "quay.io/submariner/nettest:devel",
+					ImagePullPolicy: v1.PullAlways,
+					Command:         []string{"netserver", "-D"},
+				},
+			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
+		},
+	}
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+	var err error
+	np.Pod, err = pc.Create(&nettestPod)
+	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
 }
 
 func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {

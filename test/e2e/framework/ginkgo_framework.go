@@ -15,23 +15,14 @@ limitations under the License.
 */
 package framework
 
-import (
-	"k8s.io/apimachinery/pkg/api/errors"
-)
+import "github.com/onsi/ginkgo"
 
-// identify API errors which could be considered transient/recoverable
-// due to server state.
-func IsTransientError(err error, opMsg string) bool {
-	if errors.IsInternalError(err) ||
-		errors.IsServerTimeout(err) ||
-		errors.IsTimeout(err) ||
-		errors.IsServiceUnavailable(err) ||
-		errors.IsUnexpectedServerError(err) ||
-		errors.IsTooManyRequests(err) {
+// NewFramework creates a test framework, under ginkgo
+func NewFramework(baseName string) *Framework {
+	f := NewBareFramework(baseName)
 
-		Logf("Transient failure when attempting to %s: %v", opMsg, err)
-		return true
-	}
+	ginkgo.BeforeEach(f.BeforeEach)
+	ginkgo.AfterEach(f.AfterEach)
 
-	return false
+	return f
 }

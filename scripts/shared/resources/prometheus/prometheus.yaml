@@ -1,3 +1,4 @@
+---
 apiVersion: monitoring.coreos.com/v1
 kind: Prometheus
 metadata:
@@ -8,6 +9,4 @@ spec:
   replicas: 1
   serviceAccountName: prometheus
   serviceMonitorNamespaceSelector: {}
-  serviceMonitorSelector:
-    matchLabels:
-      name: submariner-operator
+  serviceMonitorSelector: {}

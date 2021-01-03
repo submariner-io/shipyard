@@ -27,16 +27,17 @@ function kubectl() {
 # 1st argument is the amount of times to retry the command.
 # 2nd argument is the command to execute.
 # 3rd argument and so forth get passed to the command.
+# The current iteration is made available in the iteration variable.
 function with_retries() {
-    local retries
-    retries=$(eval echo "{1..$1}")
+    local retries=$1
     local cmnd=$2
 
-    for _ in ${retries}; do
+    iteration=1; while ((iteration <= retries)); do
         ( $cmnd "${@:3}"; ) &
         if wait $!; then
             return 0
         fi
+        ((iteration++))
     done
 
     echo "Max attempts reached, failed to run '${*:2}'!"
@@ -108,8 +109,8 @@ function add_cluster_cidrs() {
     local val=$1
     local idx=$2
     [[ $globalnet != "true" ]] || val="0"
-    cluster_CIDRs[$idx]="10.24${val}.0.0/16"
-    service_CIDRs[$idx]="100.9${val}.0.0/16"
+    cluster_CIDRs[$idx]="10.${val}.0.0/16"
+    service_CIDRs[$idx]="100.${val}.0.0/16"
     [[ $globalnet != "true" ]] || global_CIDRs[$idx]="169.254.${1}.0/24"
 }
 

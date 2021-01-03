@@ -2,6 +2,17 @@ FROM alpine
 
 WORKDIR /app
 
+RUN apk add --update --no-cache gcc libc-dev make curl
+
+RUN curl -L https://github.com/HewlettPackard/netperf/archive/netperf-2.7.0.tar.gz | tar xzf -
+RUN cd netperf-netperf-2.7.0 && ./configure \
+    && make && make install
+
+
+FROM alpine
+
+WORKDIR /app
+
 RUN apk add --no-cache \
 	bash \
 	bind-tools \
@@ -9,5 +20,7 @@ RUN apk add --no-cache \
 	iputils \
 	iperf3 \
 	tcpdump
+
+COPY --from=0 /usr/local/bin/net* /usr/local/bin/
 
 CMD ["/bin/bash","-l"]

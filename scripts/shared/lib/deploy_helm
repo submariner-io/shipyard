@@ -9,23 +9,9 @@ readonly SUBMARINER_PSK=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w
 
 ### Functions ###
 
-function install_helm() {
-    if kubectl -n kube-system rollout status deploy/tiller-deploy --timeout=3s > /dev/null 2>&1; then
-        echo "Helm already installed, skipping helm installation..."
-        return
-    fi
-
-    echo "Installing helm..."
-    kubectl -n kube-system create serviceaccount tiller
-    kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
-    helm --kube-context "${cluster}" init --service-account tiller
-    kubectl -n kube-system rollout status deploy/tiller-deploy --timeout=30s
-}
-
 function deploytool_prereqs() {
-    helm init --client-only
+    helm version
     helm repo add submariner-latest https://submariner-io.github.io/submariner-charts/charts
-    run_all_clusters install_helm
 }
 
 function setup_broker() {
@@ -34,9 +20,10 @@ function setup_broker() {
     else
         echo "Installing submariner broker..."
         # shellcheck disable=SC2086 # Split on purpose
-        helm install submariner-latest/submariner-k8s-broker \
+        helm install "${SUBMARINER_BROKER_NS}" \
+             submariner-latest/submariner-k8s-broker \
+             --create-namespace \
              --kube-context "${cluster}" \
-             --name "${SUBMARINER_BROKER_NS}" \
              --namespace "${SUBMARINER_BROKER_NS}" \
              ${deploytool_broker_args}
     fi
@@ -57,14 +44,16 @@ function helm_install_subm() {
 
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
-    helm --kube-context "${cluster}" install submariner-latest/submariner \
-        --name submariner \
+    helm --kube-context "${cluster}" install submariner \
+        submariner-latest/submariner \
+        --create-namespace \
         --namespace "${SUBM_NS}" \
         --set ipsec.psk="${SUBMARINER_PSK}" \
         --set broker.server="${submariner_broker_url}" \
         --set broker.token="${submariner_broker_token}" \
         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
         --set broker.ca="${submariner_broker_ca}" \
+        --set submariner.cableDriver="${cable_driver}" \
         --set submariner.clusterId="${cluster}" \
         --set submariner.clusterCidr="${cluster_CIDRs[$cluster]}" \
         --set submariner.serviceCidr="${service_CIDRs[$cluster]}" \

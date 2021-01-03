@@ -7,7 +7,7 @@
 function import_image() {
     local orig_image=$1
     local versioned_image="$1:${DEV_VERSION}"
-    local local_image="localhost:5000/${orig_image##*/}:local"
+    local local_image="localhost:5000/${orig_image##*/}:${2:-local}"
     if ! docker tag "${versioned_image}" "${local_image}"; then
         # The project doesn't build this image, pull it
         docker pull "${orig_image}:${CUTTING_EDGE}"
@@ -53,7 +53,17 @@ function test_connection() {
     local target_address=$2
 
     echo "Attempting connectivity between clusters - $source_pod --> $target_address"
-    if ! kubectl exec "${source_pod}" -- curl --output /dev/null -m 30 --silent --head --fail "${target_address}"; then
+    wait_time=30
+    start_time=$(date +%s)
+    if ! kubectl exec "${source_pod}" -- curl --output /dev/null -m "${wait_time}" --silent --head --fail "${target_address}"; then
+        end_time=$(date +%s)
+        execution_time=$(( end_time - start_time))
+        if [ $execution_time -lt $wait_time ]
+        then
+           remaining_time=$(( wait_time - execution_time))
+           echo "curl returned too soon. Sleeping for $remaining_time secs"
+           sleep $remaining_time
+        fi
         return 1
     fi
 
@@ -75,6 +85,22 @@ function connectivity_tests() {
     with_context "$target_cluster" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 }
 
+function verify_gw_status() {
+    sleep_duration=6
+    # helm doesn't use the operator yet, and connection status is based on the operator object
+    if subctl show connections 2>&1 | grep "the server could not find the requested resource"; then
+        return 0
+    fi
+
+    if ! subctl show connections | grep "connected"; then
+       echo "iter: $iteration. Clusters not yet connected. sleeping for $sleep_duration secs"
+       sleep $sleep_duration
+    else
+       return 0
+    fi
+    return 1
+}
+
 function add_subm_gateway_label() {
     [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
     kubectl label node "${cluster}-worker" "submariner.io/gateway=true" --overwrite
@@ -86,14 +112,7 @@ function del_subm_gateway_label() {
 }
 
 function prepare_cluster() {
-    local namespace=$1
     [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
-    for app in submariner-engine submariner-routeagent submariner-globalnet; do
-        if kubectl wait --for=condition=Ready pods -l "app=$app" -n "$namespace" --timeout="${timeout}" > /dev/null 2>&1; then
-            echo "Removing $app pods..."
-            kubectl delete pods -n "$namespace" -l "app=$app"
-        fi
-    done
     add_subm_gateway_label
 }
 
