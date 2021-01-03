@@ -52,6 +52,12 @@ func (f *Framework) AwaitSubmarinerEnginePod(cluster ClusterIndex) *v1.Pod {
 	return &f.AwaitPodsByAppLabel(cluster, SubmarinerEngine, TestContext.SubmarinerNamespace, 1).Items[0]
 }
 
+// AwaitRouteAgentPod finds the route agent pod in a given cluster, waiting if necessary for a period of time
+// for the pod to materialize.
+func (f *Framework) AwaitRouteAgentPod(cluster ClusterIndex) *v1.Pod {
+	return &f.AwaitPodsByAppLabel(cluster, RouteAgent, TestContext.SubmarinerNamespace, 1).Items[0]
+}
+
 // DeletePod deletes the pod for the given name and namespace.
 func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace string) {
 	AwaitUntil("delete pod", func() (interface{}, error) {
