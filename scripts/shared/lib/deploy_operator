@@ -42,11 +42,17 @@ function subctl_install_subm() {
         return
     fi
 
+    # We use the "subctl" image_tag to indicate that we want to let
+    # subctl use its default repository and version
+    subctlrepver=
+    if [ "${SUBM_ENGINE_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_ENGINE_IMAGE_REPO} --version ${SUBM_ENGINE_IMAGE_TAG}"
+    fi
+
     # shellcheck disable=SC2086 # Split on purpose
     "${SUBCTL}" join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                 --clusterid "${cluster}" \
-                --repository "${SUBM_ENGINE_IMAGE_REPO}" \
-                --version "${SUBM_ENGINE_IMAGE_TAG}" \
+                ${subctlrepver} \
                 --nattport "${CE_IPSEC_NATTPORT}" \
                 --ikeport "${CE_IPSEC_IKEPORT}" \
                 --colorcodes "${SUBM_COLORCODES}" \
