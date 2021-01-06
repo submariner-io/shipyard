@@ -2,12 +2,17 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
+include Makefile.inc
+
+ifneq (,$(filter ovn,$(_using)))
+CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings.ovn
+else
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
+endif
+
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
-
-include Makefile.inc
 
 TARGETS := $(shell ls -p scripts | grep -v -e /)
 
