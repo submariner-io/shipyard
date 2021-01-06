@@ -37,6 +37,7 @@ cat << EOM
 Cluster settings::
   broker - ${broker@Q}
   clusters - ${clusters[*]@Q}
+  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
   nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
   install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
 EOM
@@ -82,6 +83,11 @@ function create_kind_cluster() {
     fi
 
     echo "Creating KIND cluster..."
+    if [[ "${cluster_cni[$cluster]}" == "ovn" ]]; then
+        deploy_kind_ovn
+        return
+    fi
+
     generate_cluster_yaml
     local image_flag=''
     if [[ -n ${version} ]]; then
@@ -112,6 +118,11 @@ function deploy_weave_cni(){
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
+}
+
+function deploy_kind_ovn(){
+    echo "OVN on kind currently not supported"
+    exit 1
 }
 
 function run_local_registry() {
