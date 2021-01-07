@@ -1,3 +1,18 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package framework
 
 import (
@@ -8,6 +23,7 @@ import (
 
 	. "github.com/onsi/gomega"
 	"github.com/pkg/errors"
+	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -155,6 +171,8 @@ func BeforeSuite() {
 		KubeClients = append(KubeClients, createKubernetesClient(restConfig))
 	}
 
+	fetchClusterIDs()
+
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
 	}
@@ -232,6 +250,45 @@ func DetectGlobalnet() {
 
 		return true, "", nil
 	})
+}
+
+func fetchClusterIDs() {
+	for i := range KubeClients {
+		gatewayNodes := findNodesByGatewayLabel(i, true)
+		if len(gatewayNodes) == 0 {
+			continue
+		}
+
+		name := "submariner-gateway"
+		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
+			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(name, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				return nil, nil
+			}
+
+			return ds, err
+		}, func(result interface{}) (bool, string, error) {
+			if result == nil {
+				return false, "No DaemonSet found", nil
+			}
+
+			return true, "", nil
+		}).(*appsv1.DaemonSet)
+
+		const envVarName = "SUBMARINER_CLUSTERID"
+		found := false
+		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
+			if envVar.Name == envVarName {
+				By(fmt.Sprintf("Setting cluster ID %q for kube context name %q", TestContext.ClusterIDs[i], envVar.Value))
+				TestContext.ClusterIDs[i] = envVar.Value
+				found = true
+				break
+			}
+		}
+
+		Expect(found).To(BeTrue(), "Expected %q env var not found in DaemonSet %#v for kube context %q",
+			envVarName, daemonSet, TestContext.ClusterIDs[i])
+	}
 }
 
 func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {

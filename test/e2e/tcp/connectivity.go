@@ -1,3 +1,18 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package tcp
 
 import (
@@ -141,10 +156,12 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		framework.Logf("Will send traffic from IP: %v", sourceIP)
 	}
 
-	By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
+	By(fmt.Sprintf("Waiting for the connector pod %q on node %q to exit, returning what connector sent",
+		connectorPod.Pod.Name, connectorPod.Pod.Spec.NodeName))
 	connectorPod.AwaitFinish()
 
-	By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
+	By(fmt.Sprintf("Waiting for the listener pod %q on node %q to exit, returning what listener sent",
+		listenerPod.Pod.Name, listenerPod.Pod.Spec.NodeName))
 	listenerPod.AwaitFinish()
 
 	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)

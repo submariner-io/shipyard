@@ -1,3 +1,18 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package framework
 
 import (
@@ -256,7 +271,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-client-pod",
 			Labels: map[string]string{
-				"run": "nettest-client-pod",
+				TestAppLabel: "nettest-client-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -267,10 +282,13 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command: []string{
-						"sh", "-c", "iperf3 -w 256K -P 10 -c $TARGET_IP >/dev/termination-log 2>&1"},
+					Command: []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
+						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
 					},
 				},
 			},
@@ -291,7 +309,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-server-pod",
 			Labels: map[string]string{
-				"run": "nettest-server-pod",
+				TestAppLabel: "nettest-server-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -302,7 +320,10 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					Name:            "nettest-server-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"iperf3", "-s"},
+					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
+					Env: []v1.EnvVar{
+						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+					},
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -324,7 +345,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-client-pod",
 			Labels: map[string]string{
-				"run": "latency-client-pod",
+				TestAppLabel: "latency-client-pod",
 			},
 		},
 		Spec: v1.PodSpec{
@@ -359,7 +380,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-server-pod",
 			Labels: map[string]string{
-				"run": "latency-server-pod",
+				TestAppLabel: "latency-server-pod",
 			},
 		},
 		Spec: v1.PodSpec{

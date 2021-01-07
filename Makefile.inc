@@ -51,9 +51,11 @@ e2e:
 upgrade-e2e: deploy-latest deploy e2e
 
 # Deploys the latest release
+# This uses make deploy, but forcefully ignores images so that images
+# are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="--image_tag=latest" using=$(using)
+	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 gitlint:
 	gitlint --commits origin/master..HEAD
@@ -79,10 +81,6 @@ post-mortem:
 unit: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
-# TODO: Remove once all consumers are migrated to "unit"
-unit-test: vendor/modules.txt
-	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
-
 ifeq (go.mod,$(wildcard go.mod))
 # If go.mod exists (as determined above), assume we're vendoring
 vendor/modules.txt: go.mod
@@ -92,3 +90,16 @@ endif
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
+
+# This removes all Submariner-provided images and all untagged images
+# Use this to ensure you use current images
+# Copied from Makefile to provide this everywhere (until we can share
+# non-Dapper goals across projects)
+prune-images:
+	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
+	    if [ "$$tag" != "<none>" ]; then \
+	        docker rmi $$image:$$tag; \
+	    else \
+	        docker rmi $$hash; \
+	    fi \
+	done

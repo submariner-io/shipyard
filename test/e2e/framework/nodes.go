@@ -1,3 +1,18 @@
+/*
+© 2020 Red Hat, Inc.
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+*/
 package framework
 
 import (
@@ -12,6 +27,10 @@ import (
 // FindNodesByGatewayLabel finds the nodes in a given cluster by matching 'submariner.io/gateway' value. A missing label
 // is treated as false. Note the control plane node labeled as master is ignored.
 func (f *Framework) FindNodesByGatewayLabel(cluster ClusterIndex, isGateway bool) []*v1.Node {
+	return findNodesByGatewayLabel(int(cluster), isGateway)
+}
+
+func findNodesByGatewayLabel(cluster int, isGateway bool) []*v1.Node {
 	nodes := AwaitUntil("list nodes", func() (interface{}, error) {
 		// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
 		return KubeClients[cluster].CoreV1().Nodes().List(metav1.ListOptions{
