@@ -106,9 +106,7 @@ function create_kind_cluster() {
 }
 
 function deploy_cni() {
-    if [[ "${cluster_cni[$cluster]}" == "ovn" ]] || [[ -z "${cluster_cni[$cluster]}" ]]; then
-        return 0
-    fi
+    [[ -n "${cluster_cni[$cluster]}" ]] || return 0
 
     eval "deploy_${cluster_cni[$cluster]}_cni"
 }
@@ -122,23 +120,25 @@ function deploy_weave_cni(){
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
 }
 
+function deploy_ovn_cni(){
+  echo "OVN CNI deployed."
+}
+
 function deploy_kind_ovn(){
-    export K8s_VERSION=${version}
+    export K8s_VERSION="${version}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
     export OVN_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
     export REGISTRY_IP="${registry_ip}"
 
-    pushd ${OVN_DIR}/contrib
-    ( ./kind.sh; ) &
+    (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
     if ! wait $! ; then
-        popd
         echo "Failed to install kind with OVN"
         kind delete cluster --name=${cluster}
         return 1
     fi
-    popd
+
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
