@@ -1,0 +1,3 @@
+[submodule "submodules/ovn-kubernetes"]
+	path = submodules/ovn-kubernetes
+	url = https://github.com/submariner-io/ovn-kubernetes.git
