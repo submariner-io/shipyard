@@ -55,7 +55,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=latest" using=$(using)
+	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 gitlint:
 	gitlint --commits origin/master..HEAD
@@ -90,3 +90,16 @@ endif
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
+
+# This removes all Submariner-provided images and all untagged images
+# Use this to ensure you use current images
+# Copied from Makefile to provide this everywhere (until we can share
+# non-Dapper goals across projects)
+prune-images:
+	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
+	    if [ "$$tag" != "<none>" ]; then \
+	        docker rmi $$image:$$tag; \
+	    else \
+	        docker rmi $$hash; \
+	    fi \
+	done
