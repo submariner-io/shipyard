@@ -121,7 +121,7 @@ function deploy_weave_cni(){
 }
 
 function deploy_ovn_cni(){
-  echo "OVN CNI deployed."
+    echo "OVN CNI deployed."
 }
 
 function deploy_kind_ovn(){
