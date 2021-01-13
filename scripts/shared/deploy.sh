@@ -47,7 +47,11 @@ import_image quay.io/submariner/nettest
 import_image quay.io/submariner/submariner ${image_tag}
 import_image quay.io/submariner/submariner-route-agent ${image_tag}
 [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet ${image_tag}
-[[ "$cluster_cni[$cluster]" != "ovn" ]] || import_image quay.io/submariner/submariner-networkpluginsyncer ${image_tag}
+
+if [[ "$cluster_cni[$cluster]" == "ovn" ]]; then
+    import_image quay.io/submariner/submariner-networkplugin-syncer ${image_tag}
+    import_image quay.io/vthapar/ovn-daemonset-f latest
+fi
 
 load_deploytool $deploytool
 deploytool_prereqs
