@@ -59,6 +59,12 @@ func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace st
 	}, NoopCheckResult)
 }
 
+// AwaitRouteAgentPod finds the route agent pod in a given cluster, waiting if necessary for a period of time
+// for the pod to materialize.
+func (f *Framework) AwaitRouteAgentPod(cluster ClusterIndex) *v1.Pod {
+	return &f.AwaitPodsByAppLabel(cluster, RouteAgent, TestContext.SubmarinerNamespace, 1).Items[0]
+}
+
 // AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
 func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
 	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (interface{}, error) {

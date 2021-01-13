@@ -56,6 +56,7 @@ const (
 const (
 	SubmarinerEngine = "submariner-engine"
 	GatewayLabel     = "submariner.io/gateway"
+	RouteAgent       = "submariner-routeagent"
 )
 
 type PatchFunc func(pt types.PatchType, payload []byte) error
