@@ -39,19 +39,6 @@ jobs:
       - name: Run golangci-lint
         run: make golangci-lint
 
-  markdown-link-check:
-    name: Markdown Links (modified files)
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
-
-      - name: Run markdown-link-check
-        uses: gaurav-nelson/github-action-markdown-link-check@v1
-        with:
-          config-file: ".markdownlinkcheck.json"
-          check-modified-files-only: "yes"
-
   markdownlint:
     name: Markdown
     runs-on: ubuntu-latest
