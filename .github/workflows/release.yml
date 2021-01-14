@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - master
+      - release-*
 
 jobs:
   e2e:
@@ -52,5 +53,5 @@ jobs:
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: shipyard-dapper-base nettest
+          RELEASE_ARGS: shipyard-dapper-base nettest --tag "${GITHUB_REF##*/}"
         run: make release
