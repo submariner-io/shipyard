@@ -132,6 +132,8 @@ function deploy_kind_ovn(){
     export OVN_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
     export REGISTRY_IP="${registry_ip}"
 
+    docker pull "$OVN_IMAGE"
+
     (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
     if ! wait $! ; then
         echo "Failed to install kind with OVN"
