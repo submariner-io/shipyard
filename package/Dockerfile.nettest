@@ -5,7 +5,7 @@ WORKDIR /app
 RUN apk add --update --no-cache gcc libc-dev make curl
 
 RUN curl -L https://github.com/HewlettPackard/netperf/archive/netperf-2.7.0.tar.gz | tar xzf -
-RUN cd netperf-netperf-2.7.0 && ./configure \
+RUN cd netperf-netperf-2.7.0 && ./configure CFLAGS=-fcommon \
     && make && make install
 
 
