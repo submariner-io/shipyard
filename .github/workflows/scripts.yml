@@ -70,9 +70,11 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Run E2E deployment and tests
-        run: make e2e
+        run: make e2e using=ovn
 
       - name: Post mortem
         if: failure()
