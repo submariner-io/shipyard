@@ -7,7 +7,7 @@ ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/local/go/bin:$PATH \
     GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${DAPPER_HOST_ARCH} \
     GOPATH=/go GO111MODULE=on GOFLAGS=-mod=vendor GOPROXY=https://proxy.golang.org \
-    SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
+    SCRIPTS_DIR=${SHIPYARD_DIR}/scripts OVN_DIR=${SHIPYARD_DIR}/ovn-kubernetes
 
 # Requirements:
 # Component        | Usage
@@ -38,9 +38,10 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq ShellCheck npm gitlint yamllint \
-                   qemu-user-static && \
+                   qemu-user-static python3-pip && \
     npm install -g markdownlint-cli && \
-    rpm -e --nodeps containerd npm && \
+    pip install j2cli[yaml] --user && \
+    rpm -e --nodeps containerd npm python3-pip && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
@@ -72,6 +73,9 @@ COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
 
 # Copy shared makefile so that downstream projects can use it
 COPY Makefile.* ${SHIPYARD_DIR}/
+
+# Copy ovn-kubernetes to share with other projects
+COPY submodules/ovn-kubernetes ${OVN_DIR}
 
 # Copy CI deployment scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
