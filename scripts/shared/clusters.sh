@@ -125,14 +125,18 @@ function deploy_ovn_cni(){
 }
 
 function deploy_kind_ovn(){
+    local OVN_SRC_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
     export K8s_VERSION="${version}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
-    export OVN_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
     export REGISTRY_IP="${registry_ip}"
 
-    docker pull "$OVN_IMAGE"
+    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
+    docker pull "${OVN_SRC_IMAGE}"
+    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
+    docker push "${OVN_IMAGE}"
+    sed -i 's/^kind load/#kind load/g' $OVN_DIR/contrib/kind.sh
 
     (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
     if ! wait $! ; then
