@@ -10,7 +10,7 @@ DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to th
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 DEFINE_string 'image_tag' 'local' "Tag to use for the images"
-DEFINE_string 'cable_driver' 'libreswan' "Tunneling method for connections between clusters (libreswan, strongswan, wireguard requires kernel module on host)"
+DEFINE_string 'cable_driver' 'libreswan' "Tunneling method for connections between clusters (libreswan, wireguard requires kernel module on host)"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"

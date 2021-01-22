@@ -9,7 +9,7 @@ include $(SHIPYARD_DIR)/Makefile.versions
 ifneq (,$(filter libreswan,$(_using)))
 override DEPLOY_ARGS += --cable_driver libreswan
 else ifneq (,$(filter strongswan,$(_using)))
-override DEPLOY_ARGS += --cable_driver strongswan
+$(error strongSwan is no longer supported)
 else ifneq (,$(filter wireguard,$(_using)))
 # Wireguard requires kernel module install on the host
 override DEPLOY_ARGS += --cable_driver wireguard

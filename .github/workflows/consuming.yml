@@ -29,9 +29,6 @@ jobs:
         include:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner
-            cabledriver: strongswan
-            deploytool: operator
-          - project: submariner
             cabledriver: wireguard
             deploytool: operator
     steps:
