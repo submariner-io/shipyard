@@ -100,6 +100,7 @@ function create_kind_cluster() {
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
+        kubectl cluster-info dump 1>&2
         kind delete cluster --name=${cluster}
         return 1
     fi
