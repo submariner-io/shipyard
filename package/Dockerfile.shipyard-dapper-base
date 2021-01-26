@@ -53,7 +53,7 @@ ENV LINT_VERSION=v1.28.0 \
     HELM_VERSION=v3.4.1 \
     KIND_VERSION=v0.7.0 \
     BUILDX_VERSION=v0.4.2 \
-    SUBCTL_VERSION=devel
+    SUBCTL_VERSION=subctl-devel
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
