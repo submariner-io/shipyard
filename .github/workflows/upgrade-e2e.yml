@@ -14,12 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Reclaim free space!
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          df -h
-          free -h
+      - name: Prepare the host
+        uses: ./gh-actions/prepare-host
 
       - name: Install an old cluster, upgrade it and check it
         run: |

@@ -35,18 +35,10 @@ jobs:
       - name: Check out the Shipyard repository
         uses: actions/checkout@v2
 
-      - name: Install WireGuard kernel module (only in WireGuard jobs)
-        if: matrix.cabledriver == 'wireguard'
-        run: |
-          sudo apt install -y linux-headers-$(uname -r) wireguard
-          sudo modprobe wireguard
-
-      - name: Reclaim free space!
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-          df -h
-          free -h
+      - name: Prepare the host
+        uses: ./gh-actions/prepare-host
+        with:
+          cabledriver: ${{ matrix.cabledriver }}
 
       - name: Build the latest Shipyard image
         run: make images
