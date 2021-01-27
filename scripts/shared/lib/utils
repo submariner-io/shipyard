@@ -89,17 +89,6 @@ function run_subm_clusters() {
     run_parallel "${subm_clusters[*]}" "$@"
 }
 
-# Run cluster commands sequentially.
-# 1st argument is the numbers of the clusters names for which to run.
-# 2nd argument is the command to execute, which will have the $cluster variable set.
-# 3rd argument and so forth get passed to the command.
-function run_sequential() {
-    local cmnd=$2
-    for cluster in $(eval echo "$1"); do
-        $cmnd "${@:3}" | sed "s/^/[${cluster}] /" 
-    done
-}
-
 function registry_running() {
     docker ps --filter name="^/?$KIND_REGISTRY$" | grep $KIND_REGISTRY
     return $?
