@@ -14,12 +14,8 @@ jobs:
     steps:
       - uses: actions/checkout@master
 
-      - name: Prepare the host
-        uses: ./gh-actions/prepare-host
-
       - name: Install an old cluster, upgrade it and check it
-        run: |
-          make upgrade-e2e
+        uses: ./gh-actions/upgrade-e2e
 
       - name: Post Mortem
         if: failure()
