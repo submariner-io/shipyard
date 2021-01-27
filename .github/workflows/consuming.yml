@@ -56,10 +56,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: |
-          df -h
-          free -h
-          make post-mortem
+        uses: ./gh-actions/post-mortem
 
   lint-consuming:
     name: Lint
