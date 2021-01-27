@@ -1,0 +1,32 @@
+name: 'Prepare host'
+description: 'Prepares the GitHub action runner for the submariner e2e testing'
+inputs:
+  cabledriver:
+    description: 'Install any system modules for specific cable drivers'
+    required: false
+    default: ''
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        echo "::group::Reclaiming free space"
+        # Clean up tools we don't need for our CI to free up more space on the hosted runner
+        rm -rf /opt/ghc /usr/share/dotnet /usr/share/swift
+        df -h
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
+        echo "::group::Report available RAM"
+        free -h
+        echo "::endgroup::"
+
+    - name: Install any cable driver specific modules
+      shell: bash
+      run: |
+        [[ "${{ inputs.cabledriver }}" == "wireguard" ]] || exit 0
+        echo "::group::Installing wireguard modules"
+        sudo apt install -y linux-headers-$(uname -r) wireguard
+        sudo modprobe wireguard
+        echo "::endgroup::"

@@ -120,9 +120,37 @@ function deploy_weave_cni(){
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
 }
 
+function deploy_ovn_cni(){
+    echo "OVN CNI deployed."
+}
+
 function deploy_kind_ovn(){
-    echo "OVN on kind currently not supported"
-    exit 1
+    local OVN_SRC_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
+    export K8s_VERSION="${version}"
+    export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
+    export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
+    export KIND_CLUSTER_NAME="${cluster}"
+    export REGISTRY_IP="${registry_ip}"
+
+    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
+    docker pull "${OVN_SRC_IMAGE}"
+    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
+    docker push "${OVN_IMAGE}"
+    sed -i 's/^kind load/#kind load/g' $OVN_DIR/contrib/kind.sh
+
+    (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
+    if ! wait $! ; then
+        echo "Failed to install kind with OVN"
+        kind delete cluster --name=${cluster}
+        return 1
+    fi
+
+    ( deploy_cluster_capabilities; ) &
+    if ! wait $! ; then
+        echo "Failed to deploy cluster capabilities, removing the cluster"
+        kind delete cluster --name=${cluster}
+        return 1
+    fi
 }
 
 function run_local_registry() {
