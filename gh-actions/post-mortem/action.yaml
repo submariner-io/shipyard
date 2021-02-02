@@ -1,0 +1,19 @@
+name: 'Post Mortem'
+description: 'Autopsy'
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        echo "::group::Report available disk space"
+        df -h
+        echo "::endgroup::"
+        echo "::group::Report available RAM"
+        free -h
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
+        echo "::group::Running post mortem"
+        make post-mortem
+        echo "::endgroup::"

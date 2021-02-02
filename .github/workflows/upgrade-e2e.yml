@@ -19,7 +19,4 @@ jobs:
 
       - name: Post Mortem
         if: failure()
-        run: |
-          df -h
-          free -h
-          make post-mortem
+        uses: ./gh-actions/post-mortem

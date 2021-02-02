@@ -27,7 +27,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: ./gh-actions/post-mortem
 
       - name: Clean up E2E deployment
         run: make cleanup
