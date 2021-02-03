@@ -23,3 +23,6 @@ docker_deps = $(shell files=($(1) $$(awk '/COPY/ { if (substr($$2, 1, 7) != "--f
 package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuild,$$*)
 	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< $(IMAGES_ARGS)
 	touch $@
+
+# Default target to build images based on IMAGES variable
+images: $(foreach image,$(IMAGES),package/.image.$(image))

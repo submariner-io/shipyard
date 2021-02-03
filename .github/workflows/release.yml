@@ -47,6 +47,5 @@ jobs:
       - name: Build and release new images
         uses: ./gh-actions/release-images
         with:
-          images: shipyard-dapper-base nettest
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
