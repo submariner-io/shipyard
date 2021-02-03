@@ -4,6 +4,8 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 include Makefile.inc
 
+# TODO: Remove after dependency in submariner-io/submariner is removed
+# TODO: Select OVN or Weave with the using= flag instead
 ifneq (,$(filter ovn,$(_using)))
 CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings.ovn
 else

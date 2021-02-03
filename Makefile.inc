@@ -6,6 +6,10 @@ include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
 
+ifneq (,$(filter ovn,$(_using)))
+override CLUSTERS_ARGS +=  --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings.ovn
+endif
+
 ifneq (,$(filter libreswan,$(_using)))
 override DEPLOY_ARGS += --cable_driver libreswan
 else ifneq (,$(filter strongswan,$(_using)))

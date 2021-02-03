@@ -19,6 +19,7 @@ jobs:
         project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
         deploytool: ['operator', 'helm']
         cabledriver: ['libreswan']
+        cni: ['weave']
         exclude:
           # Admiral E2E doesn't respect deploy-tool params, as it uses clusters without Submariner
           - project: admiral
@@ -30,6 +31,10 @@ jobs:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner
             cabledriver: wireguard
+            deploytool: operator
+          # OVN support is WIP, only run in main repo for now
+          - project: submariner
+            cni: ovn
             deploytool: operator
     steps:
       - name: Check out the Shipyard repository
@@ -51,6 +56,7 @@ jobs:
         uses: ./gh-actions/e2e
         with:
           cabledriver: ${{ matrix.cabledriver }}
+          cni: ${{ matrix.cni }}
           deploytool: ${{ matrix.deploytool }}
           working-directory: ./${{ matrix.project }}
 

@@ -1,0 +1,6 @@
+# shellcheck shell=bash
+# shellcheck disable=SC2034 # We declare some shared variables here
+
+cluster_cni['cluster1']="ovn"
+cluster_cni['cluster2']="ovn"
+cluster_cni['cluster3']="ovn"
