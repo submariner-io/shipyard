@@ -45,7 +45,7 @@ clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit:
 
 images: export SCRIPTS_DIR=./scripts/shared
 
-images: package/.image.shipyard-dapper-base
+images: package/.image.shipyard-dapper-base package/.image.nettest
 
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends
