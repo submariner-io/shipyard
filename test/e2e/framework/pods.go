@@ -21,6 +21,7 @@ import (
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/types"
 )
 
 // AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
@@ -78,4 +79,41 @@ func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation s
 		}
 		return true, "", nil
 	}).(*v1.Pod)
+}
+
+// AwaitRouteAgentPodOnNode finds the route agent pod on a given node in a cluster, waiting if necessary for a period of time
+// for the pod to materialize. If prevPodUID is non-empty, the found pod's UID must not match it.
+func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName string, prevPodUID types.UID) *v1.Pod {
+	var found *v1.Pod
+
+	AwaitUntil(fmt.Sprintf("find route agent pod on node %q", nodeName), func() (interface {
+	}, error) {
+		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(metav1.ListOptions{
+			LabelSelector: "app=" + RouteAgent,
+		})
+	}, func(result interface{}) (bool, string, error) {
+		pods := result.(*v1.PodList)
+		var podNodes []string
+		for i := range pods.Items {
+			pod := &pods.Items[i]
+			if pod.Spec.NodeName == nodeName {
+				if pod.Status.Phase != v1.PodRunning {
+					return false, fmt.Sprintf("Found pod %q but its Status is %v", pod.Name, pod.Status.Phase), nil
+				}
+
+				if prevPodUID != "" && pod.UID == prevPodUID {
+					return false, fmt.Sprintf("Expecting new route agent pod (UID %q matches previous instance)", prevPodUID), nil
+				}
+
+				found = pod
+				return true, "", nil
+			}
+
+			podNodes = append(podNodes, pod.Spec.NodeName)
+		}
+
+		return false, fmt.Sprintf("Found pods on nodes %v", podNodes), nil
+	})
+
+	return found
 }
