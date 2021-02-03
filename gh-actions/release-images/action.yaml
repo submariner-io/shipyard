@@ -1,0 +1,30 @@
+name: 'Release Images'
+description: 'Builds images and uploads them to the public registry'
+inputs:
+  images:
+    description: 'Space separated list of images to build'
+    required: true
+  username:
+    description: 'User name for the registry'
+    required: true
+  password:
+    description: 'Password for the registry'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      env:
+        IMAGES_ARGS: --nocache
+      run: |
+        echo "::group::Build new images"
+        make images
+        echo "::endgroup::"
+
+    - name: Release newly built images
+      shell: bash
+      env:
+        QUAY_USERNAME: ${{ inputs.username }}
+        QUAY_PASSWORD: ${{ inputs.password }}
+      # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
+      run: make release RELEASE_ARGS="${{ inputs.images }} --tag '${GITHUB_REF##*/}'"
