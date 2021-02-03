@@ -73,7 +73,7 @@ yamllint:
 	yamllint .
 
 release:
-	$(SCRIPTS_DIR)/release.sh $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release.sh $(IMAGES) $(RELEASE_ARGS)
 
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
