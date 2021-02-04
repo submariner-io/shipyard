@@ -4,7 +4,8 @@ name: Release Images
 on:
   push:
     branches:
-      - master
+      - devel
+      - release-*
 
 jobs:
   e2e:
@@ -52,5 +53,6 @@ jobs:
         env:
           QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
           QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: shipyard-dapper-base nettest
-        run: make release
+          IMAGES: shipyard-dapper-base nettest
+        # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
+        run: make release RELEASE_ARGS="$IMAGES --tag '${GITHUB_REF##*/}'"
