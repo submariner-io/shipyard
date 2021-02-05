@@ -38,6 +38,7 @@ import (
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
 const (
@@ -101,6 +102,7 @@ var (
 
 	RestConfigs []*rest.Config
 	KubeClients []*kubeclientset.Clientset
+	DynClients  []dynamic.Interface
 )
 
 // NewBareFramework creates a test framework, without ginkgo dependencies
@@ -170,9 +172,13 @@ func BeforeSuite() {
 
 	for _, restConfig := range RestConfigs {
 		KubeClients = append(KubeClients, createKubernetesClient(restConfig))
+		DynClients = append(DynClients, createDynamicClient(restConfig))
 	}
 
 	fetchClusterIDs()
+
+	err := mcsv1a1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
@@ -304,6 +310,14 @@ func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 	if restConfig.NegotiatedSerializer == nil {
 		restConfig.NegotiatedSerializer = scheme.Codecs
 	}
+	return clientSet
+}
+
+func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
+
+	clientSet, err := dynamic.NewForConfig(restConfig)
+	Expect(err).NotTo(HaveOccurred())
+
 	return clientSet
 }
 
