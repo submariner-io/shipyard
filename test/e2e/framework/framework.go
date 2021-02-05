@@ -56,6 +56,7 @@ const (
 
 const (
 	SubmarinerEngine = "submariner-engine"
+	RouteAgent       = "submariner-routeagent"
 	GatewayLabel     = "submariner.io/gateway"
 )
 
