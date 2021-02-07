@@ -130,6 +130,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		remoteIP = service.Spec.ClusterIP
 
 		if p.ToEndpointType == GlobalIP {
+			p.Framework.CreateServiceExport(p.ToCluster, service.Name)
 			// Wait for the globalIP annotation on the service.
 			service = p.Framework.AwaitUntilAnnotationOnService(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
 			remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
