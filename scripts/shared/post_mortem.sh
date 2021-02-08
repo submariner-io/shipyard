@@ -24,8 +24,10 @@ function print_pods_logs() {
 }
 
 function post_analyze() {
+    print_section "* Overview of all resources in $cluster *"
+    kubectl api-resources --verbs=list -o name | xargs -n 1 kubectl get --show-kind -o wide --ignore-not-found
+
     print_section "* Pods not running in $cluster *"
-    kubectl get all --all-namespaces
     for pod in $(kubectl get pods -A | tail -n +2 | grep -v Running | sed 's/  */;/g'); do
         ns=$(echo $pod | cut -f1 -d';')
         name=$(echo $pod | cut -f2 -d';')
