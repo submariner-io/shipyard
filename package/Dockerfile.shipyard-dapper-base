@@ -3,6 +3,7 @@ FROM fedora:33
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
 ARG UPX_LEVEL=-5
+ARG SUBCTL_VERSION=devel
 ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/local/go/bin:$PATH \
     GOLANG_ARCH_amd64=amd64 GOLANG_ARCH_arm=armv6l GOLANG_ARCH=GOLANG_ARCH_${DAPPER_HOST_ARCH} \
@@ -52,8 +53,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 ENV LINT_VERSION=v1.28.0 \
     HELM_VERSION=v3.4.1 \
     KIND_VERSION=v0.7.0 \
-    BUILDX_VERSION=v0.4.2 \
-    SUBCTL_VERSION=devel
+    BUILDX_VERSION=v0.4.2
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \

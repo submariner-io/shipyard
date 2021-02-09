@@ -42,6 +42,8 @@ else
 include Makefile.images
 include Makefile.versions
 
+IMAGES_ARGS ?= --buildargs "SUBCTL_VERSION=${CUTTING_EDGE}"
+
 # Shipyard-specific starts
 clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit-test: images
 
