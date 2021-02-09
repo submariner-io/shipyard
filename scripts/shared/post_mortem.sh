@@ -24,8 +24,10 @@ function print_pods_logs() {
 }
 
 function post_analyze() {
-    print_section "* Pods not running in $cluster *"
-    kubectl get all --all-namespaces
+    print_section "* Overview of all resources in $cluster *"
+    kubectl api-resources --verbs=list -o name | xargs -n 1 kubectl get --show-kind -o wide --ignore-not-found
+
+    print_section "* Details of pods with statuses other than Running in $cluster *"
     for pod in $(kubectl get pods -A | tail -n +2 | grep -v Running | sed 's/  */;/g'); do
         ns=$(echo $pod | cut -f1 -d';')
         name=$(echo $pod | cut -f2 -d';')
@@ -34,13 +36,15 @@ function post_analyze() {
         kubectl -n $ns logs $name
     done
 
-    # TODO (revisit): The following is added to debug intermittent globalnet failures.
-    print_section "* Globalnet related logs in $cluster *"
+    print_section "* Kube-proxy pod logs for $cluster *"
     print_pods_logs "kube-system" "k8s-app=kube-proxy"
+
+    print_section "* Submariner-operator pod logs for $cluster *"
     print_pods_logs "submariner-operator"
 
-    print_section "* Dump 'subctl show all' *"
+    print_section "* Output of 'subctl show all' in $cluster *"
     subctl show all
+
     return 0
 }
 
