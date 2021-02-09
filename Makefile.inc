@@ -16,6 +16,12 @@ else ifneq (,$(filter wireguard,$(_using)))
 override DEPLOY_ARGS += --cable_driver wireguard
 endif
 
+ifneq (,$(filter lighthouse,$(_using)))
+override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery'
+else
+override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery=false'
+endif
+
 ifneq (,$(filter globalnet,$(_using)))
 override CLUSTERS_ARGS += --globalnet
 override DEPLOY_ARGS += --globalnet
