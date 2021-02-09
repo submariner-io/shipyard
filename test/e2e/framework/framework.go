@@ -525,3 +525,10 @@ func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult C
 
 	return finalResult, errMsg, err
 }
+
+func NestedString(obj map[string]interface{}, fields ...string) string {
+	str, _, err := unstructured.NestedString(obj, fields...)
+	Expect(err).To(Succeed())
+
+	return str
+}

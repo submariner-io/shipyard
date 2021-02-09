@@ -24,5 +24,7 @@ func NewFramework(baseName string) *Framework {
 	ginkgo.BeforeEach(f.BeforeEach)
 	ginkgo.AfterEach(f.AfterEach)
 
+	AddCleanupAction(f.GatewayCleanup)
+
 	return f
 }
