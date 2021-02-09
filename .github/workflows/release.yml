@@ -44,8 +44,12 @@ jobs:
           submodules: true
           fetch-depth: 0
 
+      - name: Find the right subctl version
+        run: echo "SUBCTL_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
+
       - name: Build and release new images
         uses: ./gh-actions/release-images
         with:
           username: ${{ secrets.QUAY_USERNAME }}
           password: ${{ secrets.QUAY_PASSWORD }}
+          image_args: --buildargs SUBCTL_VERSION=${{ env.SUBCTL_VERSION }}

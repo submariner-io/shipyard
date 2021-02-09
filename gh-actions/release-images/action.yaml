@@ -7,12 +7,15 @@ inputs:
   password:
     description: 'Password for the registry'
     required: true
+  image_args:
+    description: 'Additional image building arguments'
+    required: false
 runs:
   using: "composite"
   steps:
     - shell: bash
       env:
-        IMAGES_ARGS: --nocache
+        IMAGES_ARGS: --nocache ${{ inputs.image_args }}
       run: |
         echo "::group::Build new images"
         make images
