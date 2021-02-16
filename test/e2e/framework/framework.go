@@ -219,10 +219,7 @@ func (f *Framework) BeforeEach() {
 func DetectGlobalnet() {
 	TestContext.GlobalnetEnabled = false
 
-	dynClient, err := dynamic.NewForConfig(RestConfigs[ClusterA])
-	Expect(err).To(Succeed())
-
-	clusters := dynClient.Resource(schema.GroupVersionResource{
+	clusters := DynClients[ClusterA].Resource(schema.GroupVersionResource{
 		Group:    "submariner.io",
 		Version:  "v1",
 		Resource: "clusters",
