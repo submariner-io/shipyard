@@ -283,8 +283,11 @@ func fetchClusterIDs() {
 		found := false
 		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
 			if envVar.Name == envVarName {
-				By(fmt.Sprintf("Setting cluster ID %q for kube context name %q", TestContext.ClusterIDs[i], envVar.Value))
-				TestContext.ClusterIDs[i] = envVar.Value
+				if TestContext.ClusterIDs[i] != envVar.Value {
+					By(fmt.Sprintf("Setting new cluster ID %q, previous cluster ID was %q", envVar.Value, TestContext.ClusterIDs[i]))
+					TestContext.ClusterIDs[i] = envVar.Value
+				}
+
 				found = true
 				break
 			}
