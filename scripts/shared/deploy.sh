@@ -31,7 +31,6 @@ echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploy
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/version
 source ${SCRIPTS_DIR}/lib/utils
 source ${SCRIPTS_DIR}/lib/deploy_funcs
 
