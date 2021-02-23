@@ -58,7 +58,7 @@ deploy-latest:
 	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 gitlint:
-	gitlint --commits origin/master..HEAD
+	gitlint --commits origin/devel..HEAD
 
 golangci-lint: vendor/modules.txt
 	golangci-lint linters
@@ -73,7 +73,7 @@ yamllint:
 	yamllint .
 
 release:
-	$(SCRIPTS_DIR)/release.sh $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release.sh $(IMAGES) $(RELEASE_ARGS)
 
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh

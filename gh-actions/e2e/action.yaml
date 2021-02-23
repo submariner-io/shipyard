@@ -1,0 +1,47 @@
+name: 'End to End'
+description: 'Runs end to end tests with multiple clusters'
+inputs:
+  cabledriver:
+    description: 'Cable driver to use when deploying'
+    required: false
+  deploytool:
+    description: 'Deploy tool to use when deploying'
+    required: false
+  globalnet:
+    description: 'Should the deployment be with globalnet or not'
+    required: false
+  working-directory:
+    description: 'Working directory to run in'
+    required: false
+    default: '.'
+runs:
+  using: "composite"
+  steps:
+    - shell: bash
+      run: |
+        echo "::group::Reclaiming free space"
+        # Clean up tools we don't need for our CI to free up more space on the hosted runner
+        rm -rf /opt/ghc /usr/share/dotnet /usr/share/swift
+        df -h
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
+        echo "::group::Report available RAM"
+        free -h
+        echo "::endgroup::"
+
+    - name: Install WireGuard specific modules
+      shell: bash
+      run: |
+        [[ "${{ inputs.cabledriver }}" == "wireguard" ]] || exit 0
+        echo "::group::Installing WireGuard modules"
+        sudo apt install -y linux-headers-$(uname -r) wireguard
+        sudo modprobe wireguard
+        echo "::endgroup::"
+
+    - name: Run E2E deployment and tests
+      shell: bash
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        make e2e using="${{ inputs.globalnet }} ${{ inputs.deploytool }} ${{ inputs.cabledriver }}"

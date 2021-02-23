@@ -20,7 +20,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: ./gh-actions/post-mortem
 
       - name: Clean up clusters
         run: make cleanup
@@ -58,7 +58,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: ./gh-actions/post-mortem
 
       - name: Clean up deployment
         run: make cleanup
@@ -81,7 +81,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: ./gh-actions/post-mortem
 
   post_mortem:
     name: Post Mortem

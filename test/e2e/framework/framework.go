@@ -38,6 +38,7 @@ import (
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
 const (
@@ -55,6 +56,7 @@ const (
 
 const (
 	SubmarinerEngine = "submariner-engine"
+	RouteAgent       = "submariner-routeagent"
 	GatewayLabel     = "submariner.io/gateway"
 )
 
@@ -100,6 +102,7 @@ var (
 
 	RestConfigs []*rest.Config
 	KubeClients []*kubeclientset.Clientset
+	DynClients  []dynamic.Interface
 )
 
 // NewBareFramework creates a test framework, without ginkgo dependencies
@@ -169,9 +172,13 @@ func BeforeSuite() {
 
 	for _, restConfig := range RestConfigs {
 		KubeClients = append(KubeClients, createKubernetesClient(restConfig))
+		DynClients = append(DynClients, createDynamicClient(restConfig))
 	}
 
 	fetchClusterIDs()
+
+	err := mcsv1a1.AddToScheme(scheme.Scheme)
+	Expect(err).NotTo(HaveOccurred())
 
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
@@ -212,10 +219,7 @@ func (f *Framework) BeforeEach() {
 func DetectGlobalnet() {
 	TestContext.GlobalnetEnabled = false
 
-	dynClient, err := dynamic.NewForConfig(RestConfigs[ClusterA])
-	Expect(err).To(Succeed())
-
-	clusters := dynClient.Resource(schema.GroupVersionResource{
+	clusters := DynClients[ClusterA].Resource(schema.GroupVersionResource{
 		Group:    "submariner.io",
 		Version:  "v1",
 		Resource: "clusters",
@@ -279,8 +283,11 @@ func fetchClusterIDs() {
 		found := false
 		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
 			if envVar.Name == envVarName {
-				By(fmt.Sprintf("Setting cluster ID %q for kube context name %q", TestContext.ClusterIDs[i], envVar.Value))
-				TestContext.ClusterIDs[i] = envVar.Value
+				if TestContext.ClusterIDs[i] != envVar.Value {
+					By(fmt.Sprintf("Setting new cluster ID %q, previous cluster ID was %q", envVar.Value, TestContext.ClusterIDs[i]))
+					TestContext.ClusterIDs[i] = envVar.Value
+				}
+
 				found = true
 				break
 			}
@@ -303,6 +310,14 @@ func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 	if restConfig.NegotiatedSerializer == nil {
 		restConfig.NegotiatedSerializer = scheme.Codecs
 	}
+	return clientSet
+}
+
+func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
+
+	clientSet, err := dynamic.NewForConfig(restConfig)
+	Expect(err).NotTo(HaveOccurred())
+
 	return clientSet
 }
 
@@ -509,4 +524,11 @@ func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult C
 	}
 
 	return finalResult, errMsg, err
+}
+
+func NestedString(obj map[string]interface{}, fields ...string) string {
+	str, _, err := unstructured.NestedString(obj, fields...)
+	Expect(err).To(Succeed())
+
+	return str
 }

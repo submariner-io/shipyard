@@ -1,3 +1,5 @@
+IMAGES ?= shipyard-dapper-base nettest
+
 ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
@@ -40,12 +42,12 @@ else
 include Makefile.images
 include Makefile.versions
 
+IMAGES_ARGS ?= --buildargs "SUBCTL_VERSION=${CUTTING_EDGE}"
+
 # Shipyard-specific starts
 clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit: images
 
 images: export SCRIPTS_DIR=./scripts/shared
-
-images: package/.image.shipyard-dapper-base
 
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends

@@ -4,7 +4,8 @@ name: Release Images
 on:
   push:
     branches:
-      - master
+      - devel
+      - release-*
 
 jobs:
   e2e:
@@ -27,7 +28,7 @@ jobs:
 
       - name: Post mortem
         if: failure()
-        run: make post-mortem
+        uses: ./gh-actions/post-mortem
 
       - name: Clean up E2E deployment
         run: make cleanup
@@ -43,14 +44,12 @@ jobs:
           submodules: true
           fetch-depth: 0
 
-      - name: Build new images
-        env:
-          IMAGES_ARGS: --nocache
-        run: make images nettest
+      - name: Find the right subctl version
+        run: echo "SUBCTL_VERSION=${GITHUB_REF##*/}" >> $GITHUB_ENV
 
-      - name: Release the images
-        env:
-          QUAY_USERNAME: ${{ secrets.QUAY_USERNAME }}
-          QUAY_PASSWORD: ${{ secrets.QUAY_PASSWORD }}
-          RELEASE_ARGS: shipyard-dapper-base nettest
-        run: make release
+      - name: Build and release new images
+        uses: ./gh-actions/release-images
+        with:
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
+          image_args: --buildargs SUBCTL_VERSION=${{ env.SUBCTL_VERSION }}
