@@ -42,6 +42,9 @@ source "${SCRIPTS_DIR}/lib/cluster_settings"
 declare_cidrs
 declare_kubeconfig
 
+# Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
+bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash"
+
 # nettest is always referred to using :local
 import_image quay.io/submariner/nettest
 import_image quay.io/submariner/submariner-operator ${image_tag}
