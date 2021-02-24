@@ -15,7 +15,7 @@ FORCE_IMAGE: ;
 # We have to run it through a variable in order to expand any * that might be
 # in the COPY command; find is used to handle directories as dependencies
 # Files copied from another image are ignored
-docker_deps = $(shell files=($(1) $$(awk '/COPY/ { if (substr($$2, 1, 7) != "--from=") { for (i = 2; i < NF; i++) { print $$i } } }' $(1))) && find $${files[*]} -type f)
+docker_deps = $(shell files=($(1) $$(awk '/COPY/ { if (substr($$2, 1, 7) != "--from=") { for (i = 2; i < NF; i++) { print $$i } } }' $(1))) && find $${files[*]} -type f -o -type l)
 
 # Patterned recipe to use to build any image from any Dockerfile
 # An empty file is used for make to figure out if dependencies changed or not
