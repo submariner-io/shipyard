@@ -47,10 +47,10 @@ func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, na
 	}).(*v1.PodList)
 }
 
-// AwaitSubmarinerEnginePod finds the submariner engine pod in a given cluster, waiting if necessary for a period of time
+// AwaitSubmarinerGatewayPod finds the submariner gateway pod in a given cluster, waiting if necessary for a period of time
 // for the pod to materialize.
-func (f *Framework) AwaitSubmarinerEnginePod(cluster ClusterIndex) *v1.Pod {
-	return &f.AwaitPodsByAppLabel(cluster, SubmarinerEngine, TestContext.SubmarinerNamespace, 1).Items[0]
+func (f *Framework) AwaitSubmarinerGatewayPod(cluster ClusterIndex) *v1.Pod {
+	return &f.AwaitPodsByAppLabel(cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, 1).Items[0]
 }
 
 // DeletePod deletes the pod for the given name and namespace.

@@ -35,7 +35,7 @@ source "${SCRIPTS_DIR}/lib/cluster_settings"
 ### Functions ###
 
 function deploy_env_once() {
-    if with_context "${context_clusters[0]}" kubectl wait --for=condition=Ready pods -l app=submariner-engine -n "${SUBM_NS}" --timeout=3s > /dev/null 2>&1; then
+    if with_context "${context_clusters[0]}" kubectl wait --for=condition=Ready pods -l app=submariner-gateway -n "${SUBM_NS}" --timeout=3s > /dev/null 2>&1; then
         echo "Submariner already deployed, skipping deployment..."
         return
     fi
