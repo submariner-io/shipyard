@@ -45,14 +45,6 @@ declare_kubeconfig
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash"
 
-# nettest is always referred to using :local
-import_image quay.io/submariner/nettest
-import_image quay.io/submariner/submariner-operator ${image_tag}
-import_image quay.io/submariner/submariner ${image_tag}
-import_image quay.io/submariner/submariner-route-agent ${image_tag}
-[[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet ${image_tag}
-[[ "${cluster_cni[$cluster]}" != "ovn" ]] || import_image quay.io/submariner/submariner-networkplugin-syncer ${image_tag}
-
 load_deploytool $deploytool
 deploytool_prereqs
 
