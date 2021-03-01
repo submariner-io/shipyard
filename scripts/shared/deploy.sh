@@ -47,12 +47,16 @@ bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/g
 
 # nettest is always referred to using :local
 import_image quay.io/submariner/nettest
-import_image quay.io/submariner/submariner-operator ${image_tag}
-import_image quay.io/submariner/submariner ${image_tag}
-import_image quay.io/submariner/submariner-gateway ${image_tag}
-import_image quay.io/submariner/submariner-route-agent ${image_tag}
-[[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet ${image_tag}
-[[ "${cluster_cni[$cluster]}" != "ovn" ]] || import_image quay.io/submariner/submariner-networkplugin-syncer ${image_tag}
+
+# image_tag == subctl means that we will use what subctl internally dictates, using the upstream repos, no local pull
+if [[ "${image_tag}" != "subctl" ]]; then
+    import_image quay.io/submariner/submariner-operator ${image_tag}
+    import_image quay.io/submariner/submariner ${image_tag}
+    import_image quay.io/submariner/submariner-gateway ${image_tag}
+    import_image quay.io/submariner/submariner-route-agent ${image_tag}
+    [[ $globalnet != "true" ]] || import_image quay.io/submariner/submariner-globalnet ${image_tag}
+    [[ "${cluster_cni[$cluster]}" != "ovn" ]] || import_image quay.io/submariner/submariner-networkplugin-syncer ${image_tag}
+fi
 
 load_deploytool $deploytool
 deploytool_prereqs
