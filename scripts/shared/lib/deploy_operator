@@ -24,11 +24,20 @@ function setup_broker() {
     local gn
     [[ $globalnet != true ]] || gn="--globalnet"
     echo "Installing broker..."
+
+    # We use the "subctl" image_tag to indicate that we want to let
+    # subctl use its default repository and version
+    subctlrepver=
+    if [ "${SUBM_GATEWAY_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
+    fi
+
     # shellcheck disable=SC2086 # Split on purpose
     (
         cd "${OUTPUT_DIR}" && \
         "${SUBCTL}" deploy-broker \
                --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+               ${subctlrepver} \
                ${gn} \
                ${deploytool_broker_args}
     )
