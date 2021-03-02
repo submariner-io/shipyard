@@ -46,7 +46,7 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clusters deploy e2e gitlint golangci-lint markdownlint nettest post-mortem unit upgrade-e2e: images
+clusters deploy deploy-latest e2e gitlint golangci-lint markdownlint nettest post-mortem unit upgrade-e2e: images
 
 images: export SCRIPTS_DIR=./scripts/shared
 
