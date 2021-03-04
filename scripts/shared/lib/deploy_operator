@@ -22,7 +22,9 @@ function deploytool_prereqs() {
 
 function setup_broker() {
     local gn
+    local sd
     [[ $globalnet != true ]] || gn="--globalnet"
+    [[ $service_discovery != true ]] || sd="--service-discovery"
     echo "Installing broker..."
 
     # We use the "subctl" image_tag to indicate that we want to let
@@ -39,6 +41,7 @@ function setup_broker() {
                --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                ${subctlrepver} \
                ${gn} \
+               ${sd} \
                ${deploytool_broker_args}
     )
 }
