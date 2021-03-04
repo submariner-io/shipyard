@@ -17,9 +17,7 @@ override DEPLOY_ARGS += --cable_driver wireguard
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
-override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery'
-else
-override DEPLOY_ARGS += --deploytool_broker_args '--service-discovery=false'
+override DEPLOY_ARGS += --service_discovery
 endif
 
 ifneq (,$(filter globalnet,$(_using)))
