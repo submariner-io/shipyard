@@ -7,8 +7,8 @@
 readonly CE_IPSEC_IKEPORT=500
 readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
-readonly SUBM_ENGINE_IMAGE_REPO=localhost:5000
-readonly SUBM_ENGINE_IMAGE_TAG=${image_tag:-local}
+readonly SUBM_GATEWAY_IMAGE_REPO=localhost:5000
+readonly SUBM_GATEWAY_IMAGE_TAG=${image_tag:-local}
 # shellcheck disable=SC2034 # this variable is used elsewhere
 # Some projects rely on the default subctl being determined by the PATH
 readonly SUBCTL=${SUBCTL:-subctl}
@@ -18,20 +18,30 @@ readonly SUBCTL=${SUBCTL:-subctl}
 function deploytool_prereqs() {
     command -v subctl > /dev/null 2>&1
     "${SUBCTL}" version
-    # shellcheck disable=SC2086 # image_tag should expand to nothing if empty
-    import_image quay.io/submariner/submariner-operator ${image_tag}
 }
 
 function setup_broker() {
     local gn
+    local sd
     [[ $globalnet != true ]] || gn="--globalnet"
+    [[ $service_discovery != true ]] || sd="--service-discovery"
     echo "Installing broker..."
+
+    # We use the "subctl" image_tag to indicate that we want to let
+    # subctl use its default repository and version
+    subctlrepver=
+    if [ "${SUBM_GATEWAY_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
+    fi
+
     # shellcheck disable=SC2086 # Split on purpose
     (
         cd "${OUTPUT_DIR}" && \
         "${SUBCTL}" deploy-broker \
                --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+               ${subctlrepver} \
                ${gn} \
+               ${sd} \
                ${deploytool_broker_args}
     )
 }
@@ -45,8 +55,8 @@ function subctl_install_subm() {
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
     subctlrepver=
-    if [ "${SUBM_ENGINE_IMAGE_TAG}" != "subctl" ]; then
-        subctlrepver="--repository ${SUBM_ENGINE_IMAGE_REPO} --version ${SUBM_ENGINE_IMAGE_TAG}"
+    if [ "${SUBM_GATEWAY_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
     fi
 
     # shellcheck disable=SC2086 # Split on purpose

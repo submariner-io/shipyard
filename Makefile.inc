@@ -1,5 +1,6 @@
 , := ,
 _using = $(subst $(,), ,$(using))
+PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
 include $(SHIPYARD_DIR)/Makefile.images
 include $(SHIPYARD_DIR)/Makefile.versions
@@ -15,10 +16,15 @@ else ifneq (,$(filter wireguard,$(_using)))
 override DEPLOY_ARGS += --cable_driver wireguard
 endif
 
+ifneq (,$(filter lighthouse,$(_using)))
+override DEPLOY_ARGS += --service_discovery
+endif
+
 ifneq (,$(filter globalnet,$(_using)))
 override CLUSTERS_ARGS += --globalnet
 override DEPLOY_ARGS += --globalnet
 override E2E_ARGS += --globalnet
+PRELOAD_IMAGES += submariner-globalnet
 endif
 
 ifneq (,$(filter helm,$(_using)))
@@ -33,6 +39,10 @@ ifneq (,$(filter prometheus,$(_using)))
 override CLUSTERS_ARGS += --prometheus
 endif
 
+ifneq (,$(filter ovn,$(_using)))
+PRELOAD_IMAGES += submariner-networkplugin-syncer
+endif
+
 # Shipyard provided targets
 
 cleanup:
@@ -41,7 +51,15 @@ cleanup:
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
 
-deploy: clusters
+preload-images:
+	set -e;\
+	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
+	. $(SCRIPTS_DIR)/lib/debug_functions;\
+	for image in $(PRELOAD_IMAGES); do\
+		import_image quay.io/submariner/$${image};\
+	done
+
+deploy: clusters preload-images
 	$(SCRIPTS_DIR)/deploy.sh $(DEPLOY_ARGS)
 
 # Will call `deploy` if it detects no submariner running on a cluster
@@ -55,7 +73,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 gitlint:
 	gitlint --commits origin/devel..HEAD

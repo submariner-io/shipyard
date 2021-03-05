@@ -46,6 +46,7 @@ jobs:
       matrix:
         globalnet: ['', 'globalnet']
         deploytool: ['operator', 'helm']
+        lighthouse: ['', 'lighthouse']
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
@@ -54,7 +55,7 @@ jobs:
         env:
           CLUSTERS_ARGS: --timeout 1m
           DEPLOY_ARGS: --timeout 2m
-        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }}"
+        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }}"
 
       - name: Post mortem
         if: failure()
