@@ -12,3 +12,4 @@ packages="$(find_unit_test_dirs "$@")"
 echo "Running tests in ${packages}"
 [ "${ARCH}" == "amd64" ] && race=-race
 go test -v ${race} -cover ${packages} -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml
+[ "$(uname)" == "Linux" -a \( "${ARCH}" == "amd64" -o "${ARCH}" == "arm64" \) ] && CC=clang go test -v -msan -cover ${packages} -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml
