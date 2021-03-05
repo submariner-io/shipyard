@@ -72,6 +72,7 @@ function test_connection() {
 
 function connectivity_tests() {
     target_cluster="$1"
+    import_image quay.io/submariner/nettest
     deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
     with_context "$target_cluster" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 

@@ -37,15 +37,15 @@ function helm_install_subm() {
     local crd_create=false
     [[ "${cluster}" = "${broker}" ]] || crd_create=true
 
-    if kubectl wait --for=condition=Ready pods -l app=submariner-engine -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
+    if kubectl wait --for=condition=Ready pods -l app=submariner-operator -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
         echo "Submariner already installed, skipping installation..."
         return
     fi
 
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
-    helm --kube-context "${cluster}" install submariner \
-        submariner-latest/submariner \
+    helm --kube-context "${cluster}" install submariner-operator \
+        submariner-latest/submariner-operator \
         --create-namespace \
         --namespace "${SUBM_NS}" \
         --set ipsec.psk="${SUBMARINER_PSK}" \
@@ -53,6 +53,7 @@ function helm_install_subm() {
         --set broker.token="${submariner_broker_token}" \
         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
         --set broker.ca="${submariner_broker_ca}" \
+        --set broker.service_discovery="${service_discovery}" \
         --set submariner.cableDriver="${cable_driver}" \
         --set submariner.clusterId="${cluster}" \
         --set submariner.clusterCidr="${cluster_CIDRs[$cluster]}" \
@@ -60,16 +61,12 @@ function helm_install_subm() {
         --set submariner.globalCidr="${global_CIDRs[$cluster]}" \
         --set serviceAccounts.globalnet.create="${globalnet}" \
         --set submariner.natEnabled="false" \
-        --set routeAgent.image.repository="localhost:5000/submariner-route-agent" \
-        --set routeAgent.image.tag="local" \
-        --set routeAgent.image.pullPolicy="IfNotPresent" \
-        --set engine.image.repository="localhost:5000/submariner" \
-        --set engine.image.tag="local" \
-        --set engine.image.pullPolicy="IfNotPresent" \
-        --set globalnet.image.repository="localhost:5000/submariner-globalnet" \
-        --set globalnet.image.tag="local" \
-        --set globalnet.image.pullPolicy="IfNotPresent" \
-        --set crd.create="${crd_create}" \
+        --set operator.image.repository="localhost:5000/submariner-operator" \
+        --set operator.image.tag="local" \
+        --set operator.image.pullPolicy="IfNotPresent" \
+        --set submariner.images.repository="localhost:5000" \
+        --set submariner.images.tag="local" \
+        --set brokercrds.create="${crd_create}" \
         ${deploytool_submariner_args}
 }
 
