@@ -86,3 +86,32 @@ jobs:
 
       - name: Run all linters
         run: make lint
+
+  unit-consuming:
+    name: Unit Tests
+    timeout-minutes: 15
+    runs-on: ubuntu-latest
+    if: |
+      ( github.event.action == 'labeled' && github.event.label.name == 'unit-projects' )
+      || ( github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'unit-projects') )
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
+    steps:
+      - name: Check out the Shipyard repository
+        uses: actions/checkout@v2
+
+      - name: Build the latest Shipyard image
+        run: make images
+
+      - name: Check out the ${{ matrix.project }} repository
+        uses: actions/checkout@v2
+        with:
+          repository: submariner-io/${{ matrix.project }}
+
+      - name: Make sure ${{ matrix.project }} is using the built Shipyard image
+        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
+
+      - name: Run all unit tests
+        run: make unit
