@@ -46,7 +46,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
-    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
+    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 ENV LINT_VERSION=v1.36.0 \
@@ -63,8 +63,8 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     mkdir -p ~/.docker/cli-plugins && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
     chmod 755 ~/.docker/cli-plugins/docker-buildx && \
-    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc | xargs -r strip && \
-    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc | xargs -r upx ${UPX_LEVEL}
+    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
+    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \)
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
