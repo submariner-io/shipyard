@@ -45,8 +45,17 @@ endif
 
 # Shipyard provided targets
 
-cleanup:
+# clean cleans everything (running clusters, generated files ...)
+clean: clean-clusters clean-generated
+
+# clean-generated removes files we generated
+clean-generated:
+	git clean -X -f
+
+# clean-clusters removes running clusters
+clean-clusters:
 	$(SCRIPTS_DIR)/cleanup.sh
+cleanup: clean-clusters
 
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)

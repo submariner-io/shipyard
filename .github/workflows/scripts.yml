@@ -23,7 +23,7 @@ jobs:
         uses: ./gh-actions/post-mortem
 
       - name: Clean up clusters
-        run: make cleanup
+        run: make clean-clusters
 
   compile:
     name: Compile
@@ -62,7 +62,7 @@ jobs:
         uses: ./gh-actions/post-mortem
 
       - name: Clean up deployment
-        run: make cleanup
+        run: make clean-clusters
 
   e2e:
     name: E2E
