@@ -28,6 +28,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # markdownlint     | Markdown linting
 # moby-engine      | Dapper (Docker)
 # npm              | Required for installing markdownlint
+# protobuf         | NAT discovery protocol in submariner
 # qemu-user-static | Emulation (for multiarch builds)
 # ShellCheck       | shell script linting
 # subctl *         | Submariner's deploy tool (operator)
@@ -38,7 +39,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq ShellCheck npm gitlint yamllint \
-                   qemu-user-static python3-pip && \
+                   qemu-user-static python3-pip golang-google-protobuf protobuf-compiler && \
     npm install -g markdownlint-cli && \
     pip install j2cli[yaml] --user && \
     rpm -e --nodeps containerd npm python3-pip && \
@@ -46,7 +47,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
-    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube | xargs upx ${UPX_LEVEL} && \
+    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube ! -name protoc-gen-go | xargs upx ${UPX_LEVEL} && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 ENV LINT_VERSION=v1.36.0 \
