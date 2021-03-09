@@ -51,7 +51,7 @@ cleanup:
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
 
-preload-images:
+preload-images: images
 	set -e;\
 	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
 	. $(SCRIPTS_DIR)/lib/debug_functions;\
