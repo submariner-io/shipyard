@@ -1,6 +1,7 @@
 name: 'End to End'
 description: 'Runs end to end tests with multiple clusters'
 inputs:
+  # TODO: Remove once it's not being used in consuming projects
   cabledriver:
     description: 'Cable driver to use when deploying'
     required: false
@@ -43,7 +44,7 @@ runs:
     - name: Install WireGuard specific modules
       shell: bash
       run: |
-        [[ "${{ inputs.cabledriver }}" == "wireguard" ]] || exit 0
+        [[ "${{ inputs.cabledriver }}" == "wireguard" ]] || [[ "${{ inputs.using }}" =~ "wireguard" ]] || exit 0
         echo "::group::Installing WireGuard modules"
         sudo apt install -y linux-headers-$(uname -r) wireguard
         sudo modprobe wireguard
@@ -53,4 +54,4 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        make e2e using="${{ inputs.using }} {{ inputs.globalnet }} ${{ inputs.deploytool }} ${{ inputs.cabledriver }} ${{ inputs.lighthouse }}"
+        make e2e using="${{ inputs.using }} ${{ inputs.globalnet }} ${{ inputs.deploytool }} ${{ inputs.cabledriver }} ${{ inputs.lighthouse }}"
