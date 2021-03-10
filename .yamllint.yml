@@ -4,6 +4,7 @@ extends: default
 rules:
   line-length:
     max: 140
+    ignore: gh-actions/e2e/action.yaml # TODO: Delete once fixed
   # Allow standard GHA syntax for "on: *"
   truthy:
     ignore: '.github/workflows/*.yml'

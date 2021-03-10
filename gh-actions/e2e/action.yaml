@@ -4,14 +4,20 @@ inputs:
   cabledriver:
     description: 'Cable driver to use when deploying'
     required: false
+  # TODO: Remove once it's not being used in consuming projects
   deploytool:
     description: 'Deploy tool to use when deploying'
     required: false
+  # TODO: Remove once it's not being used in consuming projects
   globalnet:
     description: 'Should the deployment be with globalnet or not'
     required: false
+  # TODO: Remove once it's not being used in consuming projects
   lighthouse:
     description: 'Should the deployment be with lighthouse or not'
+    required: false
+  using:
+    description: 'Various options to pass via using="..."'
     required: false
   working-directory:
     description: 'Working directory to run in'
@@ -47,4 +53,4 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       run: |
-        make e2e using="${{ inputs.globalnet }} ${{ inputs.deploytool }} ${{ inputs.cabledriver }} ${{ inputs.lighthouse }}"
+        make e2e using="${{ inputs.using }} {{ inputs.globalnet }} ${{ inputs.deploytool }} ${{ inputs.cabledriver }} ${{ inputs.lighthouse }}"
