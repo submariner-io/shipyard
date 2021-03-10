@@ -3,7 +3,6 @@
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-source ${SCRIPTS_DIR}/lib/version
 DEFINE_string 'tag' "${CUTTING_EDGE}" "Additional tag(s) to use for the image (prefix 'v' will be stripped)"
 DEFINE_string 'repo' 'quay.io/submariner' "Quay.io repo to deploy to"
 FLAGS_HELP="USAGE: $0 [--tag v1.2.3] [--repo quay.io/myrepo] image [image ...]"

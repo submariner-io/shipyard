@@ -1,7 +1,5 @@
 #!/bin/bash
 
-source ${SCRIPTS_DIR}/lib/version
-
 ## Process command line flags ##
 
 default_platform=linux/amd64
