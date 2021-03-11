@@ -1,4 +1,5 @@
 IMAGES ?= shipyard-dapper-base nettest
+NON_DAPPER_GOALS += images
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
