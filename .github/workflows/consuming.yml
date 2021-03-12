@@ -50,8 +50,7 @@ jobs:
       - name: Run E2E deployment and tests
         uses: ./gh-actions/e2e
         with:
-          cabledriver: ${{ matrix.cabledriver }}
-          deploytool: ${{ matrix.deploytool }}
+          using: ${{ matrix.cabledriver }} ${{ matrix.deploytool }}
           working-directory: ./${{ matrix.project }}
 
       - name: Post mortem
