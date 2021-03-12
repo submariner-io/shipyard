@@ -14,7 +14,7 @@ DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g.
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
-version="${FLAGS_k8s_version}"
+k8s_version="${FLAGS_k8s_version}"
 olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
@@ -22,7 +22,7 @@ olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
-echo "Running with: k8s_version=${version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
 
 set -em
 
@@ -90,8 +90,8 @@ function create_kind_cluster() {
 
     generate_cluster_yaml
     local image_flag=''
-    if [[ -n ${version} ]]; then
-        image_flag="--image=kindest/node:v${version}"
+    if [[ -n ${k8s_version} ]]; then
+        image_flag="--image=kindest/node:v${k8s_version}"
     fi
 
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
@@ -114,7 +114,7 @@ function deploy_cni() {
 
 function deploy_weave_cni(){
     echo "Applying weave network..."
-    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
+    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
     echo "Waiting for weave-net pods to be ready..."
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
@@ -127,7 +127,7 @@ function deploy_ovn_cni(){
 
 function deploy_kind_ovn(){
     local OVN_SRC_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
-    export K8s_VERSION="${version}"
+    export K8s_VERSION="${k8s_version}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
