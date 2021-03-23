@@ -3,7 +3,7 @@
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-DEFINE_string 'k8s_version' '1.17.0' 'Version of K8s to use'
+DEFINE_string 'k8s_version' '1.17.17' 'Version of K8s to use'
 DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
@@ -94,6 +94,8 @@ function create_kind_cluster() {
         image_flag="--image=kindest/node:v${k8s_version}"
     fi
 
+    kind version
+    cat ${RESOURCES_DIR}/${cluster}-config.yaml
     kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
     kind_fixup_config
 
@@ -131,7 +133,6 @@ function deploy_kind_ovn(){
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
-    export REGISTRY_IP="${registry_ip}"
 
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
     docker pull "${OVN_SRC_IMAGE}"
@@ -162,11 +163,9 @@ function run_local_registry() {
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
         local volume_flag
         [[ $registry_inmemory != "true" ]] || volume_flag="-v /dev/shm/${KIND_REGISTRY}:/var/lib/registry"
-        docker run -d $volume_flag -p 5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        docker run -d $volume_flag -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        docker network connect kind $KIND_REGISTRY || true
     fi
-
-    # This IP is consumed by kind to point the registry mirror correctly to the local registry
-    registry_ip="$(docker inspect -f '{{.NetworkSettings.IPAddress}}' "$KIND_REGISTRY")"
 }
 
 function deploy_olm() {

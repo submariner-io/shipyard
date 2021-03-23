@@ -35,6 +35,7 @@ jobs:
       - name: Test the compile.sh script
         run: |
           make images .dapper
+          docker network create -d bridge kind || true
           ./.dapper -m bind test/scripts/compile/test.sh
 
   deploy:
@@ -94,4 +95,5 @@ jobs:
       - name: Test the post_mortem.sh script
         run: |
           make clusters
+          docker network create -d bridge kind || true
           ./.dapper -m bind test/scripts/post_mortem/test.sh
