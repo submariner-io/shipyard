@@ -24,6 +24,9 @@ function print_pods_logs() {
 }
 
 function post_analyze() {
+    print_section "* Kubernetes client and server versions in $cluster *"
+    kubectl version || true
+
     print_section "* Overview of all resources in $cluster *"
     kubectl api-resources --verbs=list -o name | xargs -n 1 kubectl get --show-kind -o wide --ignore-not-found
 
