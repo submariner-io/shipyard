@@ -13,6 +13,12 @@ runs:
 
     - shell: bash
       run: |
+        echo "::group::Disable swap"
+        sudo swapoff -a
+        echo "::endgroup::"
+
+    - shell: bash
+      run: |
         echo "::group::Report available RAM"
         free -h
         echo "::endgroup::"
