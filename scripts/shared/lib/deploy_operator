@@ -59,6 +59,11 @@ function subctl_install_subm() {
         subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
     fi
 
+    PASS_CIDR_ARGS=${PASS_CIDR_ARGS:-false}
+    if [ "${PASS_CIDR_ARGS}" == "true" ];then
+        cidr_args="--clustercidr ${cluster_CIDRs[${cluster}]} --servicecidr ${service_CIDRs[${cluster}]}"
+    fi
+
     # shellcheck disable=SC2086 # Split on purpose
     "${SUBCTL}" join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                 --clusterid "${cluster}" \
@@ -70,6 +75,7 @@ function subctl_install_subm() {
                 --disable-nat \
                 --cable-driver "${cable_driver}" \
                 ${deploytool_submariner_args} \
+                ${cidr_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
 }
 
