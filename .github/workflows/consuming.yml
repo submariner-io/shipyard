@@ -47,10 +47,6 @@ jobs:
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
-      - name: Create the kind network
-        # TODO skitt remove this once the patch is merged
-        run: docker network create -d bridge kind || true
-
       - name: Run E2E deployment and tests
         uses: ./gh-actions/e2e
         with:

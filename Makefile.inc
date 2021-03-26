@@ -2,6 +2,14 @@
 _using = $(subst $(,), ,$(using))
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
+# Check Makefile.dapper freshness
+ifneq (,$(shell cmp $(SHIPYARD_DIR)/Makefile.dapper Makefile.dapper))
+$(warning [31mYour Makefile.dapper and Shipyard's are different,[0m)
+$(warning [31myou might run into issues. To avoid this, ensure[0m)
+$(warning [31myour Shipyard image is up-to-date and delete the[0m)
+$(warning [31mlocal Makefile.dapper.[0m)
+endif
+
 include $(SHIPYARD_DIR)/Makefile.images
 include $(SHIPYARD_DIR)/Makefile.versions
 
