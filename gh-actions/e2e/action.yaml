@@ -1,6 +1,10 @@
 name: 'End to End'
 description: 'Runs end to end tests with multiple clusters'
 inputs:
+  k8s_version:
+    description: 'Version of Kubernetes to use for clusters'
+    required: false
+    default: '1.17.17'
   using:
     description: 'Various options to pass via using="..."'
     required: false
@@ -37,5 +41,7 @@ runs:
     - name: Run E2E deployment and tests
       shell: bash
       working-directory: ${{ inputs.working-directory }}
+      env:
+        CLUSTERS_ARGS: --k8s_version="${{ inputs.k8s_version }}"
       run: |
         make e2e using="${{ inputs.using }}"

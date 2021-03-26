@@ -135,6 +135,7 @@ function deploy_kind_ovn(){
     export KIND_CLUSTER_NAME="${cluster}"
 
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
+    export REGISTRY_IP="kind-registry"
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
