@@ -1,0 +1,42 @@
+---
+name: Clean Target Verification
+
+on:
+  pull_request:
+
+jobs:
+  clean-clusters:
+    name: Cluster Clean-up
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Deploy clusters
+        env:
+          CLUSTERS_ARGS: --timeout 1m
+        run: make clusters
+
+      - name: Clean up clusters
+        run: make clean-clusters
+
+      - name: Check that clusters are gone
+        run: test "$(kind get clusters 2>&1)" = "No kind clusters found."
+
+  clean-generated:
+    name: Generated Files Clean-up
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+
+      - name: Build images
+        run: make images
+
+      - name: Clean up generated files
+        run: make clean-generated
+
+      - name: Check that image markers are gone
+        run: test package/.image.* = "package/.image.*"
