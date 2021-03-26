@@ -1,0 +1,22 @@
+# This file contains sample hook to be called from
+# deploy.sh and cleanup.sh.
+# These hook will be called if path to this file is
+# passed to the script via --hook argument.
+
+function pre_deploy() {
+	echo "pre_deploy hook is called from script with below flags set."
+	for flag in ${!FLAGS_*};do echo "${flag}: ${!flag}";done
+}
+
+function post_deploy() {
+	echo "post_deploy hook is called."
+}
+
+function pre_cleanup() {
+	echo "pre_cleanup hook is called from script with below flags set."
+	for flag in ${!FLAGS_*};do echo "${flag}: ${!flag}";done
+}
+
+function post_cleanup() {
+	echo "post_cleanup hook is called."
+}
