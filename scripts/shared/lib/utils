@@ -126,6 +126,6 @@ export KUBECONFIG=\$(find \$(git rev-parse --show-toplevel)/output/kubeconfigs/ 
 
 $ kubectl config use-context cluster1 # or cluster2, cluster3..
 
-To clean everthing up, just run: make cleanup
+To clean everthing up, just run: make clean-clusters
 EOM
 }

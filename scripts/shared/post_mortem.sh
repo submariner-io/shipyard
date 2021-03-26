@@ -18,8 +18,13 @@ function print_pods_logs() {
 
     print_section "** Pods logs for NS $namespace using selector '$selector' **"
     for pod in $(kubectl get pods --selector="$selector" -n "$namespace" -o jsonpath='{.items[*].metadata.name}'); do
-        print_section "*** $pod ***"
-        kubectl -n $namespace logs $pod
+        if [ "$(kubectl get pods -n $namespace $pod -o jsonpath='{.status.containerStatuses[*].ready}')" != true ]; then
+            print_section "*** $pod (terminated) ***"
+            kubectl -n $namespace logs -p $pod
+        else
+            print_section "*** $pod ***"
+            kubectl -n $namespace logs $pod
+        fi
     done
 }
 
