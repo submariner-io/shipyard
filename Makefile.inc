@@ -51,6 +51,14 @@ ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
+ifdef FOCUS
+override E2E_ARGS += --focus "$(FOCUS)"
+endif
+
+ifdef SKIP
+override E2E_ARGS += --skip "$(SKIP)"
+endif
+
 # Shipyard provided targets
 
 # clean cleans everything (running clusters, generated files ...)
