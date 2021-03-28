@@ -18,12 +18,20 @@ function print_pods_logs() {
 
     print_section "** Pods logs for NS $namespace using selector '$selector' **"
     for pod in $(kubectl get pods --selector="$selector" -n "$namespace" -o jsonpath='{.items[*].metadata.name}'); do
-        print_section "*** $pod ***"
-        kubectl -n $namespace logs $pod
+        if [ "$(kubectl get pods -n $namespace $pod -o jsonpath='{.status.containerStatuses[*].ready}')" != true ]; then
+            print_section "*** $pod (terminated) ***"
+            kubectl -n $namespace logs -p $pod
+        else
+            print_section "*** $pod ***"
+            kubectl -n $namespace logs $pod
+        fi
     done
 }
 
 function post_analyze() {
+    print_section "* Kubernetes client and server versions in $cluster *"
+    kubectl version || true
+
     print_section "* Overview of all resources in $cluster *"
     kubectl api-resources --verbs=list -o name | xargs -n 1 kubectl get --show-kind -o wide --ignore-not-found
 

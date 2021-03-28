@@ -31,7 +31,7 @@ jobs:
         uses: ./gh-actions/post-mortem
 
       - name: Clean up E2E deployment
-        run: make cleanup
+        run: make clean-clusters
 
   release:
     name: Release Images
