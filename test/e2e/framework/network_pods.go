@@ -16,13 +16,17 @@ limitations under the License.
 package framework
 
 import (
+	"bytes"
 	"fmt"
+	"io"
 	"strconv"
 	"strings"
 
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
+	"k8s.io/client-go/kubernetes/scheme"
+	"k8s.io/client-go/tools/remotecommand"
 
 	. "github.com/onsi/gomega"
 )
@@ -44,6 +48,7 @@ const (
 	ThroughputServerPod
 	LatencyClientPod
 	LatencyServerPod
+	CustomPod
 )
 
 type NetworkPodScheduling int
@@ -64,6 +69,9 @@ type NetworkPodConfig struct {
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
 	Networking         NetworkingType
+	ContainerName      string
+	ImageName          string
+	Command            []string
 	// TODO: namespace, once https://github.com/submariner-io/submariner/pull/141 is merged
 }
 
@@ -111,6 +119,8 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildLatencyClientPod()
 	case LatencyServerPod:
 		networkPod.buildLatencyServerPod()
+	case CustomPod:
+		networkPod.buildCustomPod()
 	}
 
 	return networkPod
@@ -176,6 +186,55 @@ func (np *NetworkPod) CheckSuccessfulFinish() {
 
 func (np *NetworkPod) CreateService() *v1.Service {
 	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
+}
+
+// RunCommand run the specified command in this NetworkPod
+func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
+	req := KubeClients[np.Config.Cluster].CoreV1().RESTClient().Post().
+		Resource("pods").Name(np.Pod.Name).Namespace(np.Pod.Namespace).
+		SubResource("exec").Param("container", np.Config.ContainerName)
+
+	req.VersionedParams(&v1.PodExecOptions{
+		Container: np.Config.ContainerName,
+		Command:   cmd,
+		Stdin:     false,
+		Stdout:    true,
+		Stderr:    true,
+		TTY:       false,
+	}, scheme.ParameterCodec)
+
+	config := RestConfigs[np.Config.Cluster]
+
+	executor, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	Expect(err).NotTo(HaveOccurred())
+
+	var stdout, stderr bytes.Buffer
+
+	err = executor.Stream(remotecommand.StreamOptions{
+		Stdin:  nil,
+		Stdout: &stdout,
+		Stderr: &stderr,
+		Tty:    false,
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	return stdout.String(), stderr.String()
+}
+
+// GetLog returns container log from this NetworkPod
+func (np *NetworkPod) GetLog() string {
+	req := KubeClients[np.Config.Cluster].CoreV1().Pods(np.Pod.Namespace).GetLogs(np.Pod.Name, &v1.PodLogOptions{})
+
+	closer, err := req.Stream()
+	Expect(err).NotTo(HaveOccurred())
+	defer closer.Close()
+
+	out := new(strings.Builder)
+
+	_, err = io.Copy(out, closer)
+	Expect(err).NotTo(HaveOccurred())
+
+	return out.String()
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
@@ -282,7 +341,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command: []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command:         []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
@@ -401,6 +460,40 @@ func (np *NetworkPod) buildLatencyServerPod() {
 	var err error
 	np.Pod, err = pc.Create(&nettestPod)
 	Expect(err).NotTo(HaveOccurred())
+	np.AwaitReady()
+}
+
+// create a test pod inside the current test namespace on the specified cluster.
+// The pod will use the image specified and run command specified.
+func (np *NetworkPod) buildCustomPod() {
+	customPod := v1.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			GenerateName: "custom",
+			Labels: map[string]string{
+				TestAppLabel: "custom",
+			},
+		},
+		Spec: v1.PodSpec{
+			Affinity:      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy: v1.RestartPolicyNever,
+			Containers: []v1.Container{
+				{
+					Name:            np.Config.ContainerName,
+					Image:           np.Config.ImageName,
+					ImagePullPolicy: v1.PullAlways,
+					Command:         np.Config.Command,
+				},
+			},
+			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
+		},
+	}
+
+	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
+
+	var err error
+	np.Pod, err = pc.Create(&customPod)
+	Expect(err).NotTo(HaveOccurred())
+
 	np.AwaitReady()
 }
 
