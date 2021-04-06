@@ -1,3 +1,4 @@
+BASE_BRANCH ?= devel
 IMAGES ?= shipyard-dapper-base nettest
 NON_DAPPER_GOALS += images
 
