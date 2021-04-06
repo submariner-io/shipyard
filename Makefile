@@ -25,6 +25,9 @@ $(TARGETS):
 
 .PHONY: $(TARGETS)
 
+# Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
+package/.image.nettest package/.image.shipyard-dapper-base: ;
+
 # Project-specific targets go here
 deploy: nettest
 
