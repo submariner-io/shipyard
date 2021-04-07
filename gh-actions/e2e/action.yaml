@@ -12,6 +12,22 @@ inputs:
     description: 'Working directory to run in'
     required: false
     default: '.'
+  target:
+    description: 'Target for make'
+    required: false
+    default: 'e2e'
+  focus:
+    description: '-ginkgo.focus argument to pass to E2E tests'
+    required: false
+    default: '\[.*\]'
+  skip:
+    description: '-ginkgo.skip argument to pass to E2E tests'
+    required: false
+    default: '\[external-dataplane\]'
+  plugin:
+    description: 'Path to the plugin that has pre/post hooks'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -49,5 +65,8 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         CLUSTERS_ARGS: --k8s_version="${{ inputs.k8s_version }}"
+        FOCUS: "${{ inputs.focus }}"
+        SKIP: "${{ inputs.skip }}"
+        PLUGIN: "${{ inputs.plugin }}"
       run: |
-        make e2e using="${{ inputs.using }}"
+        make "${{ inputs.target }}" using="${{ inputs.using }}"

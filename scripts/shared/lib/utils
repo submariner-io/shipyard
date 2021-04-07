@@ -129,3 +129,12 @@ $ kubectl config use-context cluster1 # or cluster2, cluster3..
 To clean everthing up, just run: make clean-clusters
 EOM
 }
+
+# Run shell function if it is defined
+# 1st argument is the name of the function.
+# 2nd argument and so forth get passed to the function.
+function run_if_defined() {
+    local func=$1
+    type -t "${func}" | grep -q function || return 0
+    "${func}" "${@:2}"
+}

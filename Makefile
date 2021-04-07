@@ -1,5 +1,8 @@
 IMAGES ?= shipyard-dapper-base nettest
 NON_DAPPER_GOALS += images
+FOCUS ?=
+SKIP ?=
+PLUGIN ?=
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
@@ -24,6 +27,9 @@ $(TARGETS):
 	./scripts/$@
 
 .PHONY: $(TARGETS)
+
+# Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
+package/.image.nettest package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here
 deploy: nettest
