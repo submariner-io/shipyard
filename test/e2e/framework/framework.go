@@ -56,8 +56,8 @@ const (
 
 const (
 	SubmarinerGateway = "submariner-gateway"
-	RouteAgent       = "submariner-routeagent"
-	GatewayLabel     = "submariner.io/gateway"
+	RouteAgent        = "submariner-routeagent"
+	GatewayLabel      = "submariner.io/gateway"
 )
 
 type PatchFunc func(pt types.PatchType, payload []byte) error
@@ -322,7 +322,7 @@ func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
 }
 
 func createRestConfig(kubeConfig, context string) *rest.Config {
-	restConfig, _, err := loadConfig(kubeConfig, context)
+	restConfig, err := loadConfig(kubeConfig, context)
 	if err != nil {
 		Errorf("Unable to load kubeconfig file %s for context %s, this is a non-recoverable error",
 			TestContext.KubeConfig, context)
