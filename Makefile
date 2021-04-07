@@ -1,5 +1,8 @@
 IMAGES ?= shipyard-dapper-base nettest
 NON_DAPPER_GOALS += images
+FOCUS ?=
+SKIP ?=
+PLUGIN ?=
 
 ifneq (,$(DAPPER_HOST_ARCH))
 

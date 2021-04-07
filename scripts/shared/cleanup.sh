@@ -1,9 +1,20 @@
-
 #!/usr/bin/env bash
+
+## Process command line flags ##
+
+source ${SCRIPTS_DIR}/lib/shflags
+DEFINE_string 'plugin' '' "Path to the plugin that has pre_cleanup and post_cleanup hook"
+
+FLAGS "$@" || exit $?
+eval set -- "${FLAGS_ARGV}"
+
 set -em
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
+
+# Source plugin if the path is passed via plugin argument and the file exists
+[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
 
 ### Functions ###
 
@@ -22,9 +33,13 @@ function stop_local_registry {
 ### Main ###
 
 clusters=($(kind get clusters))
+
+run_if_defined pre_cleanup
+
 run_parallel "${clusters[*]}" delete_cluster
 [[ -z "${DAPPER_OUTPUT}" ]] || rm -rf ${DAPPER_OUTPUT}/*
 
 stop_local_registry
 docker system prune --volumes -f
 
+run_if_defined post_cleanup
