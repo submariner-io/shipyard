@@ -25,4 +25,4 @@ runs:
 
     - shell: bash
       run: |
-        make upgrade-e2e
+        make upgrade-e2e CLUSTERS_ARGS=--k8s_version=1.18.15
