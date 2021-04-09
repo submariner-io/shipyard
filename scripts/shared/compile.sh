@@ -34,6 +34,6 @@ if [ "$build_debug" = "false" ]; then
     ldflags="-s -w ${ldflags}"
 fi
 
-CGO_ENABLED=0 go build -ldflags "${ldflags}" -o $binary $source_file
+CGO_ENABLED=0 go build -trimpath -ldflags "${ldflags}" -o $binary $source_file
 [[ "$build_upx" = "false" ]] || [[ "$build_debug" = "true" ]] || upx $binary
 
