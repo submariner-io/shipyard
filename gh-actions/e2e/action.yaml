@@ -24,6 +24,10 @@ inputs:
     description: '-ginkgo.skip argument to pass to E2E tests'
     required: false
     default: '\[external-dataplane\]'
+  testdir:
+    description: 'Where to look for the E2E tests'
+    required: false
+    default: 'test/e2e'
   plugin:
     description: 'Path to the plugin that has pre/post hooks'
     required: false
@@ -68,5 +72,6 @@ runs:
         FOCUS: "${{ inputs.focus }}"
         SKIP: "${{ inputs.skip }}"
         PLUGIN: "${{ inputs.plugin }}"
+        E2E_TESTDIR: "${{ inputs.testdir }}"
       run: |
         make "${{ inputs.target }}" using="${{ inputs.using }}"

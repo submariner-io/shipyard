@@ -59,6 +59,10 @@ ifdef SKIP
 override E2E_ARGS += --skip "$(SKIP)"
 endif
 
+ifdef E2E_TESTDIR
+override E2E_ARGS += --testdir "$(E2E_TESTDIR)"
+endif
+
 ifdef PLUGIN
 override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
@@ -106,7 +110,7 @@ deploy-latest:
 	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 gitlint:
-	gitlint --commits origin/devel..HEAD
+	gitlint --commits origin/$(BASE_BRANCH)..HEAD
 
 golangci-lint: vendor/modules.txt
 	golangci-lint linters
