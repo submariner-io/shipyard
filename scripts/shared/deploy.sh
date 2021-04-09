@@ -12,6 +12,7 @@ DEFINE_boolean 'service_discovery' false "Enable multicluster service discovery 
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 DEFINE_string 'image_tag' 'local' "Tag to use for the images"
 DEFINE_string 'cable_driver' 'libreswan' "Tunneling method for connections between clusters (libreswan, wireguard requires kernel module on host)"
+DEFINE_string 'plugin' '' "Path to the plugin that has pre_deploy and post_deploy hook"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
@@ -34,6 +35,9 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 source ${SCRIPTS_DIR}/lib/deploy_funcs
 
+# Source plugin if the path is passed via plugin argument and the file exists
+[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
+
 # Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
 source "${SCRIPTS_DIR}/lib/cluster_settings"
 [[ -z "${cluster_settings}" ]] || source ${cluster_settings}
@@ -49,6 +53,8 @@ bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/g
 load_deploytool $deploytool
 deploytool_prereqs
 
+run_if_defined pre_deploy
+
 run_subm_clusters prepare_cluster
 
 with_context $broker setup_broker
@@ -61,4 +67,6 @@ if [ "${#cluster_subm[@]}" -gt 1 ]; then
 else
     echo "Not executing connectivity tests - requires at least two clusters with submariner installed"
 fi
+
+run_if_defined post_deploy
 

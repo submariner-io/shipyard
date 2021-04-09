@@ -12,13 +12,15 @@ export MAKEFLAGS
 	@./.dapper.tmp -v
 	@mv .dapper.tmp .dapper
 
+SELINUX_CONTEXT := $(shell (selinuxenabled && echo -S z) 2>/dev/null)
+
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
 $(filter-out .dapper shell $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper
 	-docker network create -d bridge kind
-	+./.dapper -m bind make --debug=b $@
+	+./.dapper -m bind $(SELINUX_CONTEXT) make --debug=b $@
 
 shell: .dapper
-	./.dapper -m bind -s
+	./.dapper -m bind $(SELINUX_CONTEXT) -s
 
 .PHONY: shell
