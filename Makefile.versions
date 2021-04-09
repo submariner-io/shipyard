@@ -1,7 +1,7 @@
 # Calculate versions; these can be overridden
 CUTTING_EDGE := devel
 DEV_VERSION := dev
-override CALCULATED_VERSION := $(shell git describe --tags --dirty="-$(DEV_VERSION)" --exclude="*$(CUTTING_EDGE)*" --exclude="latest")
+override CALCULATED_VERSION := $(BASE_BRANCH)-$(shell git rev-parse --short HEAD)$(shell test -z `git diff-index HEAD` || echo "-$(DEV_VERSION)")
 VERSION ?= $(CALCULATED_VERSION)
 
 export CUTTING_EDGE DEV_VERSION VERSION
