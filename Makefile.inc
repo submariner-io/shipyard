@@ -59,6 +59,10 @@ ifdef SKIP
 override E2E_ARGS += --skip "$(SKIP)"
 endif
 
+ifdef E2E_TESTDIR
+override E2E_ARGS += --testdir "$(E2E_TESTDIR)"
+endif
+
 ifdef PLUGIN
 override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
