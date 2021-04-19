@@ -5,3 +5,9 @@ override CALCULATED_VERSION := $(BASE_BRANCH)-$(shell git rev-parse --short HEAD
 VERSION ?= $(CALCULATED_VERSION)
 
 export CUTTING_EDGE DEV_VERSION VERSION
+
+print-version:
+	@echo CALCULATED_VERSION=$(CALCULATED_VERSION)
+	@echo VERSION=$(VERSION)
+
+.PHONY: print-version
