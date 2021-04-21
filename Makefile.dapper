@@ -13,14 +13,23 @@ export MAKEFLAGS
 	@mv .dapper.tmp .dapper
 
 SELINUX_CONTEXT := $(shell (selinuxenabled && echo -S z) 2>/dev/null)
+RUN_IN_DAPPER := ./.dapper -m bind $(SELINUX_CONTEXT)
 
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
-$(filter-out .dapper shell $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper
+$(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper
 	-docker network create -d bridge kind
-	+./.dapper -m bind $(SELINUX_CONTEXT) make --debug=b $@
+	+$(RUN_IN_DAPPER) make --debug=b $@
 
 shell: .dapper
-	./.dapper -m bind $(SELINUX_CONTEXT) -s
+	$(RUN_IN_DAPPER) -s
 
-.PHONY: shell
+# Run silently to just list the targets (hence we can't use the generic dapper wrapper recipe).
+# This only lists targets accessible inside dapper (which are 99% of targets we use)
+targets:
+	@$(RUN_IN_DAPPER) make -pRrq : 2>/dev/null |\
+		grep -v -e "^[^[:alnum:]]" -e "Makefile.*" |\
+		grep -oP -e "^[-[:alnum:]]*(?=:)" |\
+		sort | uniq
+
+.PHONY: shell targets
