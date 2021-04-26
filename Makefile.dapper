@@ -28,8 +28,6 @@ shell: .dapper
 # This only lists targets accessible inside dapper (which are 99% of targets we use)
 targets:
 	@$(RUN_IN_DAPPER) make -pRrq : 2>/dev/null |\
-		grep -v -e "^[^[:alnum:]]" -e "Makefile.*" |\
-		grep -oP -e "^[-[:alnum:]]*(?=:)" |\
-		sort | uniq
+		grep -oP '^(?!Makefile.*)[-[:alnum:]]*(?=:)' | sort -u
 
 .PHONY: shell targets
