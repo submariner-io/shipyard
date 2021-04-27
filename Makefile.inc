@@ -70,18 +70,19 @@ endif
 
 # Shipyard provided targets
 
-# clean cleans everything (running clusters, generated files ...)
+# [clean] cleans everything (running clusters, generated files ...)
 clean: clean-clusters clean-generated
 
-# clean-generated removes files we generated
+# [clean-generated] removes files we generated
 clean-generated:
 	git clean -X -f
 
-# clean-clusters removes running clusters
+# [clean-clusters] removes running clusters
 clean-clusters:
 	$(SCRIPTS_DIR)/cleanup.sh $(CLEANUP_ARGS)
 cleanup: clean-clusters
 
+# [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
 
@@ -93,43 +94,52 @@ preload-images: images
 		import_image quay.io/submariner/$${image};\
 	done
 
+# [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images
 	$(SCRIPTS_DIR)/deploy.sh $(DEPLOY_ARGS)
 
+# [e2e] executes the project's end to end testing on the deployed KIND clusters
 # Will call `deploy` if it detects no submariner running on a cluster
 e2e:
 	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
 
 upgrade-e2e: deploy-latest deploy e2e
 
-# Deploys the latest release
+# [deploy-latest] deploys the latest release
 # This uses make deploy, but forcefully ignores images so that images
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
 	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
+# [gitlint] validates the commits are valid
 gitlint:
 	gitlint --commits origin/$(BASE_BRANCH)..HEAD
 
+# [golangci-lint] validates Go code in the project
 golangci-lint: vendor/modules.txt
 	golangci-lint linters
 	golangci-lint run --timeout 10m
 
 lint: gitlint golangci-lint markdownlint yamllint
 
+# [markdownlint] validates Markdown files in the project
 markdownlint:
 	markdownlint markdownlint -c .markdownlint.yml -i vendor .
 
+# [yamllint] validates YAML files in the project
 yamllint:
 	yamllint .
 
+# [release] uploads the project's images to a public repository
 release:
 	$(SCRIPTS_DIR)/release.sh $(IMAGES) $(RELEASE_ARGS)
 
+# [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
+# [unit] executes the Go unit tests of the project
 unit: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
@@ -143,7 +153,7 @@ endif
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
 
-# This removes all Submariner-provided images and all untagged images
+# [prune-images] removes all Submariner-provided images and all untagged images
 # Use this to ensure you use current images
 # Copied from Makefile to provide this everywhere (until we can share
 # non-Dapper goals across projects)
