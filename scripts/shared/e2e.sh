@@ -60,6 +60,12 @@ function generate_kubeconfigs() {
     done
 }
 
+function join_by { local IFS="$1"; shift; echo "$*"; }
+
+function generate_kubecontexts() {
+    join_by , "${context_clusters[@]}"
+}
+
 function test_with_e2e_tests {
     cd ${DAPPER_SOURCE}/${FLAGS_testdir}
 
@@ -72,7 +78,7 @@ function test_with_e2e_tests {
 }
 
 function test_with_subctl {
-    subctl verify --only connectivity $(generate_kubeconfigs)
+    subctl verify --only connectivity --kubecontexts $(generate_kubecontexts)
 }
 
 ### Main ###
