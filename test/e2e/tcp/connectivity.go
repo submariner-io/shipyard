@@ -21,6 +21,7 @@ import (
 	. "github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
+	v1 "k8s.io/api/core/v1"
 )
 
 const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
@@ -124,9 +125,10 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	})
 
 	remoteIP := listenerPod.Pod.Status.PodIP
+	var service *v1.Service
 	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalIP {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q", framework.TestContext.ClusterIDs[p.ToCluster]))
-		service := listenerPod.CreateService()
+		service = listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
 
 		if p.ToEndpointType == GlobalIP {
@@ -166,6 +168,18 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	listenerPod.AwaitFinish()
 
 	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)
+
+	// In Globalnet deployments, when backend pods finish their execution, kubeproxy-iptables driver tries
+	// to delete the iptables-chain associated with the service (even when the service is present) as there are
+	// no active backend pods. Since the iptables-chain is also referenced by Globalnet Ingress rules, the chain
+	// cannot be deleted (kubeproxy errors out and continues to retry) until Globalnet removes the reference.
+	// Globalnet removes the reference only when the service itself is deleted. Until Globalnet is enhanced [*]
+	// to remove this dependency with iptables-chain, lets delete the service after the listener Pod is terminated.
+	// [*] https://github.com/submariner-io/submariner/issues/1166
+	if p.ToEndpointType == GlobalIP {
+		p.Framework.DeleteService(p.ToCluster, service.Name)
+		p.Framework.DeleteServiceExport(p.ToCluster, service.Name)
+	}
 
 	return listenerPod, connectorPod
 }
