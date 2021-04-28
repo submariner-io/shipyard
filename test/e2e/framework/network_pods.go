@@ -173,8 +173,6 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 
 		if verbose {
 			Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
-		} else {
-			fmt.Printf("%s", removeDupDataplaneLines(np.TerminationMessage))
 		}
 	}
 }
