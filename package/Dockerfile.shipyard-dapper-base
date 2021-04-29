@@ -1,4 +1,4 @@
-FROM fedora:33
+FROM fedora:34
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
