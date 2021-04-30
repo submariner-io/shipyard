@@ -1,4 +1,4 @@
-BASE_BRANCH ?= devel
+BASE_BRANCH ?= release-0.9
 IMAGES ?= shipyard-dapper-base nettest
 NON_DAPPER_GOALS += images
 FOCUS ?=
