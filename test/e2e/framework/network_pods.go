@@ -345,7 +345,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout*1000))},
 					},
 				},
 			},
