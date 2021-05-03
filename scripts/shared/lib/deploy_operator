@@ -72,7 +72,7 @@ function subctl_install_subm() {
                 --ikeport "${CE_IPSEC_IKEPORT}" \
                 --colorcodes "${SUBM_COLORCODES}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
-                --disable-nat \
+                --natt=false \
                 --cable-driver "${cable_driver}" \
                 ${deploytool_submariner_args} \
                 ${cidr_args} \
