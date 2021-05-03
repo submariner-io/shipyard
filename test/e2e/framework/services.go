@@ -16,6 +16,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
@@ -50,14 +51,14 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 	services := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return AwaitUntil("create service", func() (interface{}, error) {
-		service, err := services.Create(&tcpService)
+		service, err := services.Create(context.TODO(), &tcpService, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
-			err = services.Delete(tcpService.Name, &metav1.DeleteOptions{})
+			err = services.Delete(context.TODO(), tcpService.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return nil, err
 			}
 
-			service, err = services.Create(&tcpService)
+			service, err = services.Create(context.TODO(), &tcpService, metav1.CreateOptions{})
 		}
 
 		return service, err
@@ -93,7 +94,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 	service := AwaitUntil("create service", func() (interface{}, error) {
-		return sc.Create(&nginxService)
+		return sc.Create(context.TODO(), &nginxService, metav1.CreateOptions{})
 
 	}, NoopCheckResult).(*corev1.Service)
 	return service
@@ -102,14 +103,14 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 	By(fmt.Sprintf("Deleting service %q on %q", serviceName, TestContext.ClusterIDs[cluster]))
 	AwaitUntil("delete service", func() (interface{}, error) {
-		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(serviceName, &metav1.DeleteOptions{})
+		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
 
 // AwaitUntilAnnotationOnService queries the service and looks for the presence of annotation.
 func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation string, svcName string, namespace string) *v1.Service {
 	return AwaitUntil("get"+annotation+" annotation for service "+svcName, func() (interface{}, error) {
-		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(svcName, metav1.GetOptions{})
+		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(context.TODO(), svcName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}

@@ -16,6 +16,7 @@ limitations under the License.
 package example
 
 import (
+	"context"
 	"fmt"
 	"time"
 
@@ -50,7 +51,7 @@ func testListingNodes() {
 func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	nc := cs.CoreV1().Nodes()
 	By("Requesting node list from API")
-	nodes, err := nc.List(metav1.ListOptions{})
+	nodes, err := nc.List(context.TODO(), metav1.ListOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	By("Checking that we had more than 0 nodes on the response")
 	Expect(len(nodes.Items)).ToNot(BeZero())
@@ -97,12 +98,12 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 	pc := cs.CoreV1().Pods(f.Namespace)
 	By("Creating a bunch of pods")
 	for i := 0; i < 3; i++ {
-		_, err := pc.Create(&testPod)
+		_, err := pc.Create(context.TODO(), &testPod, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 	}
 	By("Waiting for the example-pod(s) to be scheduled and running")
 	err := wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
-		pods, err := pc.List(metav1.ListOptions{LabelSelector: "example-pod"})
+		pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 		if err != nil {
 			if errors.IsUnexpectedServerError(err) {
 				framework.Logf("Transient failure when attempting to list pods: %v", err)
@@ -124,7 +125,7 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 	})
 	Expect(err).NotTo(HaveOccurred())
 	By("Collecting pod ClusterIPs just for fun")
-	pods, err := pc.List(metav1.ListOptions{LabelSelector: "example-pod"})
+	pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 	Expect(err).NotTo(HaveOccurred())
 	for _, pod := range pods.Items {
 		framework.Logf("Detected pod with IP: %v", pod.Status.PodIP)
