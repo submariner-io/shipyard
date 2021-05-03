@@ -16,6 +16,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"fmt"
 
 	v1 "k8s.io/api/core/v1"
@@ -28,7 +29,7 @@ import (
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
 func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, namespace string, expectedCount int) *v1.PodList {
 	return AwaitUntil("find pods for app "+appName, func() (interface{}, error) {
-		return KubeClients[cluster].CoreV1().Pods(namespace).List(metav1.ListOptions{
+		return KubeClients[cluster].CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app=" + appName,
 		})
 	}, func(result interface{}) (bool, string, error) {
@@ -56,14 +57,14 @@ func (f *Framework) AwaitSubmarinerGatewayPod(cluster ClusterIndex) *v1.Pod {
 // DeletePod deletes the pod for the given name and namespace.
 func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace string) {
 	AwaitUntil("delete pod", func() (interface{}, error) {
-		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(podName, &metav1.DeleteOptions{})
+		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(context.TODO(), podName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
 
 // AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
 func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
 	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (interface{}, error) {
-		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(podName, metav1.GetOptions{})
+		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -88,7 +89,7 @@ func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName stri
 
 	AwaitUntil(fmt.Sprintf("find route agent pod on node %q", nodeName), func() (interface {
 	}, error) {
-		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(metav1.ListOptions{
+		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app=" + RouteAgent,
 		})
 	}, func(result interface{}) (bool, string, error) {

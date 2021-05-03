@@ -16,6 +16,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"fmt"
 
 	. "github.com/onsi/gomega"
@@ -26,7 +27,7 @@ import (
 
 func (f *Framework) FindDeployment(cluster ClusterIndex, appName string, namespace string) *appsv1.Deployment {
 	deployments := AwaitUntil("list deployments", func() (interface{}, error) {
-		return KubeClients[cluster].AppsV1().Deployments(namespace).List(metav1.ListOptions{
+		return KubeClients[cluster].AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app=" + appName,
 		})
 	}, NoopCheckResult).(*appsv1.DeploymentList)
@@ -126,7 +127,7 @@ func create(f *Framework, cluster ClusterIndex, deployment *appsv1.Deployment) *
 	appName := deployment.Spec.Template.ObjectMeta.Labels["app"]
 
 	_ = AwaitUntil("create deployment", func() (interface{}, error) {
-		return pc.Create(deployment)
+		return pc.Create(context.TODO(), deployment, metav1.CreateOptions{})
 	}, NoopCheckResult).(*appsv1.Deployment)
 
 	return f.AwaitPodsByAppLabel(cluster, appName, f.Namespace, 1)

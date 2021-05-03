@@ -16,6 +16,8 @@ limitations under the License.
 package framework
 
 import (
+	"context"
+
 	"k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -40,7 +42,7 @@ func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 	svcExs := DynClients[cluster].Resource(gvr).Namespace(f.Namespace)
 
 	_ = AwaitUntil("create service export", func() (interface{}, error) {
-		result, err := svcExs.Create(resourceServiceExport, metav1.CreateOptions{})
+		result, err := svcExs.Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
 			err = nil
 		}
@@ -50,6 +52,6 @@ func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 
 func (f *Framework) DeleteServiceExport(cluster ClusterIndex, name string) {
 	AwaitUntil("delete service export", func() (interface{}, error) {
-		return nil, DynClients[cluster].Resource(gvr).Namespace(f.Namespace).Delete(name, &metav1.DeleteOptions{})
+		return nil, DynClients[cluster].Resource(gvr).Namespace(f.Namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
