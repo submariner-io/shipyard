@@ -19,7 +19,7 @@ require (
 	k8s.io/apimachinery v0.18.4
 	k8s.io/client-go v0.18.4
 	k8s.io/klog v1.0.0
-	sigs.k8s.io/mcs-api v0.0.0-20200908023942-d26176718973
+	sigs.k8s.io/mcs-api v0.1.0
 )
 
 // Pinned to kubernetes-1.17.0
