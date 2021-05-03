@@ -1,0 +1,10 @@
+FROM quay.io/submariner/shipyard-linting:devel
+
+ENV DAPPER_ENV="GITHUB_SHA MAKEFLAGS" \
+    DAPPER_SOURCE=/opt/linting
+ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output
+
+WORKDIR ${DAPPER_SOURCE}
+
+ENTRYPOINT ["/opt/shipyard/scripts/entry"]
+CMD ["sh"]
