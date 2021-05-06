@@ -17,6 +17,7 @@ package framework
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"strconv"
@@ -130,7 +131,7 @@ func (np *NetworkPod) AwaitReady() {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	np.Pod = AwaitUntil("await pod ready", func() (interface{}, error) {
-		return pods.Get(np.Pod.Name, metav1.GetOptions{})
+		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
 	}, func(result interface{}) (bool, string, error) {
 		pod := result.(*v1.Pod)
 		if pod.Status.Phase != v1.PodRunning {
@@ -152,7 +153,7 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
-		return pods.Get(np.Pod.Name, metav1.GetOptions{})
+		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
 	}, func(result interface{}) (bool, string, error) {
 		np.Pod = result.(*v1.Pod)
 
@@ -173,8 +174,6 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 
 		if verbose {
 			Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
-		} else {
-			fmt.Printf("%s", removeDupDataplaneLines(np.TerminationMessage))
 		}
 	}
 }
@@ -225,7 +224,7 @@ func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 func (np *NetworkPod) GetLog() string {
 	req := KubeClients[np.Config.Cluster].CoreV1().Pods(np.Pod.Namespace).GetLogs(np.Pod.Name, &v1.PodLogOptions{})
 
-	closer, err := req.Stream()
+	closer, err := req.Stream(context.TODO())
 	Expect(err).NotTo(HaveOccurred())
 	defer closer.Close()
 
@@ -272,7 +271,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&tcpCheckListenerPod)
+	np.Pod, err = pc.Create(context.TODO(), &tcpCheckListenerPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
 }
@@ -317,7 +316,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&tcpCheckConnectorPod)
+	np.Pod, err = pc.Create(context.TODO(), &tcpCheckConnectorPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -347,7 +346,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
+						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout*1000))},
 					},
 				},
 			},
@@ -356,7 +355,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&nettestPod)
+	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
 }
@@ -390,7 +389,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&nettestPod)
+	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
 }
@@ -427,7 +426,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&nettestPod)
+	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
 }
@@ -458,7 +457,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(&nettestPod)
+	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
 }
@@ -491,7 +490,7 @@ func (np *NetworkPod) buildCustomPod() {
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	var err error
-	np.Pod, err = pc.Create(&customPod)
+	np.Pod, err = pc.Create(context.TODO(), &customPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
 	np.AwaitReady()

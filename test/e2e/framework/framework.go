@@ -16,6 +16,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
@@ -226,7 +227,7 @@ func DetectGlobalnet() {
 	}).Namespace(TestContext.SubmarinerNamespace)
 
 	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
-		clusters, err := clusters.List(metav1.ListOptions{})
+		clusters, err := clusters.List(context.TODO(), metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -265,7 +266,7 @@ func fetchClusterIDs() {
 
 		name := "submariner-gateway"
 		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
-			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(name, metav1.GetOptions{})
+			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
@@ -341,9 +342,7 @@ func createRestConfig(kubeConfig, context string) *rest.Config {
 }
 
 func deleteNamespace(client kubeclientset.Interface, namespaceName string) error {
-	return client.CoreV1().Namespaces().Delete(
-		namespaceName,
-		&metav1.DeleteOptions{})
+	return client.CoreV1().Namespaces().Delete(context.TODO(), namespaceName, metav1.DeleteOptions{})
 }
 
 // AfterEach deletes the namespace, after reading its events.
@@ -423,7 +422,7 @@ func generateNamespace(client kubeclientset.Interface, baseName string, labels m
 		},
 	}
 
-	namespace, err := client.CoreV1().Namespaces().Create(namespaceObj)
+	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error generating namespace %v", namespaceObj)
 	return namespace
 }
@@ -441,7 +440,7 @@ func createNamespace(client kubeclientset.Interface, name string, labels map[str
 		},
 	}
 
-	namespace, err := client.CoreV1().Namespaces().Create(namespaceObj)
+	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error creating namespace %v", namespaceObj)
 	return namespace
 }

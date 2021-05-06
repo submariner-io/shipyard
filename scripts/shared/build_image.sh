@@ -45,7 +45,7 @@ if [[ "$cache" = true ]]; then
 fi
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
-buildargs_flag='--build-arg BUILDKIT_INLINE_CACHE=1'
+buildargs_flag="--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg BASE_BRANCH=${BASE_BRANCH}"
 [[ -z "${buildargs}" ]] || buildargs_flag="${buildargs_flag} --build-arg ${buildargs}"
 if docker buildx version > /dev/null 2>&1; then
     docker buildx use buildx_builder || docker buildx create --name buildx_builder --use

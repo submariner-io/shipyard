@@ -7,7 +7,7 @@ runs:
       run: |
         echo "::group::Reclaiming free space"
         # Clean up tools we don't need for our CI to free up more space on the hosted runner
-        rm -rf /opt/ghc /usr/share/dotnet /usr/share/swift
+        rm -rf /usr/share/dotnet
         df -h
         echo "::endgroup::"
 
