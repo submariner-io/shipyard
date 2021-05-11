@@ -24,5 +24,6 @@ package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_imag
 	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< $(IMAGES_ARGS)
 	touch $@
 
+# [images] builds all the container images for the project
 # Default target to build images based on IMAGES variable
 images: $(foreach image,$(IMAGES),package/.image.$(image))

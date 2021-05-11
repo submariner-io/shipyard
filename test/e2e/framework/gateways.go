@@ -16,6 +16,7 @@ limitations under the License.
 package framework
 
 import (
+	"context"
 	"fmt"
 
 	"github.com/onsi/ginkgo"
@@ -37,7 +38,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 	gwClient := gatewayClient(cluster)
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
 		func() (interface{}, error) {
-			resGw, err := gwClient.Get(name, metav1.GetOptions{})
+			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
@@ -85,7 +86,7 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 	gwClient := gatewayClient(cluster)
 	AwaitUntil(fmt.Sprintf("await Gateway on %q removed", name),
 		func() (interface{}, error) {
-			_, err := gwClient.Get(name, metav1.GetOptions{})
+			_, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return true, nil
 			}
@@ -101,7 +102,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 	gwClient := gatewayClient(cluster)
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
 		func() (interface{}, error) {
-			resGw, err := gwClient.Get(name, metav1.GetOptions{})
+			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
@@ -142,7 +143,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 func (f *Framework) GetGatewaysWithHAStatus(
 	cluster ClusterIndex, status string) []unstructured.Unstructured {
 	gwClient := gatewayClient(cluster)
-	gwList, err := gwClient.List(metav1.ListOptions{})
+	gwList, err := gwClient.List(context.TODO(), metav1.ListOptions{})
 
 	filteredGateways := []unstructured.Unstructured{}
 
@@ -165,7 +166,7 @@ func (f *Framework) GetGatewaysWithHAStatus(
 
 func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	AwaitUntil("delete gateway", func() (interface{}, error) {
-		err := gatewayClient(cluster).Delete(name, &metav1.DeleteOptions{})
+		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}

@@ -27,7 +27,6 @@ shell: .dapper
 # Run silently to just list the targets (hence we can't use the generic dapper wrapper recipe).
 # This only lists targets accessible inside dapper (which are 99% of targets we use)
 targets:
-	@$(RUN_IN_DAPPER) make -pRrq : 2>/dev/null |\
-		grep -oP '^(?!Makefile.*)[-[:alnum:]]*(?=:)' | sort -u
+	@$(RUN_IN_DAPPER) -q eval "\$${SCRIPTS_DIR}/targets.sh"
 
 .PHONY: shell targets
