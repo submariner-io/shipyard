@@ -10,6 +10,6 @@ make_targets=($(make -pRrq : 2>/dev/null |\
     grep -oP '^(?!Makefile.*)[-[:alnum:]]*(?=:)' | sort -u))
 
 for target in ${make_targets[*]}; do
-    print_indent "${target}" \
-    "$(grep -hoP -m1 "(?<=\[${target}\] ).*" Makefile* ${SHIPYARD_DIR}/Makefile*)"
+    description=$(grep -hoP -m1 "(?<=\[${target}\] ).*" Makefile* ${SHIPYARD_DIR}/Makefile* | head -1)
+    print_indent "${target}" "${description}"
 done
