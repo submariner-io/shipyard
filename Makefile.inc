@@ -22,6 +22,8 @@ $(error strongSwan is no longer supported)
 else ifneq (,$(filter wireguard,$(_using)))
 # Wireguard requires kernel module install on the host
 override DEPLOY_ARGS += --cable_driver wireguard
+else ifneq (,$(filter vxlan,$(_using)))
+override DEPLOY_ARGS += --cable_driver vxlan
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
