@@ -47,7 +47,12 @@ jobs:
       matrix:
         globalnet: ['', 'globalnet']
         deploytool: ['operator', 'helm']
-        lighthouse: ['', 'lighthouse']
+        lighthouse: ['']
+        include:
+          - deploytool: operator
+            lighthouse: lighthouse
+          - deploytool: helm
+            lighthouse: lighthouse
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
