@@ -1,5 +1,7 @@
 /*
-© 2020 Red Hat, Inc.
+SPDX-License-Identifier: Apache-2.0
+
+Copyright Contributors to the Submariner project.
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
@@ -465,6 +467,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will use the image specified and run command specified.
 func (np *NetworkPod) buildCustomPod() {
+	terminationGracePeriodSeconds := int64(5)
 	customPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "custom",
@@ -475,6 +478,8 @@ func (np *NetworkPod) buildCustomPod() {
 		Spec: v1.PodSpec{
 			Affinity:      nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
+			HostNetwork:   bool(np.Config.Networking),
+			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			Containers: []v1.Container{
 				{
 					Name:            np.Config.ContainerName,
