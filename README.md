@@ -1,10 +1,13 @@
 # Shipyard
 
+<!-- markdownlint-disable line-length -->
+[![CII Best Practices](https://bestpractices.coreinfrastructure.org/projects/4865/badge)](https://bestpractices.coreinfrastructure.org/projects/4865)
+[![Release Images](https://github.com/submariner-io/shipyard/workflows/Release%20Images/badge.svg)](https://github.com/submariner-io/shipyard/actions?query=workflow%3A%22Release+Images%22)
+[![Periodic](https://github.com/submariner-io/shipyard/workflows/Periodic/badge.svg)](https://github.com/submariner-io/shipyard/actions?query=workflow%3APeriodic)
+<!-- markdownlint-enable line-length -->
+
 The Shipyard project provides tooling for creating K8s clusters with [kind](K8s in Docker) and provides a Go framework for creating E2E
 tests.
-
-[![Build Status](https://travis-ci.com/submariner-io/shipyard.svg?branch=devel)](https://travis-ci.com/submariner-io/shipyard)
-[![Go Report Card](https://goreportcard.com/badge/github.com/submariner-io/shipyard)](https://goreportcard.com/report/github.com/submariner-io/shipyard)
 
 ## Prerequisites
 
