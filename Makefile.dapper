@@ -3,11 +3,7 @@
 # other projects (and needs to be copied, it can't be shared
 # via the Dapper image since it's needed to retrieve the image)
 
-LINTING_GOALS := gitlint shellcheck yamllint markdownlint
-NON_DAPPER_GOALS += .dapper shell targets $(LINTING_GOALS)
 export MAKEFLAGS
-
-.PHONY: $(LINTING_GOALS)
 
 .dapper:
 	@echo Downloading dapper
@@ -25,16 +21,12 @@ $(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper
 	-docker network create -d bridge kind
 	+$(RUN_IN_DAPPER) make --debug=b $@
 
-# Run silently as the commands are pretty straightforward and `make` hasn't a lot to do
-$(LINTING_GOALS): .dapper
-	@$(RUN_IN_DAPPER) -f Dockerfile.linting -q make $@
-
 shell: .dapper
 	$(RUN_IN_DAPPER) -s
 
 # Run silently to just list the targets (hence we can't use the generic dapper wrapper recipe).
 # This only lists targets accessible inside dapper (which are 99% of targets we use)
 targets:
-	@$(RUN_IN_DAPPER) -f Dockerfile.linting -q eval "\$${SCRIPTS_DIR}/targets.sh"
+	@$(RUN_IN_DAPPER) -q eval "\$${SCRIPTS_DIR}/targets.sh"
 
 .PHONY: shell targets
