@@ -1,5 +1,5 @@
 BASE_BRANCH ?= devel
-IMAGES ?= shipyard-dapper-base nettest
+IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 NON_DAPPER_GOALS += images
 FOCUS ?=
 SKIP ?=
@@ -53,7 +53,7 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clusters deploy deploy-latest e2e gitlint golangci-lint markdownlint nettest post-mortem print-version unit upgrade-e2e: images
+clusters deploy deploy-latest e2e golangci-lint nettest post-mortem print-version unit upgrade-e2e: images
 
 images: export SCRIPTS_DIR=./scripts/shared
 
@@ -75,5 +75,9 @@ NON_DAPPER_GOALS += prune-images
 .PHONY: prune-images
 
 include Makefile.dapper
+
+# Make sure linting goals have up-to-date linting image
+$(LINTING_GOALS): export SCRIPTS_DIR=./scripts/shared
+$(LINTING_GOALS): package/.image.shipyard-linting
 
 endif
