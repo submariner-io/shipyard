@@ -150,6 +150,7 @@ ifeq (go.mod,$(wildcard go.mod))
 vendor/modules.txt: go.mod
 	go mod download
 	go mod vendor
+	go mod tidy
 endif
 
 CODEOWNERS: CODEOWNERS.in
