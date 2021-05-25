@@ -4,9 +4,10 @@
 # See the release notes of the kind version in use
 declare -A kind_k8s_versions
 kind_k8s_versions[1.17]=1.17.17
-kind_k8s_versions[1.18]=1.18.15
-kind_k8s_versions[1.19]=1.19.7
-kind_k8s_versions[1.20]=1.20.2
+kind_k8s_versions[1.18]=1.18.19
+kind_k8s_versions[1.19]=1.19.11
+kind_k8s_versions[1.20]=1.20.7
+kind_k8s_versions[1.21]=1.21.1
 
 ## Process command line flags ##
 
