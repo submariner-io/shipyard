@@ -48,20 +48,28 @@ jobs:
         globalnet: ['', 'globalnet']
         deploytool: ['operator', 'helm']
         lighthouse: ['']
+        ovn: ['']
         include:
+          - ovn: ovn
           - deploytool: operator
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
     steps:
+      - name: Reclaim space on GHA host (if the job needs it)
+        if: ${{ matrix.ovn != '' }}
+        run: rm -rf /usr/share/dotnet
+
       - name: Check out the repository
         uses: actions/checkout@v2
+        with:
+          submodules: true
 
       - name: Deploy clusters and Submariner
         env:
           CLUSTERS_ARGS: --timeout 1m
           DEPLOY_ARGS: --timeout 2m
-        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }}"
+        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }} ${{ matrix.ovn }}"
 
       - name: Post mortem
         if: failure()
@@ -74,17 +82,12 @@ jobs:
     name: E2E
     timeout-minutes: 30
     runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        ovn: ['', 'ovn']
     steps:
       - name: Check out the repository
         uses: actions/checkout@v2
-        with:
-          submodules: true
 
       - name: Run E2E deployment and tests
-        run: make e2e using="${{ matrix.ovn }}"
+        run: make e2e
 
       - name: Post mortem
         if: failure()
