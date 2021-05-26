@@ -27,4 +27,4 @@ runs:
         QUAY_USERNAME: ${{ inputs.username }}
         QUAY_PASSWORD: ${{ inputs.password }}
       # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
-      run: make release RELEASE_ARGS="--tag '${GITHUB_REF##*/}'"
+      run: make release-images RELEASE_ARGS="--tag '${GITHUB_REF##*/}'"

@@ -133,10 +133,6 @@ markdownlint:
 yamllint:
 	yamllint .
 
-# [release] uploads the project's images to a public repository
-release:
-	$(SCRIPTS_DIR)/release.sh $(IMAGES) $(RELEASE_ARGS)
-
 # [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
