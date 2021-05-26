@@ -1,9 +1,17 @@
 #!/usr/bin/env bash
 
+## Kubernetes version mapping, as supported by kind ##
+# See the release notes of the kind version in use
+declare -A kind_k8s_versions
+kind_k8s_versions[1.17]=1.17.17
+kind_k8s_versions[1.18]=1.18.15
+kind_k8s_versions[1.19]=1.19.7
+kind_k8s_versions[1.20]=1.20.2
+
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-DEFINE_string 'k8s_version' '1.20.2' 'Version of K8s to use'
+DEFINE_string 'k8s_version' '1.20' 'Version of K8s to use'
 DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
@@ -16,6 +24,7 @@ eval set -- "${FLAGS_ARGV}"
 
 k8s_version="${FLAGS_k8s_version}"
 olm_version="${FLAGS_olm_version}"
+[[ -n "${kind_k8s_versions[$k8s_version]}" ]] && k8s_version="${kind_k8s_versions[$k8s_version]}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
