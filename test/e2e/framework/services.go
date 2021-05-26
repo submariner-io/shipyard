@@ -41,7 +41,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
 				Port:       int32(port),
-                                Name:       "tcp",
+				Name:       "tcp",
 				TargetPort: intstr.FromInt(port),
 				Protocol:   corev1.ProtocolTCP,
 			}},
@@ -83,23 +83,22 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 			Ports: []corev1.ServicePort{
 				{
 					Port:     tcpPort,
-                                        Name:     "http",
+					Name:     "http",
 					Protocol: corev1.ProtocolTCP,
 					TargetPort: intstr.IntOrString{
 						Type:   intstr.Int,
 						IntVal: 8080,
 					},
 				},
-                                {
-                                        Port:     metricsPort,
-                                        Name:     "metrics",
-                                        Protocol: corev1.ProtocolTCP,
-                                        TargetPort: intstr.IntOrString{
-                                                Type:   intstr.Int,
-                                                IntVal: 8082,
-                                        },
-                                },
-
+				{
+					Port:     metricsPort,
+					Name:     "metrics",
+					Protocol: corev1.ProtocolTCP,
+					TargetPort: intstr.IntOrString{
+						Type:   intstr.Int,
+						IntVal: 8082,
+					},
+				},
 			},
 			Selector: map[string]string{
 				"app": "nginx-demo",
