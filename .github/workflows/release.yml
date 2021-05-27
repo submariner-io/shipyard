@@ -8,35 +8,8 @@ on:
       - release-*
 
 jobs:
-  e2e:
-    name: E2E
-    if: github.repository_owner == 'submariner-io'
-    timeout-minutes: 30
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@v2
-
-      - name: Reclaim free space
-        run: |
-          sudo swapoff -a
-          sudo rm -f /swapfile
-
-      - name: Run E2E deployment and tests
-        run: make e2e
-        env:
-          IMAGES_ARGS: --nocache
-
-      - name: Post mortem
-        if: failure()
-        uses: ./gh-actions/post-mortem
-
-      - name: Clean up E2E deployment
-        run: make clean-clusters
-
   release:
     name: Release Images
-    needs: e2e
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
