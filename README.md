@@ -22,14 +22,16 @@ To use Make, you'll need some commands to enable Dapper and also include the tar
 
 ### Dockerfile.dapper
 
+Shipyard provides this file automatically for you. You can also define it explicitly to be more tailored to the specific project.
+
 The Dockerfile should build upon `quay.io/submariner/shipyard-dapper-base`.
-For example:
+
+For example, this very basic file allows E2E testing:
 
 ```Dockerfile
-FROM quay.io/submariner/shipyard-dapper-base
+FROM quay.io/submariner/shipyard-dapper-base:devel
 
-ENV DAPPER_ENV="REPO TAG QUAY_USERNAME QUAY_PASSWORD TRAVIS_COMMIT" \
-    DAPPER_SOURCE=/go/src/github.com/submariner-io/submariner DAPPER_DOCKER_SOCKET=true
+ENV DAPPER_SOURCE=/go/src/github.com/submariner-io/submariner DAPPER_DOCKER_SOCKET=true
 ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output
 
 WORKDIR ${DAPPER_SOURCE}
@@ -43,12 +45,17 @@ You can also refer to the project's own [Dockerfile.dapper](Dockerfile.dapper) a
 ### Makefile
 
 The Makefile should include targets to run everything in Dapper.
-They're defined in [Makefile.dapper](Makefile.dapper) and can be copied as-is and included.
+They're defined in [Makefile.dapper](Makefile.dapper) and can be copied as-is and included, but it's best to download and import it.
 To use Shipyard's target, simply include the [Makefile.inc](Makefile.inc) file in your own Makefile.
 
 The simplest Makefile would look like this:
 
 ```Makefile
+BASE_BRANCH=devel
+PROJECT=shipyard
+export BASE_BRANCH
+export PROJECT
+
 ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
@@ -58,6 +65,10 @@ include $(SHIPYARD_DIR)/Makefile.inc
 else
 
 # Not running in Dapper
+
+Makefile.dapper:
+        @echo Downloading $@
+        @curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
 
 include Makefile.dapper
 

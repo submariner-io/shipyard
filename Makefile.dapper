@@ -3,10 +3,13 @@
 # other projects (and needs to be copied, it can't be shared
 # via the Dapper image since it's needed to retrieve the image)
 
+PROJECT ?= $(notdir $(CURDIR))
+BASE_DAPPER := Dockerfile.dapper
 LINTING_DAPPER := Dockerfile.linting
 LINTING_GOALS := gitlint shellcheck yamllint markdownlint
 NON_DAPPER_GOALS += .dapper shell targets $(LINTING_GOALS)
 export MAKEFLAGS
+export PROJECT
 
 .dapper:
 	@echo Downloading dapper
@@ -20,12 +23,12 @@ RUN_IN_DAPPER := ./.dapper -m bind $(SELINUX_CONTEXT)
 
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
-$(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper
+$(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
 	-docker network create -d bridge kind
 	+$(RUN_IN_DAPPER) make --debug=b $@
 
-# The original dockerfile will live in Shipyard and be downloaded by consuming projects.
-$(LINTING_DAPPER):
+# The original dockerfiles will live in Shipyard and be downloaded by consuming projects.
+$(BASE_DAPPER) $(LINTING_DAPPER):
 	@echo Downloading $@
 	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
 
@@ -33,7 +36,7 @@ $(LINTING_DAPPER):
 $(LINTING_GOALS): .dapper $(LINTING_DAPPER)
 	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -q make $@
 
-shell: .dapper
+shell: .dapper $(BASE_DAPPER)
 	$(RUN_IN_DAPPER) -s
 
 # Run silently to just list the targets (hence we can't use the generic dapper wrapper recipe).
