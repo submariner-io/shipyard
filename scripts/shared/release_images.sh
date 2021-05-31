@@ -31,8 +31,6 @@ function release_image() {
     done
 }
 
-commit_hash=${GITHUB_SHA:-${TRAVIS_COMMIT}}
-
 echo "$QUAY_PASSWORD" | docker login quay.io -u "$QUAY_USERNAME" --password-stdin
 for image in "$@"; do
     release_image ${repo}/${image}

@@ -5,6 +5,8 @@ FOCUS ?=
 SKIP ?=
 PLUGIN ?=
 
+export BASE_BRANCH
+
 ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
@@ -78,5 +80,11 @@ include Makefile.dapper
 
 # Make sure linting goals have up-to-date linting image
 $(LINTING_GOALS): package/.image.shipyard-linting
+
+script-test: .dapper images
+	-docker network create -d bridge kind
+	$(RUN_IN_DAPPER) $(SCRIPT_TEST_ARGS)
+
+.PHONY: script-test
 
 endif
