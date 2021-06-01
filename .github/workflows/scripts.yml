@@ -33,10 +33,7 @@ jobs:
         uses: actions/checkout@v2
 
       - name: Test the compile.sh script
-        run: |
-          make images .dapper
-          docker network create -d bridge kind || true
-          ./.dapper -m bind test/scripts/compile/test.sh
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
   deploy:
     name: Deploy
@@ -100,8 +97,8 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@v2
 
+      - name: Deploy some clusters
+        run: make clusters
+
       - name: Test the post_mortem.sh script
-        run: |
-          make clusters
-          docker network create -d bridge kind || true
-          ./.dapper -m bind test/scripts/post_mortem/test.sh
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/post_mortem/test.sh"
