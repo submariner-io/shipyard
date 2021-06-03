@@ -53,6 +53,9 @@ jobs:
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
+      - name: Copy Shipyard resources
+        run: cp -n Dockerfile.* Makefile.dapper ${{ matrix.project }}/
+
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
@@ -89,12 +92,16 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: submariner-io/${{ matrix.project }}
+          path: ${{ matrix.project }}
+
+      - name: Copy Shipyard resources
+        run: cp -n Dockerfile.* Makefile.dapper ${{ matrix.project }}/
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
-        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
+        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
       - name: Run all linters
-        run: make lint
+        run: make -C ${{ matrix.project }} lint
 
   unit-consuming:
     name: Unit Tests
@@ -118,9 +125,13 @@ jobs:
         uses: actions/checkout@v2
         with:
           repository: submariner-io/${{ matrix.project }}
+          path: ${{ matrix.project }}
+
+      - name: Copy Shipyard resources
+        run: cp -n Dockerfile.* Makefile.dapper ${{ matrix.project }}/
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
-        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
+        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
       - name: Run all unit tests
-        run: make unit
+        run: make -C ${{ matrix.project }} unit
