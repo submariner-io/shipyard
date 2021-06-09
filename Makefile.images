@@ -21,8 +21,7 @@ docker_deps = $(shell files=($(1) $$(awk '/COPY/ { if (substr($$2, 1, 7) != "--f
 # An empty file is used for make to figure out if dependencies changed or not
 .SECONDEXPANSION:
 package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuild,$$*)
-	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< $(IMAGES_ARGS)
-	touch $@
+	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< -h $@ $(IMAGES_ARGS)
 
 # [images] builds all the container images for the project
 # Default target to build images based on IMAGES variable
