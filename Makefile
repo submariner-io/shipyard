@@ -1,6 +1,7 @@
 BASE_BRANCH ?= devel
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 NON_DAPPER_GOALS += images
+SHELLCHECK_ARGS := scripts/shared/lib/*
 FOCUS ?=
 SKIP ?=
 PLUGIN ?=
@@ -40,10 +41,6 @@ deploy: nettest
 nettest: package/.image.nettest
 
 e2e: vendor/modules.txt clusters
-
-shellcheck:
-# SC2154 is excluded to avoid false positives based on our use of global variables
-	shellcheck -e SC2154 scripts/shared/lib/*
 
 else
 

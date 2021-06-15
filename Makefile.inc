@@ -137,6 +137,10 @@ yamllint:
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
+# [shellcheck] validates your shell files
+shellcheck:
+	shellcheck $(SHELLCHECK_ARGS)
+
 # [unit] executes the Go unit tests of the project
 unit: vendor/modules.txt
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
