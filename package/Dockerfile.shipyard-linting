@@ -17,11 +17,12 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
 # nodejs           | Used by markdownlint
 # npm              | Installing markdownlint (Removed afterwards)
 # py3-pip          | Installing gitlint (Removed afterwards)
+# py3-six          | Required by gitlint
 # shellcheck       | Shell script linting
 # upx              | Compressing executables to get a smaller image
 # yamllint         | YAML linting
 
-RUN apk add --no-cache bash findutils git grep make nodejs shellcheck upx yamllint && \
+RUN apk add --no-cache bash findutils git grep make nodejs py3-six shellcheck upx yamllint && \
     apk add --no-cache --virtual installers npm py3-pip && \
     npm install -g markdownlint-cli && \
     pip install gitlint && \
