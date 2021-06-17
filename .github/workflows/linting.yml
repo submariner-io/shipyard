@@ -23,6 +23,17 @@ jobs:
           flags: 'i'
           error: 'Commits addressing code review feedback should typically be squashed into the commits under review'
 
+  commit-size:
+    name: Commit Size
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@v2
+      - name: Make sure each commit in the PR is within reviewable size
+        uses: ./gh-actions/commit-size
+        with:
+          size: 200
+
   gitlint:
     name: Commit Message(s)
     runs-on: ubuntu-latest
