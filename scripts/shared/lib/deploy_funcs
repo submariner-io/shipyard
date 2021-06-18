@@ -23,8 +23,11 @@ function get_globalip() {
     local gip
     gip=$(kubectl get svc "$svc_name" -o jsonpath='{.metadata.annotations.submariner\.io/globalIp}')
     if [[ -z "${gip}" ]]; then
-        sleep 1
-        return 1
+        gip=$(kubectl get giip "$svc_name" -o jsonpath='{.status.allocatedIP}')
+        if [[ -z "${gip}" ]]; then
+            sleep 1
+            return 1
+        fi
     fi
 
     echo "$gip"
