@@ -16,14 +16,6 @@ inputs:
     description: 'Target for make'
     required: false
     default: 'e2e'
-  focus:
-    description: '-ginkgo.focus argument to pass to E2E tests'
-    required: false
-    default: '\[.*\]'
-  skip:
-    description: '-ginkgo.skip argument to pass to E2E tests'
-    required: false
-    default: '\[external-dataplane\]'
   testdir:
     description: 'Where to look for the E2E tests'
     required: false
@@ -69,8 +61,6 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       env:
         CLUSTERS_ARGS: --k8s_version="${{ inputs.k8s_version }}"
-        FOCUS: "${{ inputs.focus }}"
-        SKIP: "${{ inputs.skip }}"
         PLUGIN: "${{ inputs.plugin }}"
         E2E_TESTDIR: "${{ inputs.testdir }}"
       run: |

@@ -53,14 +53,6 @@ ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
-ifdef FOCUS
-override E2E_ARGS += --focus "$(FOCUS)"
-endif
-
-ifdef SKIP
-override E2E_ARGS += --skip "$(SKIP)"
-endif
-
 ifdef E2E_TESTDIR
 override E2E_ARGS += --testdir "$(E2E_TESTDIR)"
 endif
