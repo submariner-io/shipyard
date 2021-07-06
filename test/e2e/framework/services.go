@@ -27,6 +27,7 @@ import (
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
+	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
 const (
@@ -51,21 +52,9 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 		},
 	}
 
-	services := KubeClients[cluster].CoreV1().Services(f.Namespace)
+	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
-	return AwaitUntil("create service", func() (interface{}, error) {
-		service, err := services.Create(context.TODO(), &tcpService, metav1.CreateOptions{})
-		if errors.IsAlreadyExists(err) {
-			err = services.Delete(context.TODO(), tcpService.Name, metav1.DeleteOptions{})
-			if err != nil {
-				return nil, err
-			}
-
-			service, err = services.Create(context.TODO(), &tcpService, metav1.CreateOptions{})
-		}
-
-		return service, err
-	}, NoopCheckResult).(*corev1.Service)
+	return createService(sc, &tcpService)
 }
 
 func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
@@ -107,11 +96,44 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 	}
 
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
-	service := AwaitUntil("create service", func() (interface{}, error) {
-		return sc.Create(context.TODO(), &nginxService, metav1.CreateOptions{})
 
+	return createService(sc, &nginxService)
+}
+
+func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int) *corev1.Service {
+	serviceSpec := corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: svcName,
+		},
+		Spec: corev1.ServiceSpec{
+			Ports: []corev1.ServicePort{{
+				Port:       int32(port),
+				Name:       portName,
+				TargetPort: intstr.FromInt(port),
+				Protocol:   corev1.ProtocolTCP,
+			}},
+		},
+	}
+
+	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
+
+	return createService(sc, &serviceSpec)
+}
+
+func createService(sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
+	return AwaitUntil("create service", func() (interface{}, error) {
+		service, err := sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
+		if errors.IsAlreadyExists(err) {
+			err = sc.Delete(context.TODO(), serviceSpec.Name, metav1.DeleteOptions{})
+			if err != nil {
+				return nil, err
+			}
+
+			service, err = sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
+		}
+
+		return service, err
 	}, NoopCheckResult).(*corev1.Service)
-	return service
 }
 
 func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
