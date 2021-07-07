@@ -2,7 +2,6 @@ BASE_BRANCH ?= devel
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 NON_DAPPER_GOALS += images
 SHELLCHECK_ARGS := scripts/shared/lib/*
-PLUGIN ?=
 
 export BASE_BRANCH
 

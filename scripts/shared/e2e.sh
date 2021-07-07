@@ -4,7 +4,7 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
-DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
+DEFINE_string 'testdir' 'test/e2e' "Directory containing the tests to be run"
 DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
 DEFINE_boolean 'globalnet' false "Indicates if the globalnet feature is enabled"
 FLAGS_HELP="USAGE: $0 [--cluster_settings /path/to/settings] [--[no]lazy_deploy] [--testdir test/e2e] cluster [cluster ...]"
@@ -13,6 +13,7 @@ eval set -- "${FLAGS_ARGV}"
 
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=-globalnet || globalnet=
 cluster_settings="${FLAGS_cluster_settings}"
+testdir="${FLAGS_testdir}"
 [[ "${FLAGS_lazy_deploy}" = "${FLAGS_TRUE}" ]] && lazy_deploy=true || lazy_deploy=false
 
 if [[ $# == 0 ]]; then
@@ -62,7 +63,7 @@ function generate_kubecontexts() {
 }
 
 function test_with_e2e_tests {
-    cd ${DAPPER_SOURCE}/${FLAGS_testdir}
+    cd ${DAPPER_SOURCE}/${testdir}
 
     go test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
         -submariner-namespace $SUBM_NS $(generate_context_flags) ${globalnet} \
@@ -80,7 +81,7 @@ function test_with_subctl {
 declare_kubeconfig
 [[ "${lazy_deploy}" = "false" ]] || deploy_env_once
 
-if [ -d ${DAPPER_SOURCE}/${FLAGS_testdir} ]; then
+if [ -d ${DAPPER_SOURCE}/${testdir} ]; then
     test_with_e2e_tests
 else
     test_with_subctl

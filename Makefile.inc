@@ -53,15 +53,6 @@ ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
-ifdef E2E_TESTDIR
-override E2E_ARGS += --testdir "$(E2E_TESTDIR)"
-endif
-
-ifdef PLUGIN
-override DEPLOY_ARGS += --plugin $(PLUGIN)
-override CLEANUP_ARGS += --plugin $(PLUGIN)
-endif
-
 # Shipyard provided targets
 
 # [clean] cleans everything (running clusters, generated files ...)
