@@ -12,10 +12,6 @@ inputs:
     description: 'Working directory to run in'
     required: false
     default: '.'
-  target:
-    description: 'Target for make'
-    required: false
-    default: 'e2e'
 runs:
   using: "composite"
   steps:
@@ -54,4 +50,4 @@ runs:
       env:
         CLUSTERS_ARGS: --k8s_version="${{ inputs.k8s_version }}"
       run: |
-        make "${{ inputs.target }}" using="${{ inputs.using }}"
+        make e2e using="${{ inputs.using }}"
