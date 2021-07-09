@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package framework
 
 import (
@@ -348,7 +349,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout*1000))},
+						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * 1000))},
 					},
 				},
 			},
@@ -476,9 +477,9 @@ func (np *NetworkPod) buildCustomPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
-			HostNetwork:   bool(np.Config.Networking),
+			Affinity:                      nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                 v1.RestartPolicyNever,
+			HostNetwork:                   bool(np.Config.Networking),
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
 			Containers: []v1.Container{
 				{
