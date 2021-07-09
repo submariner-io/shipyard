@@ -123,6 +123,17 @@ golangci-lint: vendor/modules.txt
 	golangci-lint linters
 	golangci-lint run --timeout 10m
 
+# [packagedoc-lint] checks that the package docs don’t include the SPDX header
+packagedoc-lint:
+	result=0; \
+	for package in $$(find . -name vendor -prune -o -name \*.go -printf "%h\n" | sort -u); do \
+		if go doc $$package | grep -q SPDX; then \
+			echo $$package has an invalid package documentation; \
+			result=1; \
+		fi; \
+	done 2>/dev/null; \
+	exit $$result
+
 lint: gitlint golangci-lint markdownlint yamllint
 
 # [markdownlint] validates Markdown files in the project
