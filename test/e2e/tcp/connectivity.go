@@ -33,7 +33,10 @@ type EndpointType int
 const (
 	PodIP EndpointType = iota
 	ServiceIP
+	// TODO: Remove GlobalIP once all consumer code switches to GlobalServiceIP
 	GlobalIP
+	GlobalPodIP
+	GlobalServiceIP = GlobalIP
 )
 
 type ConnectivityTestParams struct {
@@ -66,7 +69,7 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring(listenerPod.Config.Data))
 
 	if p.Networking == framework.PodNetworking {
-		if p.ToEndpointType == GlobalIP {
+		if p.ToEndpointType == GlobalServiceIP {
 			// When Globalnet is enabled (i.e., remoteEndpoint is a globalIP) and POD uses PodNetworking,
 			// Globalnet Controller MASQUERADEs the source-ip of the POD to the corresponding global-ip
 			// that is assigned to the POD.
@@ -74,7 +77,7 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 			podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
 			Expect(podGlobalIP).ToNot(Equal(""))
 			Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
-		} else if p.ToEndpointType != GlobalIP {
+		} else if p.ToEndpointType != GlobalServiceIP {
 			By("Verifying the output of listener pod which must contain the source IP")
 			Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
 		}
@@ -128,12 +131,12 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	remoteIP := listenerPod.Pod.Status.PodIP
 	var service *v1.Service
-	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalIP {
+	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalServiceIP {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q", framework.TestContext.ClusterIDs[p.ToCluster]))
 		service = listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
 
-		if p.ToEndpointType == GlobalIP {
+		if p.ToEndpointType == GlobalServiceIP {
 			p.Framework.CreateServiceExport(p.ToCluster, service.Name)
 			// Wait for the globalIP annotation on the service.
 			service = p.Framework.AwaitUntilAnnotationOnService(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
@@ -154,7 +157,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		Networking:         p.Networking,
 	})
 
-	if p.ToEndpointType == GlobalIP && p.Networking == framework.PodNetworking {
+	if p.ToEndpointType == GlobalServiceIP && p.Networking == framework.PodNetworking {
 		// Wait for the globalIP annotation on the connectorPod.
 		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name, connectorPod.Pod.Namespace)
 		sourceIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
@@ -178,7 +181,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	// Globalnet removes the reference only when the service itself is deleted. Until Globalnet is enhanced [*]
 	// to remove this dependency with iptables-chain, lets delete the service after the listener Pod is terminated.
 	// [*] https://github.com/submariner-io/submariner/issues/1166
-	if p.ToEndpointType == GlobalIP {
+	if p.ToEndpointType == GlobalServiceIP {
 		p.Framework.DeleteService(p.ToCluster, service.Name)
 		p.Framework.DeleteServiceExport(p.ToCluster, service.Name)
 	}
