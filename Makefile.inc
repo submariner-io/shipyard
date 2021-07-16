@@ -116,7 +116,11 @@ deploy-latest:
 
 # [gitlint] validates the commits are valid
 gitlint:
-	gitlint --commits origin/$(BASE_BRANCH)..HEAD
+	if [ -r .gitlint ]; then \
+	    gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
+	else \
+	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
+	fi
 
 # [golangci-lint] validates Go code in the project
 golangci-lint: vendor/modules.txt
