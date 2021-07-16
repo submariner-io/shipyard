@@ -16,12 +16,5 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package main
-
-import "fmt"
-
-var MYVAR = "nobody"
-
-func main() {
-	fmt.Println("hello " + MYVAR)
-}
+// Package framework contains the shared test framework for Submariner projects.
+package framework
