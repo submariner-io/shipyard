@@ -37,31 +37,33 @@ var clusterGlobalEgressIPGVR = &schema.GroupVersionResource{
 }
 
 func (f *Framework) AwaitClusterGlobalEgressIPs(cluster ClusterIndex, name string) []string {
-	if TestContext.GlobalnetEnabled {
-		gipClient := clusterGlobalEgressIPClient(cluster)
-		obj := AwaitUntil(fmt.Sprintf("await ClusterGlobalEgressIP %s", name),
-			func() (interface{}, error) {
-				resGip, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
-				if apierrors.IsNotFound(err) {
-					return nil, nil
-				}
-				return resGip, err
-			},
-			func(result interface{}) (bool, string, error) {
-				if result == nil {
-					return false, fmt.Sprintf("ClusterGlobalEgressIP %s not found yet", name), nil
-				}
+	gipClient := clusterGlobalEgressIPClient(cluster)
 
-				globalIPs := getGlobalIPs(result.(*unstructured.Unstructured))
-				if len(globalIPs) == 0 {
-					return false, fmt.Sprintf("ClusterGlobalEgressIP %q exists but allocatedIPs not available yet", name), nil
-				}
-				return true, "", nil
-			})
+	return AwaitAllocatedEgressIPs(gipClient, name)
+}
 
-		return getGlobalIPs(obj.(*unstructured.Unstructured))
-	}
-	return []string{}
+func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []string {
+	obj := AwaitUntil(fmt.Sprintf("await allocated egress IPs for %s", name),
+		func() (interface{}, error) {
+			resGip, err := client.Get(context.TODO(), name, metav1.GetOptions{})
+			if apierrors.IsNotFound(err) {
+				return nil, nil
+			}
+			return resGip, err
+		},
+		func(result interface{}) (bool, string, error) {
+			if result == nil {
+				return false, fmt.Sprintf("Egress IP resource %q not found yet", name), nil
+			}
+
+			globalIPs := getGlobalIPs(result.(*unstructured.Unstructured))
+			if len(globalIPs) == 0 {
+				return false, fmt.Sprintf("Egress IP resource %q exists but allocatedIPs not available yet", name), nil
+			}
+			return true, "", nil
+		})
+
+	return getGlobalIPs(obj.(*unstructured.Unstructured))
 }
 
 func clusterGlobalEgressIPClient(cluster ClusterIndex) dynamic.ResourceInterface {
