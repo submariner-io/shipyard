@@ -70,8 +70,7 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
 
-# Copy shared makefile and .gitlint
-# so that downstream projects can use them
+# Copy shared files so that downstream projects can use them
 COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
 
 # Copy ovn-kubernetes to share with other projects
