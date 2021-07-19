@@ -30,8 +30,8 @@ RUN apk add --no-cache bash findutils git grep make nodejs py3-six shellcheck up
     find /usr/lib/ -name __pycache__ -type d -exec rm -rf {} + && \
     apk del installers
 
-# Copy shared makefiles so that downstream projects can use it
-COPY Makefile.* ${SHIPYARD_DIR}/
+# Copy shared files so that downstream projects can use it
+COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
 
 # Copy shared scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
