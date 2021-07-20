@@ -1,7 +1,5 @@
 # This Makefile contains the rules required to set up our
-# Dapper-based build environment; it can be copied as-is to
-# other projects (and needs to be copied, it can't be shared
-# via the Dapper image since it's needed to retrieve the image)
+# Dapper-based build environment
 
 PROJECT ?= $(notdir $(CURDIR))
 BASE_DAPPER := Dockerfile.dapper
@@ -13,19 +11,18 @@ export PROJECT
 
 .dapper:
 	@echo Downloading dapper
-	@curl -sL https://releases.rancher.com/dapper/latest/dapper-`uname -s`-`uname -m` > .dapper.tmp
-	@@chmod +x .dapper.tmp
-	@./.dapper.tmp -v
-	@mv .dapper.tmp .dapper
+	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+	@chmod +x .dapper
+	@./.dapper -v
 
 SELINUX_CONTEXT := $(shell (selinuxenabled && echo -S z) 2>/dev/null)
-RUN_IN_DAPPER := ./.dapper -m bind $(SELINUX_CONTEXT)
+RUN_IN_DAPPER := ./.dapper $(DAPPER_ARGS) $(SELINUX_CONTEXT)
 
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
 $(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
 	-docker network create -d bridge kind
-	+$(RUN_IN_DAPPER) make --debug=b $@
+	+$(RUN_IN_DAPPER) -- make --debug=b $@
 
 # The original dockerfiles will live in Shipyard and be downloaded by consuming projects.
 $(BASE_DAPPER) $(LINTING_DAPPER):
@@ -34,7 +31,7 @@ $(BASE_DAPPER) $(LINTING_DAPPER):
 
 # Run silently as the commands are pretty straightforward and `make` hasn't a lot to do
 $(LINTING_GOALS): .dapper $(LINTING_DAPPER)
-	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -q make $@
+	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -- make $@
 
 shell: .dapper $(BASE_DAPPER)
 	$(RUN_IN_DAPPER) -s
@@ -42,6 +39,6 @@ shell: .dapper $(BASE_DAPPER)
 # Run silently to just list the targets (hence we can't use the generic dapper wrapper recipe).
 # This only lists targets accessible inside dapper (which are 99% of targets we use)
 targets: $(LINTING_DAPPER)
-	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -q eval "\$${SCRIPTS_DIR}/targets.sh"
+	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -- eval "\$${SCRIPTS_DIR}/targets.sh"
 
 .PHONY: shell targets $(LINTING_GOALS)
