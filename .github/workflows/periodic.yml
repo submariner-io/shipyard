@@ -26,3 +26,27 @@ jobs:
           title: Broken link detected by CI
           content-filepath: .github/ISSUE_TEMPLATE/broken-link.md
           labels: automated, broken link
+
+  go-mod-outdated-periodic:
+    name: Outdated Dependencies
+    if: github.repository_owner == 'submariner-io'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'shipyard', 'submariner-bot', 'submariner', 'submariner-operator']
+    steps:
+      - name: Check out the Shipyard repository
+        uses: actions/checkout@v2
+
+      - name: Build go-mod-outdated
+        run: go build -o bin/go-mod-outdated github.com/psampaz/go-mod-outdated
+
+      - name: Check out the ${{ matrix.project }} repository
+        uses: actions/checkout@v2
+        with:
+          repository: submariner-io/${{ matrix.project }}
+          path: ${{ matrix.project }}
+
+      - name: Check for updates
+        run: (cd ${{ matrix.project }}; go list -u -m -json all) | bin/go-mod-outdated -direct -update
