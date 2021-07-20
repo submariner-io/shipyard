@@ -4,7 +4,7 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
-DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
+DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle)'
 DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
 DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"

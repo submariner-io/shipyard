@@ -43,6 +43,7 @@ endif
 
 ifneq (,$(filter olm,$(_using)))
 override CLUSTERS_ARGS += --olm
+override DEPLOY_ARGS += --deploytool bundle
 endif
 
 ifneq (,$(filter prometheus,$(_using)))

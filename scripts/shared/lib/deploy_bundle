@@ -1,0 +1,249 @@
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
+
+### Constants ###
+
+readonly CE_IPSEC_IKEPORT=500
+readonly CE_IPSEC_NATTPORT=4500
+readonly SUBM_IMAGE_REPO=localhost:5000
+readonly SUBM_IMAGE_TAG=${image_tag:-local}
+readonly MARKETPLACE_NAMESPACE="olm"
+readonly OPERATOR_NAME="submariner"
+readonly BROKER_NAMESPACE="submariner-k8s-broker"
+readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
+readonly INDEX_IMG=localhost:5000/submariner-operator-index:local
+readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+
+# Variables
+
+BROKER_K8S_API_SERVER=""
+BROKER_K8S_API_SERVER_TOKEN=""
+BROKER_K8S_CA=""
+
+### Functions ###
+
+function deploytool_prereqs() {
+  echo "VERSION:        ${VERSION}"
+  echo "SUBM_NS:        ${SUBM_NS}"
+  echo "CHANNEL:        ${CHANNEL}"
+  if [[ -z "${VERSION}" ]] ||
+   [[ -z "${SUBM_NS}" ]] ||
+   [[ -z "${CHANNEL}" ]]; then
+    echo "[ERROR] Required environment variables not loaded"
+    echo "    VERSION"
+    echo "    SUBM_NS"
+    echo "    CHANNEL"
+    exit 3
+  fi
+
+  # Create new namespace
+  run_subm_clusters create_submariner_namespace
+
+  # Create the custom catalog source
+  run_subm_clusters create_catalog_source
+
+  # Install the submariner operator bundle
+  run_subm_clusters install_bundle
+}
+
+function create_submariner_namespace {
+  echo "[INFO](${cluster}) Create the namespace..."
+  kubectl create namespace "${SUBM_NS}" || :
+}
+
+function create_catalog_source() {
+  echo "[INFO](${cluster}) Create the catalog source..."
+
+  kubectl delete catalogsource/submariner-catalog-source -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
+
+  # Create the CatalogSource
+cat <<EOF | kubectl apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: submariner-catalog-source
+  namespace: ${MARKETPLACE_NAMESPACE}
+spec:
+  sourceType: grpc
+  image: ${INDEX_IMG}
+  displayName: Submariner Catalog Source
+  publisher: Submariner.io (Test)
+  updateStrategy:
+    registryPoll:
+      interval: 5m
+EOF
+
+  # Wait for the catalogSource Readiness
+  if ! (timeout 5m bash -c "until [[ $(kubectl --context="${cluster}" get catalogsource -n ${MARKETPLACE_NAMESPACE} submariner-catalog-source -o jsonpath='{.status.connectionState.lastObservedState}') -eq 'READY' ]]; do sleep 10; done"); then
+      echo "[ERROR] CatalogSource is not ready."
+      exit 1
+  fi
+
+  # Debug
+  kubectl -n ${MARKETPLACE_NAMESPACE} get catalogsource --ignore-not-found
+  kubectl -n ${MARKETPLACE_NAMESPACE} get pods --ignore-not-found
+  kubectl -n ${MARKETPLACE_NAMESPACE} get packagemanifests --ignore-not-found | grep 'Submariner Catalog Source' || true
+
+
+  # Create the OperatorGroup
+cat <<EOF | kubectl apply -f -
+apiVersion: operators.coreos.com/v1
+kind: OperatorGroup
+metadata:
+  name: submariner-group
+  namespace: ${SUBM_NS}
+spec:
+  targetNamespaces:
+    - ${SUBM_NS}
+EOF
+
+  # Debug
+  kubectl get og -n "${SUBM_NS}" --ignore-not-found
+
+  echo "[INFO](${cluster}) Catalog source created"
+}
+
+function install_bundle() {
+  local installPlan
+
+  # Delete previous catalogSource and Subscription
+  kubectl delete sub/submariner-subscription -n "${SUBM_NS}" --wait --ignore-not-found
+
+  # Create the Subscription (Approval should be Manual not Automatic in order to pin the bundle version)
+  echo "[INFO](${cluster}) Install the bundle..."
+cat <<EOF | kubectl apply -f -
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: submariner-subscription
+  namespace: ${SUBM_NS}
+spec:
+  channel: ${CHANNEL}
+  installPlanApproval: Manual
+  name: ${OPERATOR_NAME}
+  source: submariner-catalog-source
+  sourceNamespace: ${MARKETPLACE_NAMESPACE}
+  startingCSV: ${OPERATOR_NAME}.v${VERSION}
+EOF
+
+  # Manual Approve
+  echo "[INFO](${cluster}) Approve the installPlan..."
+  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${SUBM_NS}" subs/submariner-subscription || (echo "[ERROR](${cluster}) InstallPlan not found."; exit 1)
+  installPlan=$(kubectl get subscriptions.operators.coreos.com submariner-subscription -n "${SUBM_NS}" -o jsonpath='{.status.installPlanRef.name}')
+  if [ -n "${installPlan}" ]; then
+    kubectl patch installplan -n "${SUBM_NS}" "${installPlan}" -p '{"spec":{"approved":true}}' --type merge
+  fi
+
+  # Debug
+  kubectl get sub -n "${SUBM_NS}" --ignore-not-found
+  kubectl get installplan -n "${SUBM_NS}" --ignore-not-found
+  kubectl get csv -n "${SUBM_NS}" --ignore-not-found
+  kubectl get pods -n "${SUBM_NS}" --ignore-not-found
+
+  echo "[INFO](${cluster}) Bundle installed"
+}
+
+function setup_broker() {
+  local brokerClientSecret
+
+  if ! (timeout 5m bash -c "until kubectl --context=${cluster} get crds brokers.submariner.io > /dev/null 2>&1; do sleep 10; done"); then
+      echo "[ERROR] Broker CRD was not found."
+      exit 1
+  fi
+
+  # Create the broker Namespace & RBAC
+  echo "[INFO] Deploy the broker"
+  [ -d /tmp/submariner-operator ] && rm -Rf /tmp/submariner-operator
+  git clone --depth 1 --single-branch --branch "${BASE_BRANCH}" https://github.com/submariner-io/submariner-operator /tmp/submariner-operator
+  kubectl apply -k /tmp/submariner-operator/config/broker -n ${BROKER_NAMESPACE}
+
+  # Enable the service-discovery component if defined
+  local components="connectivity"
+  components+=$([[ ${service_discovery} == "true" ]] && echo ", service-discovery" || echo "")
+  components+=$([[ ${globalnet} == "true" ]] && echo ", globalnet" || echo "")
+
+  ### Create the Broker instance
+cat <<EOF | kubectl apply -f -
+apiVersion: submariner.io/v1alpha1
+kind: Broker
+metadata:
+  name: submariner-broker
+  namespace: ${SUBM_NS}
+spec:
+  components: [${components}]
+  defaultGlobalnetClusterSize: 8192
+  globalnetEnabled: ${globalnet}
+  globalnetCIDRRange: 169.254.0.0/16
+EOF
+
+  echo "[INFO] Wait for the broker readiness..."
+  if ! (timeout 5m bash -c "until kubectl --context=${cluster} get brokers.submariner.io submariner-broker -n ${SUBM_NS} > /dev/null 2>&1; do sleep 10; done"); then
+      echo "[ERROR] Broker is not ready."
+      exit 1
+  fi
+
+  brokerClientSecret=$(kubectl -n ${BROKER_NAMESPACE} get secrets -o json | jq -r -c '[.items[] | select(.metadata.annotations."kubernetes.io/service-account.name"=="'${BROKER_CLIENT_SA}'") | select(.data.token != null) | select(.data."ca.crt" != null)] | .[0]')
+  BROKER_K8S_API_SERVER=$(kubectl get endpoints kubernetes -n default -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+  BROKER_K8S_API_SERVER_TOKEN=$(echo "${brokerClientSecret}" | jq -r '.data.token' | base64 --decode)
+  BROKER_K8S_CA=$(echo "${brokerClientSecret}" | jq -r '.data."ca.crt"')
+
+}
+
+function install_subm() {
+  if [[ ${cluster_subm[$cluster]} != "true" ]]; then
+        echo "Skipping installation as requested in cluster settings"
+        return
+  fi
+
+  if kubectl wait --for=condition=Ready pods -l app=submariner-operator -n "${SUBM_NS}" --timeout=60s > /dev/null 2>&1; then
+        echo "[WARN](${cluster}) Submariner already installed, skipping installation..."
+        return
+  fi
+
+  if ! (timeout 5m bash -c "until kubectl --context=${cluster} get crds submariners.submariner.io > /dev/null 2>&1; do sleep 10; done"); then
+      echo "[ERROR] Submariner CRD was not found."
+      exit 1
+  fi
+
+  # Create the Submariner instance
+  echo "[INFO](${cluster}) Deploy Submariner"
+cat <<EOF | kubectl apply -f -
+apiVersion: submariner.io/v1alpha1
+kind: Submariner
+metadata:
+  name: submariner
+  namespace: ${SUBM_NS}
+spec:
+  serviceCIDR: "${service_CIDRs[$cluster]}"
+  clusterCIDR: "${cluster_CIDRs[$cluster]}"
+  globalCIDR: "${global_CIDRs[$cluster]}"
+  clusterID: "${cluster}"
+  debug: true
+  natEnabled: true
+  serviceDiscoveryEnabled: ${service_discovery}
+  broker: "k8s"
+  brokerK8sApiServer: "${BROKER_K8S_API_SERVER}"
+  brokerK8sApiServerToken: "${BROKER_K8S_API_SERVER_TOKEN}"
+  brokerK8sRemoteNamespace: "${BROKER_NAMESPACE}"
+  brokerK8sCA: "${BROKER_K8S_CA}"
+  cableDriver: "libreswan"
+  ceIPSecPSK: "${IPSEC_PSK}"
+  ceIPSecDebug: true
+  ceIPSecIKEPort: ${CE_IPSEC_IKEPORT}
+  ceIPSecNATTPort: ${CE_IPSEC_NATTPORT}
+  namespace: "${SUBM_NS}"
+  repository: "${SUBM_IMAGE_REPO}"
+  version: "${SUBM_IMAGE_TAG}"
+  connectionHealthCheck:
+    enabled: true
+    intervalSeconds: 1
+    maxPacketLossCount: 5
+EOF
+
+echo "[INFO](${cluster}) Submariner deployed"
+}
+
+function install_subm_all_clusters() {
+    run_subm_clusters install_subm
+}
