@@ -15,6 +15,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
+
 package framework
 
 import (
@@ -27,12 +28,12 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
+// AwaitPodsByLabelSelector finds pods in a given cluster whose labels match a specified label selector. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
-func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, namespace string, expectedCount int) *v1.PodList {
-	return AwaitUntil("find pods for app "+appName, func() (interface{}, error) {
+func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector string, namespace string, expectedCount int) *v1.PodList {
+	return AwaitUntil("find pods for label "+labelSelector, func() (interface{}, error) {
 		return KubeClients[cluster].CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "app=" + appName,
+			LabelSelector: labelSelector,
 		})
 	}, func(result interface{}) (bool, string, error) {
 		pods := result.(*v1.PodList)
@@ -48,6 +49,12 @@ func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, na
 
 		return true, "", nil
 	}).(*v1.PodList)
+}
+
+// AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
+// expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
+func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, namespace string, expectedCount int) *v1.PodList {
+	return f.AwaitPodsByLabelSelector(cluster, "app=" + appName, namespace, expectedCount)
 }
 
 // AwaitSubmarinerGatewayPod finds the submariner gateway pod in a given cluster, waiting if necessary for a period of time
