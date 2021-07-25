@@ -50,6 +50,8 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          # This is replaced to stable branch by auto release process
+          ref: devel
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -91,6 +93,8 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          # This is replaced to stable branch by auto release process
+          ref: devel
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -124,6 +128,8 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          # This is replaced to stable branch by auto release process
+          ref: devel
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
