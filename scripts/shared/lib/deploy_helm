@@ -5,6 +5,7 @@
 ### Constants ###
 
 readonly SUBMARINER_BROKER_NS=submariner-k8s-broker
+# shellcheck disable=SC2155
 readonly SUBMARINER_PSK=$(LC_CTYPE=C tr -dc 'a-zA-Z0-9' < /dev/urandom | fold -w 64 | head -n 1)
 
 ### Functions ###
