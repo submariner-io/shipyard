@@ -51,6 +51,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          ref: release-0.9
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -89,6 +90,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          ref: release-0.9
           repository: submariner-io/${{ matrix.project }}
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
@@ -118,6 +120,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@v2
         with:
+          ref: release-0.9
           repository: submariner-io/${{ matrix.project }}
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
