@@ -1,0 +1,11 @@
+---
+apiVersion: submariner.io/v1alpha1
+kind: Broker
+metadata:
+  name: submariner-broker
+  namespace: ${SUBM_NS}
+spec:
+  components: ["${components}"]
+  defaultGlobalnetClusterSize: 8192
+  globalnetEnabled: ${globalnet}
+  globalnetCIDRRange: 169.254.0.0/16
