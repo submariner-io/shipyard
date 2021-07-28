@@ -14,7 +14,7 @@ kind_k8s_versions[1.21]=1.21.1
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' "${DEFAULT_K8S_VERSION}" 'Version of K8s to use'
-DEFINE_string 'olm_version' '0.14.1' 'Version of OLM to use'
+DEFINE_string 'olm_version' '0.16.1' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
@@ -34,7 +34,7 @@ olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
 cluster_settings="${FLAGS_cluster_settings}"
 timeout="${FLAGS_timeout}"
-echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, timeout=${timeout}"
 
 set -em
 
