@@ -56,10 +56,6 @@ EOM
 
 ### Functions ###
 
-function render_template() {
-    eval "echo \"$(cat $1)\""
-}
-
 function generate_cluster_yaml() {
     local pod_cidr="${cluster_CIDRs[${cluster}]}"
     local service_cidr="${service_CIDRs[${cluster}]}"

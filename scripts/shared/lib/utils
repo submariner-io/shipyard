@@ -23,6 +23,11 @@ function kubectl() {
     fi
 }
 
+# Render a template file
+function render_template() {
+    eval "echo \"$(cat "$1")\""
+}
+
 # Run a command and retry it if it fails, up to the given amount of retries
 # 1st argument is the amount of times to retry the command.
 # 2nd argument is the command to execute.

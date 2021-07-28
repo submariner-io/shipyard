@@ -43,6 +43,8 @@ endif
 
 ifneq (,$(filter olm,$(_using)))
 override CLUSTERS_ARGS += --olm
+override DEPLOY_ARGS += --deploytool bundle
+PRELOAD_IMAGES += submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
