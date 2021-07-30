@@ -76,6 +76,10 @@ type NetworkPodConfig struct {
 	ContainerName      string
 	ImageName          string
 	Command            []string
+	Concurrency        uint
+	TestTimeSeconds    uint
+	TCPWindowSizeKB    uint
+	TCPMaxMSS          uint
 	// TODO: namespace, once https://github.com/submariner-io/submariner/pull/141 is merged
 }
 
@@ -328,6 +332,9 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 // response in the pod termination log, then
 // exit with 0 status
 func (np *NetworkPod) buildThroughputClientPod() {
+
+	np.setThroughputTestDefaults()
+
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-client-pod",
@@ -343,24 +350,52 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{"sh", "-c",
+						"for i in $(seq $CONN_TRIES); do " +
+							"if iperf3 -w ${TCP_WINDOW_KB}K -t $TEST_TIME --connect-timeout $CONN_TIMEOUT -P $CONCURRENCY " +
+							"-p $TARGET_PORT -c $TARGET_IP $TCPMAXMSS; then break; else echo [going to retry]; " +
+							"sleep $RETRY_SLEEP; fi; " +
+							"done >/dev/termination-log 2>&1"},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * 1000))},
+						{Name: "TCP_WINDOW_KB", Value: strconv.Itoa(int(np.Config.TCPWindowSizeKB))},
+						{Name: "TEST_TIME", Value: strconv.Itoa(int(np.Config.TestTimeSeconds))},
+						{Name: "CONCURRENCY", Value: strconv.Itoa(int(np.Config.Concurrency))},
 					},
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
 		},
 	}
+
+	if np.Config.TCPMaxMSS != 0 {
+		nettestPod.Spec.Containers[0].Env = append(nettestPod.Spec.Containers[0].Env,
+			v1.EnvVar{Name: "TCPMAXMSS", Value: "--set-mss " + strconv.Itoa(int(np.Config.TCPMaxMSS))})
+	}
+
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
 	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 	np.AwaitReady()
+}
+
+func (np *NetworkPod) setThroughputTestDefaults() {
+	if np.Config.TCPWindowSizeKB == 0 {
+		np.Config.TCPWindowSizeKB = 256
+	}
+
+	if np.Config.Concurrency == 0 {
+		np.Config.Concurrency = 10
+	}
+
+	if np.Config.TestTimeSeconds == 0 {
+		np.Config.TestTimeSeconds = 10
+	}
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
