@@ -184,8 +184,8 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	// to remove this dependency with iptables-chain, lets delete the service after the listener Pod is terminated.
 	// [*] https://github.com/submariner-io/submariner/issues/1166
 	if p.ToEndpointType == GlobalServiceIP {
-		p.Framework.DeleteService(p.ToCluster, service.Name)
 		p.Framework.DeleteServiceExport(p.ToCluster, service.Name)
+		p.Framework.DeleteService(p.ToCluster, service.Name)
 	}
 
 	return listenerPod, connectorPod
