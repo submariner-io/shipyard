@@ -70,7 +70,10 @@ prune-images:
 	    fi \
 	done
 
-NON_DAPPER_GOALS += prune-images
+backport:
+	scripts/shared/backport.sh $(release) $(pr)
+
+NON_DAPPER_GOALS += prune-images backport
 .PHONY: prune-images
 
 include Makefile.dapper
