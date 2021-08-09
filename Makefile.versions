@@ -1,5 +1,5 @@
 # Calculate versions; these can be overridden
-CUTTING_EDGE := devel
+CUTTING_EDGE := release-0.10
 DEV_VERSION := dev
 override CALCULATED_VERSION := $(BASE_BRANCH)-$(shell git rev-parse --short HEAD)
 VERSION ?= $(CALCULATED_VERSION)

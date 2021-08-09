@@ -4,7 +4,7 @@ name: Release Images
 on:
   push:
     branches:
-      - devel
+      - release-0.10
       - release-*
 
 jobs:
