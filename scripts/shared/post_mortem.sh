@@ -62,6 +62,7 @@ function post_analyze() {
 ### Main ###
 
 declare_kubeconfig
+bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash"
 for cluster in $(kind get clusters); do
     post_analyze
 done
