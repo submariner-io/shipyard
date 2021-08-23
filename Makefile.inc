@@ -156,7 +156,7 @@ markdownlint:
 
 # [yamllint] validates YAML files in the project
 yamllint:
-	yamllint .
+	yamllint --strict .
 
 # [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:
