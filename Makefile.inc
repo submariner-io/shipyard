@@ -148,7 +148,11 @@ lint: gitlint golangci-lint markdownlint yamllint
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
-	markdownlint markdownlint -c .markdownlint.yml -i vendor .
+	md_ignored=($(patsubst %/modules.txt,%,$(VENDOR_MODULES))); \
+	if [ -r .mdignore ]; then \
+		md_ignored+=($$(< .mdignore)); \
+	fi; \
+	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
 
 # [yamllint] validates YAML files in the project
 yamllint:
