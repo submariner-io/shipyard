@@ -1,3 +1,4 @@
+---
 name: 'Commit Size'
 description: 'Make sure no commit in the pull request goes over a certain size'
 inputs:
