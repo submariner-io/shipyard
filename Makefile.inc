@@ -70,6 +70,9 @@ override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
 endif
 
+GO ?= go
+export GO
+
 # Shipyard provided targets
 
 # [clean] cleans everything (running clusters, generated files ...)
@@ -134,7 +137,7 @@ golangci-lint: $(VENDOR_MODULES)
 packagedoc-lint:
 	result=0; \
 	for package in $$(find . -name vendor -prune -o -name \*.go -printf "%h\n" | sort -u); do \
-		if go doc $$package | grep -q SPDX; then \
+		if $(GO) doc $$package | grep -q SPDX; then \
 			echo $$package has an invalid package documentation; \
 			result=1; \
 		fi; \
@@ -164,15 +167,15 @@ unit: $(VENDOR_MODULES)
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
 vendor/modules.txt: go.mod
-	go mod download
-	go mod vendor
-	go mod tidy
+	$(GO) mod download
+	$(GO) mod vendor
+	$(GO) mod tidy
 
 %/vendor/modules.txt: %/go.mod
 	cd $(patsubst %/vendor/,%,$(dir $@)) && \
-	go mod download && \
-	go mod vendor && \
-	go mod tidy
+	$(GO) mod download && \
+	$(GO) mod vendor && \
+	$(GO) mod tidy
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
