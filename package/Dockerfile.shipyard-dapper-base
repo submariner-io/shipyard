@@ -50,7 +50,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
-ENV LINT_VERSION=v1.39.0 \
+ENV LINT_VERSION=v1.41.1 \
     HELM_VERSION=v3.4.1 \
     KIND_VERSION=v0.11.1 \
     BUILDX_VERSION=v0.5.1
@@ -70,8 +70,8 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
 
-# Copy shared makefile so that downstream projects can use it
-COPY Makefile.* ${SHIPYARD_DIR}/
+# Copy shared files so that downstream projects can use them
+COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
 
 # Copy ovn-kubernetes to share with other projects
 COPY submodules/ovn-kubernetes ${OVN_DIR}
