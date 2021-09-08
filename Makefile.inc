@@ -122,8 +122,11 @@ gitlint:
 	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
 	fi
 
+# List of vendor/modules.txt files we need
+VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h/vendor/modules.txt\n")
+
 # [golangci-lint] validates Go code in the project
-golangci-lint: vendor/modules.txt
+golangci-lint: $(VENDOR_MODULES)
 	golangci-lint linters
 	golangci-lint run --timeout 10m
 
@@ -161,16 +164,19 @@ shellcheck:
 	shellcheck $(SHELLCHECK_ARGS)
 
 # [unit] executes the Go unit tests of the project
-unit: vendor/modules.txt
+unit: $(VENDOR_MODULES)
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
-ifeq (go.mod,$(wildcard go.mod))
-# If go.mod exists (as determined above), assume we're vendoring
 vendor/modules.txt: go.mod
 	go mod download
 	go mod vendor
 	go mod tidy
-endif
+
+%/vendor/modules.txt: %/go.mod
+	cd $(patsubst %/vendor/,%,$(dir $@)) && \
+	go mod download && \
+	go mod vendor && \
+	go mod tidy
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
