@@ -78,7 +78,7 @@ export GO
 # Shipyard provided targets
 
 # [clean] cleans everything (running clusters, generated files ...)
-clean: clean-clusters clean-generated
+clean: clean-clusters clean-generated clean-buildx
 
 # [clean-generated] removes files we generated
 clean-generated:
@@ -88,6 +88,12 @@ clean-generated:
 clean-clusters:
 	$(SCRIPTS_DIR)/cleanup.sh $(CLEANUP_ARGS)
 cleanup: clean-clusters
+
+# [clean-buildx] removes the buildx builder, if any
+clean-buildx:
+	docker buildx version > /dev/null 2>&1 && \
+	docker buildx use buildx_builder > /dev/null 2>&1 && \
+	docker buildx rm
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
