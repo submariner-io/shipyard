@@ -70,6 +70,9 @@ override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
 endif
 
+GO ?= go
+export GO
+
 # Shipyard provided targets
 
 # [clean] cleans everything (running clusters, generated files ...)
@@ -122,8 +125,11 @@ gitlint:
 	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
 	fi
 
+# List of vendor/modules.txt files we need
+VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h/vendor/modules.txt\n")
+
 # [golangci-lint] validates Go code in the project
-golangci-lint: vendor/modules.txt
+golangci-lint: $(VENDOR_MODULES)
 	golangci-lint linters
 	golangci-lint run --timeout 10m
 
@@ -131,7 +137,7 @@ golangci-lint: vendor/modules.txt
 packagedoc-lint:
 	result=0; \
 	for package in $$(find . -name vendor -prune -o -name \*.go -printf "%h\n" | sort -u); do \
-		if go doc $$package | grep -q SPDX; then \
+		if $(GO) doc $$package | grep -q SPDX; then \
 			echo $$package has an invalid package documentation; \
 			result=1; \
 		fi; \
@@ -142,7 +148,11 @@ lint: gitlint golangci-lint markdownlint yamllint
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
-	markdownlint markdownlint -c .markdownlint.yml -i vendor .
+	md_ignored=($(patsubst %/modules.txt,%,$(VENDOR_MODULES))); \
+	if [ -r .mdignore ]; then \
+		md_ignored+=($$(< .mdignore)); \
+	fi; \
+	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
 
 # [yamllint] validates YAML files in the project
 yamllint:
@@ -157,16 +167,19 @@ shellcheck:
 	shellcheck $(SHELLCHECK_ARGS)
 
 # [unit] executes the Go unit tests of the project
-unit: vendor/modules.txt
+unit: $(VENDOR_MODULES)
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
-ifeq (go.mod,$(wildcard go.mod))
-# If go.mod exists (as determined above), assume we're vendoring
 vendor/modules.txt: go.mod
-	go mod download
-	go mod vendor
-	go mod tidy
-endif
+	$(GO) mod download
+	$(GO) mod vendor
+	$(GO) mod tidy
+
+%/vendor/modules.txt: %/go.mod
+	cd $(patsubst %/vendor/,%,$(dir $@)) && \
+	$(GO) mod download && \
+	$(GO) mod vendor && \
+	$(GO) mod tidy
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners

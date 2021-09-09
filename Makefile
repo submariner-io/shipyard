@@ -40,7 +40,7 @@ deploy: nettest
 
 nettest: package/.image.nettest
 
-e2e: vendor/modules.txt clusters
+e2e: $(VENDOR_MODULES) clusters
 
 else
 
