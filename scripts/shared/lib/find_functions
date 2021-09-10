@@ -1,5 +1,5 @@
 # shellcheck shell=bash
-function _find_pkg_dirs() {
+function _build_find_exclude() {
     local find_exclude
     excluded_dirs+=" vendor .git .trash-cache bin"
 
@@ -7,8 +7,17 @@ function _find_pkg_dirs() {
         find_exclude+=" -path ./$dir -prune -o"
     done
 
-    # shellcheck disable=SC2086
-    find . ${find_exclude} -path "$1" -printf "%h\n" | sort -u
+    echo "${find_exclude}"
+}
+
+function _find_pkg_dirs() {
+    # shellcheck disable=SC2046
+    find . $(_build_find_exclude) -path "$1" -printf "%h\n" | sort -u
+}
+
+function find_modules() {
+    # shellcheck disable=SC2046
+    find . $(_build_find_exclude) -name go.mod -printf "%h\n" | sort -u
 }
 
 function find_unit_test_dirs() {
