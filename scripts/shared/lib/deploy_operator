@@ -24,7 +24,11 @@ function setup_broker() {
     local gn
     local sd
     [[ $globalnet != true ]] || gn="--globalnet"
-    [[ $service_discovery != true ]] || sd="--components service-discovery,connectivity"
+    if [[ $service_discovery != true ]]; then
+        sd="--components service-discovery,connectivity"
+    else
+        sd="--components connectivity"
+    fi
     echo "Installing broker..."
 
     # We use the "subctl" image_tag to indicate that we want to let
