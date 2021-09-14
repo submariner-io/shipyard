@@ -1,3 +1,4 @@
+---
 name: 'Release Images'
 description: 'Builds images and uploads them to the public registry'
 inputs:

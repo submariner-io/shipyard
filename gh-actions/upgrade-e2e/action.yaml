@@ -1,3 +1,4 @@
+---
 name: 'Upgrades End to End'
 description: 'Runs an upgrade procedure, followed by end to end tests with multiple clusters'
 runs:

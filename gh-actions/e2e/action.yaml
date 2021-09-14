@@ -1,3 +1,4 @@
+---
 name: 'End to End'
 description: 'Runs end to end tests with multiple clusters'
 inputs:

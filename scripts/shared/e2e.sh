@@ -69,7 +69,7 @@ function generate_kubecontexts() {
 function test_with_e2e_tests {
     cd ${DAPPER_SOURCE}/${FLAGS_testdir}
 
-    go test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
+    ${GO:-go} test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
         -submariner-namespace $SUBM_NS $(generate_context_flags) ${globalnet} \
         -ginkgo.reportPassed -test.timeout 15m \
         "${ginkgo_args[@]}" \
