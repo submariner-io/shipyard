@@ -4,11 +4,7 @@
 
 ### Constants ###
 
-readonly CE_IPSEC_IKEPORT=500
-readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
-readonly SUBM_GATEWAY_IMAGE_REPO=localhost:5000
-readonly SUBM_GATEWAY_IMAGE_TAG=${image_tag:-local}
 # shellcheck disable=SC2034 # this variable is used elsewhere
 # Some projects rely on the default subctl being determined by the PATH
 readonly SUBCTL=${SUBCTL:-subctl}
@@ -24,14 +20,18 @@ function setup_broker() {
     local gn
     local sd
     [[ $globalnet != true ]] || gn="--globalnet"
-    [[ $service_discovery != true ]] || sd="--components service-discovery,connectivity"
+    if [[ $service_discovery != true ]]; then
+        sd="--components service-discovery,connectivity"
+    else
+        sd="--components connectivity"
+    fi
     echo "Installing broker..."
 
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
     subctlrepver=
-    if [ "${SUBM_GATEWAY_IMAGE_TAG}" != "subctl" ]; then
-        subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
+    if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_IMAGE_REPO} --version ${SUBM_IMAGE_TAG}"
     fi
 
     # shellcheck disable=SC2086 # Split on purpose
@@ -55,8 +55,8 @@ function subctl_install_subm() {
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
     subctlrepver=
-    if [ "${SUBM_GATEWAY_IMAGE_TAG}" != "subctl" ]; then
-        subctlrepver="--repository ${SUBM_GATEWAY_IMAGE_REPO} --version ${SUBM_GATEWAY_IMAGE_TAG}"
+    if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
+        subctlrepver="--repository ${SUBM_IMAGE_REPO} --version ${SUBM_IMAGE_TAG}"
     fi
 
     PASS_CIDR_ARGS=${PASS_CIDR_ARGS:-false}

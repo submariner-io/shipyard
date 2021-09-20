@@ -43,6 +43,8 @@ endif
 
 ifneq (,$(filter olm,$(_using)))
 override CLUSTERS_ARGS += --olm
+override DEPLOY_ARGS += --deploytool bundle
+PRELOAD_IMAGES += submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
@@ -162,7 +164,7 @@ markdownlint:
 
 # [yamllint] validates YAML files in the project
 yamllint:
-	yamllint .
+	yamllint --strict .
 
 # [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:

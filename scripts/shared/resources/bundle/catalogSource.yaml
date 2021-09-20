@@ -1,0 +1,14 @@
+---
+apiVersion: operators.coreos.com/v1alpha1
+kind: CatalogSource
+metadata:
+  name: submariner-catalog-source
+  namespace: ${MARKETPLACE_NAMESPACE}
+spec:
+  sourceType: grpc
+  image: ${INDEX_IMG}
+  displayName: Submariner Catalog Source
+  publisher: Submariner.io (Test)
+  updateStrategy:
+    registryPoll:
+      interval: 5m

@@ -4,7 +4,7 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
-DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm)'
+DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle)'
 DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
 DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
@@ -41,6 +41,15 @@ source ${SCRIPTS_DIR}/lib/deploy_funcs
 # Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
 source "${SCRIPTS_DIR}/lib/cluster_settings"
 [[ -z "${cluster_settings}" ]] || source ${cluster_settings}
+
+### Constants ###
+readonly CE_IPSEC_IKEPORT=500
+readonly CE_IPSEC_NATTPORT=4500
+readonly SUBM_IMAGE_REPO=localhost:5000
+readonly SUBM_IMAGE_TAG=${image_tag:-local}
+readonly BROKER_NAMESPACE="submariner-k8s-broker"
+readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
+readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
 
 ### Main ###
 

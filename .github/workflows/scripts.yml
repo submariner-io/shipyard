@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm']
+        deploytool: ['operator', 'helm', 'olm']
         lighthouse: ['']
         ovn: ['']
         include:
@@ -52,7 +52,16 @@ jobs:
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
+          - deploytool: olm
+            lighthouse: lighthouse
     steps:
+      - name: Setup kernel for react native, increase watchers
+        if: ${{ matrix.deploytool == 'olm' }}
+        run: |
+          echo -e "fs.inotify.max_user_watches=524288\nfs.inotify.max_user_instances=512" \
+          | sudo tee -a /etc/sysctl.conf && \
+          sudo sysctl -p
+
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ matrix.ovn != '' }}
         run: rm -rf /usr/share/dotnet
@@ -61,6 +70,9 @@ jobs:
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
         with:
           submodules: true
+
+      - name: Fetch all git tags
+        run: git fetch origin +refs/tags/*:refs/tags/*
 
       - name: Deploy clusters and Submariner
         env:
