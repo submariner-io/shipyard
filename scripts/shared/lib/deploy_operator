@@ -20,7 +20,7 @@ function setup_broker() {
     local gn
     local sd
     [[ $globalnet != true ]] || gn="--globalnet"
-    if [[ $service_discovery != true ]]; then
+    if [[ $service_discovery == true ]]; then
         sd="--components service-discovery,connectivity"
     else
         sd="--components connectivity"
