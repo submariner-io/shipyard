@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm', 'olm']
+        deploytool: ['operator', 'helm', 'bundle']
         lighthouse: ['']
         ovn: ['']
         include:
@@ -52,11 +52,11 @@ jobs:
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
-          - deploytool: olm
+          - deploytool: bundle
             lighthouse: lighthouse
     steps:
       - name: Setup kernel for react native, increase watchers
-        if: ${{ matrix.deploytool == 'olm' }}
+        if: ${{ matrix.deploytool == 'bundle' }}
         run: |
           echo -e "fs.inotify.max_user_watches=524288\nfs.inotify.max_user_instances=512" \
           | sudo tee -a /etc/sysctl.conf && \
