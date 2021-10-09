@@ -9,8 +9,9 @@ spec:
   clusterCIDR: "${cluster_CIDRs[$cluster]}"
   globalCIDR: "${global_CIDRs[$cluster]}"
   clusterID: "${cluster}"
-  debug: true
-  natEnabled: true
+  colorCodes: "${SUBM_COLORCODES}"
+  debug: false
+  natEnabled: false
   serviceDiscoveryEnabled: ${service_discovery}
   broker: "k8s"
   brokerK8sApiServer: "${BROKER_K8S_API_SERVER}"
@@ -19,7 +20,7 @@ spec:
   brokerK8sCA: "${BROKER_K8S_CA}"
   cableDriver: "libreswan"
   ceIPSecPSK: "${IPSEC_PSK}"
-  ceIPSecDebug: true
+  ceIPSecDebug: false
   ceIPSecIKEPort: ${CE_IPSEC_IKEPORT}
   ceIPSecNATTPort: ${CE_IPSEC_NATTPORT}
   namespace: "${SUBM_NS}"
