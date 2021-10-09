@@ -4,7 +4,6 @@
 
 ### Constants ###
 
-readonly SUBM_COLORCODES=blue
 # shellcheck disable=SC2034 # this variable is used elsewhere
 # Some projects rely on the default subctl being determined by the PATH
 readonly SUBCTL=${SUBCTL:-subctl}
