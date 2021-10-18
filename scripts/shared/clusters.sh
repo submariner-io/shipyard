@@ -9,6 +9,7 @@ kind_k8s_versions[1.18]=1.18.19
 kind_k8s_versions[1.19]=1.19.11
 kind_k8s_versions[1.20]=1.20.7
 kind_k8s_versions[1.21]=1.21.1
+kind_k8s_versions[1.22]=1.22.0
 
 ## Process command line flags ##
 
