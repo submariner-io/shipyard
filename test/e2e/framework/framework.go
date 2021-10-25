@@ -260,6 +260,20 @@ func DetectGlobalnet() {
 	})
 }
 
+func InitNumClusterNodes() error {
+	TestContext.NumNodesInCluster = map[ClusterIndex]int{}
+	for i := range KubeClients {
+		nodes, err := KubeClients[i].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			return err
+		}
+
+		TestContext.NumNodesInCluster[ClusterIndex(i)] = len(nodes.Items)
+	}
+
+	return nil
+}
+
 func fetchClusterIDs() {
 	for i := range KubeClients {
 		gatewayNodes := findNodesByGatewayLabel(i, true)
