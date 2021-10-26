@@ -46,9 +46,104 @@ readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
 readonly SUBM_IMAGE_REPO=localhost:5000
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
+readonly SUBM_CS="submariner-catalog-source"
+readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
+readonly MARKETPLACE_NAMESPACE="olm"
 readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+
+### Common functions ###
+
+# Create a namespace
+# 1st argument is the namespace
+function create_namespace {
+  local ns=$1
+  echo "[INFO](${cluster}) Create the ${ns} namespace..."
+  kubectl create namespace "${ns}" || :
+}
+
+# Create a CatalogSource
+# 1st argument is the catalogsource name
+# 2nd argument is the namespace
+# 3rd argument is index image url
+function create_catalog_source() {
+  local cs=$1
+  local ns=$2
+  # shellcheck disable=SC2034
+  local iib=$3
+  echo "[INFO](${cluster}) Create the catalog source ${cs}..."
+
+  kubectl delete catalogsource/operatorhubio-catalog -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
+  kubectl delete catalogsource/"${cs}" -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
+
+  # Create the CatalogSource
+  render_template "${RESOURCES_DIR}"/common/catalogSource.yaml | kubectl apply -f -
+
+  # Wait for the catalogSource Readiness
+  if ! with_retries 60 kubectl get catalogsource -n "${MARKETPLACE_NAMESPACE}" "${cs}" -o jsonpath='{.status.connectionState.lastObservedState}'; then
+    echo "[ERROR](${cluster}) CatalogSource ${cs} is not ready."
+    exit 1
+  fi
+
+  # Debug
+  kubectl -n ${MARKETPLACE_NAMESPACE} get catalogsource --ignore-not-found
+  kubectl -n ${MARKETPLACE_NAMESPACE} get pods --ignore-not-found
+  kubectl -n ${MARKETPLACE_NAMESPACE} get packagemanifests --ignore-not-found | grep "${cs}" || true
+
+  echo "[INFO](${cluster}) Catalog source ${cs} created"
+}
+
+# Create an OperatorGroup
+# 1st argument is the operatorgroup name
+# 2nd argument is the target namespace
+function create_operator_group() {
+  local og=$1
+  local ns=$2
+
+  echo "[INFO](${cluster}) Create the Operator group ${og}..."
+  # Create the OperatorGroup
+  render_template "${RESOURCES_DIR}"/common/operatorGroup.yaml | kubectl apply -f -
+
+  # Debug
+  kubectl get og -n "${ns}" --ignore-not-found
+}
+
+# Install the bundle, subscript and approve.
+# 1st argument is the subscription name
+# 2nd argument is the target catalogsource name
+# 3nd argument is the source namespace
+# 4th argument is the bundle name
+function install_bundle() {
+  local sub=$1
+  local cs=$2
+  local ns=$3
+  local bundle=$4
+  local installPlan
+
+  # Delete previous catalogSource and Subscription
+  kubectl delete sub/"${sub}" -n "${ns}" --wait --ignore-not-found
+
+  # Create the Subscription (Approval should be Manual not Automatic in order to pin the bundle version)
+  echo "[INFO](${cluster}) Install the bundle ${bundle} ..."
+  render_template "${RESOURCES_DIR}"/common/subscription.yaml | kubectl apply -f -
+
+  # Manual Approve
+  echo "[INFO](${cluster}) Approve the installPlan..."
+  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${ns}" subs/"${sub}" || (echo "[ERROR](${cluster}) InstallPlan not found."; exit 1)
+  installPlan=$(kubectl get subscriptions.operators.coreos.com "${sub}" -n "${ns}" -o jsonpath='{.status.installPlanRef.name}')
+  if [ -n "${installPlan}" ]; then
+    kubectl patch installplan -n "${ns}" "${installPlan}" -p '{"spec":{"approved":true}}' --type merge
+  fi
+
+  # Debug
+  kubectl get sub -n "${ns}" --ignore-not-found
+  kubectl get installplan -n "${ns}" --ignore-not-found
+  kubectl get csv -n "${ns}" --ignore-not-found
+  kubectl get pods -n "${ns}" --ignore-not-found
+
+  echo "[INFO](${cluster}) Bundle ${bundle} installed"
+}
 
 ### Main ###
 
