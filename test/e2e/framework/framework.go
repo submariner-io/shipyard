@@ -331,6 +331,7 @@ func createRestConfig(kubeConfig, context string) *rest.Config {
 		Errorf("Unable to load kubeconfig file %s for context %s, this is a non-recoverable error",
 			TestContext.KubeConfig, context)
 		Errorf("loadConfig err: %s", err.Error())
+		fmt.Printf("Non-recoverable error: %s", err.Error())
 		os.Exit(1)
 	}
 
