@@ -16,6 +16,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # curl             | download other tools
 # findutils        | make unit (find unit test dirs)
 # gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# gh               | backport, releases
 # ginkgo           | tests
 # git              | find the workspace root
 # gitlint          | Commit message linting
@@ -53,7 +54,8 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 ENV LINT_VERSION=v1.42.1 \
     HELM_VERSION=v3.4.1 \
     KIND_VERSION=v0.11.1 \
-    BUILDX_VERSION=v0.5.1
+    BUILDX_VERSION=v0.5.1 \
+    GH_VERSION=2.2.0
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
@@ -64,6 +66,9 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     mkdir -p ~/.docker/cli-plugins && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
     chmod 755 ~/.docker/cli-plugins/docker-buildx && \
+    curl -L https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz | tar xzf - && \
+    mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
+    rm -rf gh_${GH_VERSION}_linux_${ARCH} && \
     find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \)
 

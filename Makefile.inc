@@ -192,6 +192,11 @@ vendor/modules.txt: go.mod
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
 
+# [backport] creates a PR to backport the PR identified by pr= to the release identified by release=
+# This needs gh, and a GITHUB_TOKEN with repo and read:org
+backport:
+	$(SCRIPTS_DIR)/backport.sh $(release) $(pr)
+
 # [prune-images] removes all Submariner-provided images and all untagged images
 # Use this to ensure you use current images
 # Copied from Makefile to provide this everywhere (until we can share
