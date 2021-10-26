@@ -3,14 +3,9 @@
 . "${BASH_SOURCE%/*}"/source_only
 
 ### Constants ###
-
-# These variables are used elsewhere
-# shellcheck disable=SC2034
-readonly MARKETPLACE_NAMESPACE="olm"
-# shellcheck disable=SC2034
-readonly OPERATOR_NAME="submariner"
-# shellcheck disable=SC2034
-readonly INDEX_IMG=localhost:5000/submariner-operator-index:local
+readonly SUBM_GROUP="submariner-group"
+readonly SUBM_SUB="submariner-subscription"
+readonly SUBM_OPERATOR_NAME="submariner"
 
 # Variables
 
@@ -22,77 +17,20 @@ BROKER_K8S_CA=""
 
 function deploytool_prereqs() {
   [[ -z "${SUBM_NS}" ]] && (echo "[ERROR] Required environment variables SUBM_NS not loaded"; exit 3)
+  [[ -z "${SUBM_CS}" ]] && (echo "[ERROR] Required environment variables SUBM_CS not loaded"; exit 3)
+  [[ -z "${SUBM_INDEX_IMG}" ]] && (echo "[ERROR] Required environment variables SUBM_INDEX_IMG not loaded"; exit 3)
 
   # Create new namespace
-  run_subm_clusters create_submariner_namespace
+  run_subm_clusters "create_namespace ${SUBM_NS}"
 
   # Create the custom catalog source
-  run_subm_clusters create_catalog_source
+  run_subm_clusters "create_catalog_source ${SUBM_CS} ${SUBM_NS} ${SUBM_INDEX_IMG}"
+
+  # Create the operator group
+  run_subm_clusters "create_operator_group ${SUBM_GROUP} ${SUBM_NS}"
 
   # Install the submariner operator bundle
-  run_subm_clusters install_bundle
-}
-
-function create_submariner_namespace {
-  echo "[INFO](${cluster}) Create the namespace..."
-  kubectl create namespace "${SUBM_NS}" || :
-}
-
-function create_catalog_source() {
-  echo "[INFO](${cluster}) Create the catalog source..."
-
-  kubectl delete catalogsource/operatorhubio-catalog -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
-  kubectl delete catalogsource/submariner-catalog-source -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
-
-  # Create the CatalogSource
-  render_template "${RESOURCES_DIR}"/bundle/catalogSource.yaml | kubectl apply -f -
-
-  # Wait for the catalogSource Readiness
-  if ! (timeout 5m bash -c "until [[ $(kubectl --context="${cluster}" get catalogsource -n ${MARKETPLACE_NAMESPACE} submariner-catalog-source -o jsonpath='{.status.connectionState.lastObservedState}') -eq 'READY' ]]; do sleep 10; done"); then
-      echo "[ERROR] CatalogSource is not ready."
-      exit 1
-  fi
-
-  # Debug
-  kubectl -n ${MARKETPLACE_NAMESPACE} get catalogsource --ignore-not-found
-  kubectl -n ${MARKETPLACE_NAMESPACE} get pods --ignore-not-found
-  kubectl -n ${MARKETPLACE_NAMESPACE} get packagemanifests --ignore-not-found | grep 'Submariner Catalog Source' || true
-
-
-  # Create the OperatorGroup
-  render_template "${RESOURCES_DIR}"/bundle/operatorGroup.yaml | kubectl apply -f -
-
-  # Debug
-  kubectl get og -n "${SUBM_NS}" --ignore-not-found
-
-  echo "[INFO](${cluster}) Catalog source created"
-}
-
-function install_bundle() {
-  local installPlan
-
-  # Delete previous catalogSource and Subscription
-  kubectl delete sub/submariner-subscription -n "${SUBM_NS}" --wait --ignore-not-found
-
-  # Create the Subscription (Approval should be Manual not Automatic in order to pin the bundle version)
-  echo "[INFO](${cluster}) Install the bundle..."
-  render_template "${RESOURCES_DIR}"/bundle/subscription.yaml | kubectl apply -f -
-
-  # Manual Approve
-  echo "[INFO](${cluster}) Approve the installPlan..."
-  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${SUBM_NS}" subs/submariner-subscription || (echo "[ERROR](${cluster}) InstallPlan not found."; exit 1)
-  installPlan=$(kubectl get subscriptions.operators.coreos.com submariner-subscription -n "${SUBM_NS}" -o jsonpath='{.status.installPlanRef.name}')
-  if [ -n "${installPlan}" ]; then
-    kubectl patch installplan -n "${SUBM_NS}" "${installPlan}" -p '{"spec":{"approved":true}}' --type merge
-  fi
-
-  # Debug
-  kubectl get sub -n "${SUBM_NS}" --ignore-not-found
-  kubectl get installplan -n "${SUBM_NS}" --ignore-not-found
-  kubectl get csv -n "${SUBM_NS}" --ignore-not-found
-  kubectl get pods -n "${SUBM_NS}" --ignore-not-found
-
-  echo "[INFO](${cluster}) Bundle installed"
+  run_subm_clusters "install_bundle ${SUBM_SUB} ${SUBM_CS} ${SUBM_NS} ${SUBM_OPERATOR_NAME}"
 }
 
 function setup_broker() {
@@ -128,11 +66,11 @@ function setup_broker() {
   fi
 
   brokerClientSecret=$(kubectl -n "${BROKER_NAMESPACE}" get secrets -o json | jq -r -c '[.items[] | select(.metadata.annotations."kubernetes.io/service-account.name"=="'"${BROKER_CLIENT_SA}"'") | select(.data.token != null) | select(.data."ca.crt" != null)] | .[0]')
-  # shellcheck disable=SC2034
+  # shellcheck disable=SC2034 # this variable is used elsewhere
   BROKER_K8S_API_SERVER=$(kubectl get endpoints kubernetes -n default -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-  # shellcheck disable=SC2034
+  # shellcheck disable=SC2034 # this variable is used elsewhere
   BROKER_K8S_API_SERVER_TOKEN=$(echo "${brokerClientSecret}" | jq -r '.data.token' | base64 --decode)
-  # shellcheck disable=SC2034
+  # shellcheck disable=SC2034 # this variable is used elsewhere
   BROKER_K8S_CA=$(echo "${brokerClientSecret}" | jq -r '.data."ca.crt"')
 
 }
