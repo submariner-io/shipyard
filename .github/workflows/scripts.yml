@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm', 'bundle']
+        deploytool: ['operator', 'helm', 'bundle', 'ocm']
         lighthouse: ['']
         ovn: ['']
         include:
@@ -54,6 +54,10 @@ jobs:
             lighthouse: lighthouse
           - deploytool: bundle
             lighthouse: lighthouse
+        exclude:
+          # OCM does not support globalnet at this moment
+          - deploytool: ocm
+            globalnet: globalnet
     steps:
       - name: Set up kernel, increase the inotify settings
         if: ${{ matrix.deploytool == 'bundle' || matrix.deploytool == 'ocm' }}
