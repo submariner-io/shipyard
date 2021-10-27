@@ -1,4 +1,5 @@
 BASE_BRANCH ?= devel
+OCM_BASE_BRANCH ?= main
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 NON_DAPPER_GOALS += images
 SHELLCHECK_ARGS := scripts/shared/lib/*
@@ -6,7 +7,7 @@ FOCUS ?=
 SKIP ?=
 PLUGIN ?=
 
-export BASE_BRANCH
+export BASE_BRANCH OCM_BASE_BRANCH
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
