@@ -15,9 +15,9 @@ ifneq (,$(DAPPER_HOST_ARCH))
 include Makefile.inc
 
 ifneq (,$(filter ovn,$(_using)))
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings.ovn
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
