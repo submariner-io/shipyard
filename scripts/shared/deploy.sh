@@ -38,10 +38,6 @@ source ${SCRIPTS_DIR}/lib/deploy_funcs
 # Source plugin if the path is passed via plugin argument and the file exists
 [[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
 
-# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-source "${SCRIPTS_DIR}/lib/cluster_settings"
-[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
-
 ### Constants ###
 readonly CE_IPSEC_IKEPORT=500
 readonly CE_IPSEC_NATTPORT=4500
@@ -54,6 +50,7 @@ readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA
 
 ### Main ###
 
+load_settings
 declare_cidrs
 declare_kubeconfig
 

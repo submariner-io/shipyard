@@ -42,19 +42,6 @@ set -em
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 
-# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-source "${SCRIPTS_DIR}/lib/cluster_settings"
-[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
-
-cat << EOM
-Cluster settings::
-  broker - ${broker@Q}
-  clusters - ${clusters[*]@Q}
-  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
-  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
-  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
-EOM
-
 ### Functions ###
 
 function generate_cluster_yaml() {
@@ -227,6 +214,7 @@ function warn_inotify() {
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
+load_settings
 run_local_registry
 declare_cidrs
 

@@ -32,10 +32,6 @@ set -em -o pipefail
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
 
-# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-source "${SCRIPTS_DIR}/lib/cluster_settings"
-[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
-
 ### Functions ###
 
 function deploy_env_once() {
@@ -83,6 +79,7 @@ function test_with_subctl {
 
 ### Main ###
 
+load_settings
 declare_kubeconfig
 [[ "${lazy_deploy}" = "false" ]] || deploy_env_once
 
