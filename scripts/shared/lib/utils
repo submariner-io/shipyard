@@ -143,3 +143,18 @@ function run_if_defined() {
     type -t "${func}" | grep -q function || return 0
     "${func}" "${@:2}"
 }
+
+function load_settings() {
+    # Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
+    source "${SCRIPTS_DIR}/lib/cluster_settings"
+    [[ -z "${cluster_settings}" ]] || source "${cluster_settings}"
+
+    cat << EOM
+Cluster settings::
+  broker - ${broker@Q}
+  clusters - ${clusters[*]@Q}
+  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+}
