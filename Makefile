@@ -49,20 +49,6 @@ clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit u
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends
 
-# This removes all Submariner-provided images and all untagged images
-# Use this to ensure you use current images
-prune-images:
-	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
-	    if [ "$$tag" != "<none>" ]; then \
-	        docker rmi $$image:$$tag; \
-	    else \
-	        docker rmi $$hash; \
-	    fi \
-	done
-
-NON_DAPPER_GOALS += prune-images
-.PHONY: prune-images
-
 include Makefile.dapper
 
 # Make sure linting goals have up-to-date linting image
