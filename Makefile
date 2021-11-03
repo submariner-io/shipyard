@@ -28,9 +28,7 @@ override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
 package/.image.nettest package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here
-deploy: nettest
-
-nettest: package/.image.nettest
+deploy: package/.image.nettest
 
 e2e: $(VENDOR_MODULES) clusters
 
@@ -46,7 +44,7 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clusters deploy deploy-latest e2e golangci-lint nettest post-mortem print-version unit upgrade-e2e: images
+clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit upgrade-e2e: images
 
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends
