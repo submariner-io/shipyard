@@ -3,7 +3,8 @@
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
-DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments"
+DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments (deprecated, use settings instead)"
+DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'focus' '' "Ginkgo focus for the E2E tests"
 DEFINE_string 'skip' '' "Ginkgo skip for the E2E tests"
 DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
@@ -18,6 +19,7 @@ ginkgo_args=()
 [[ -n "${FLAGS_focus}" ]] && ginkgo_args+=("-ginkgo.focus=${FLAGS_focus}")
 [[ -n "${FLAGS_skip}" ]] && ginkgo_args+=("-ginkgo.skip=${FLAGS_skip}")
 cluster_settings="${FLAGS_cluster_settings}"
+settings="${FLAGS_settings}"
 [[ "${FLAGS_lazy_deploy}" = "${FLAGS_TRUE}" ]] && lazy_deploy=true || lazy_deploy=false
 
 if [[ $# == 0 ]]; then
@@ -31,10 +33,6 @@ set -em -o pipefail
 
 source ${SCRIPTS_DIR}/lib/debug_functions
 source ${SCRIPTS_DIR}/lib/utils
-
-# Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-source "${SCRIPTS_DIR}/lib/cluster_settings"
-[[ -z "${cluster_settings}" ]] || source ${cluster_settings}
 
 ### Functions ###
 
@@ -83,6 +81,7 @@ function test_with_subctl {
 
 ### Main ###
 
+load_settings
 declare_kubeconfig
 [[ "${lazy_deploy}" = "false" ]] || deploy_env_once
 
