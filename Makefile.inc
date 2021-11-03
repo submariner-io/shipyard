@@ -77,6 +77,9 @@ export GO
 
 # Shipyard provided targets
 
+##### CLEANING TARGETS #####
+.PHONY: clean clean-clusters clean-generated clean-buildx
+
 # [clean] cleans everything (running clusters, generated files ...)
 clean: clean-clusters clean-generated clean-buildx
 
@@ -94,6 +97,9 @@ clean-buildx:
 	docker buildx version > /dev/null 2>&1 && \
 	docker buildx use buildx_builder > /dev/null 2>&1 && \
 	docker buildx rm
+
+##### DEPLOYMENT& TESTING TARGETS #####
+.PHONY: clusters preload-images deploy e2e upgrade-e2e deploy-latest
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
@@ -124,6 +130,9 @@ upgrade-e2e: deploy-latest deploy e2e
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
 	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
+
+##### LINTING TARGETS #####
+.PHONY: gitlint golangci-lint lint markdownlint packagedoc-lint shellcheck yamllint
 
 # [gitlint] validates the commits are valid
 gitlint:
@@ -162,17 +171,25 @@ markdownlint:
 	fi; \
 	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
 
+# [shellcheck] validates your shell files
+shellcheck:
+	shellcheck $(SHELLCHECK_ARGS)
+
 # [yamllint] validates YAML files in the project
 yamllint:
 	yamllint --strict .
 
+##### MISC TARGETS #####
+.PHONY: backport post-mortem unit
+
+# [backport] creates a PR to backport the PR identified by pr= to the release identified by release=
+# This needs gh, and a GITHUB_TOKEN with repo and read:org
+backport:
+	$(SCRIPTS_DIR)/backport.sh $(release) $(pr)
+
 # [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
-
-# [shellcheck] validates your shell files
-shellcheck:
-	shellcheck $(SHELLCHECK_ARGS)
 
 # [unit] executes the Go unit tests of the project
 unit: $(VENDOR_MODULES)
@@ -191,11 +208,6 @@ vendor/modules.txt: go.mod
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
-
-# [backport] creates a PR to backport the PR identified by pr= to the release identified by release=
-# This needs gh, and a GITHUB_TOKEN with repo and read:org
-backport:
-	$(SCRIPTS_DIR)/backport.sh $(release) $(pr)
 
 # [prune-images] removes all Submariner-provided images and all untagged images
 # Use this to ensure you use current images
