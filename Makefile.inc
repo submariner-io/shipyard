@@ -6,8 +6,9 @@ PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
 DEBUG_PRINT ?= true
+PARALLEL ?= true
 TIMEOUT ?= 5m
-export DEBUG_PRINT GLOBALNET PLUGIN SETTINGS TIMEOUT
+export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.24
@@ -130,7 +131,7 @@ clean-buildx:
 	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
-.PHONY: clusters deploy e2e upgrade-e2e deploy-latest
+.PHONY: clusters deploy e2e scale upgrade-e2e deploy-latest
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
@@ -144,6 +145,10 @@ deploy: clusters preload-images
 # Will call `deploy` if it detects no submariner running on a cluster
 e2e:
 	$(SCRIPTS_DIR)/e2e.sh
+
+# [scale] deploys KIND clusters with submariner for local scale testing
+scale: PARALLEL = false
+scale: deploy
 
 upgrade-e2e: deploy-latest deploy e2e
 
