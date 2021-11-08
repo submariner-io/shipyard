@@ -145,14 +145,12 @@ function run_if_defined() {
 }
 
 function load_settings() {
-    if [[ -n "${settings}" ]]; then
-        load_settings_from_yaml
-    else
-        # Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-        source "${SCRIPTS_DIR}/lib/cluster_settings"
-        [[ -z "${cluster_settings}" ]] || source "${cluster_settings}"
+    if [[ -z "${settings}" ]]; then
+        echo "Settings file must be specified!"
+        exit 1
     fi
 
+    load_settings_from_yaml
     cat << EOM
 Cluster settings::
   broker - ${broker@Q}

@@ -20,7 +20,6 @@ DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
-DEFINE_string 'cluster_settings' '' "Settings file to customize cluster deployments (deprecated, use settings instead)"
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 FLAGS "$@" || exit $?
@@ -34,11 +33,10 @@ olm_version="${FLAGS_olm_version}"
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
-cluster_settings="${FLAGS_cluster_settings}"
 settings="${FLAGS_settings}"
 timeout="${FLAGS_timeout}"
 
-echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, cluster_settings=${cluster_settings}, settings=${settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, settings=${settings}, timeout=${timeout}"
 
 set -em
 
