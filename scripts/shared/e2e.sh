@@ -8,7 +8,7 @@ DEFINE_string 'skip' '' "Ginkgo skip for the E2E tests"
 DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
 DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
 DEFINE_boolean 'globalnet' false "Indicates if the globalnet feature is enabled"
-FLAGS_HELP="USAGE: $0 [--cluster_settings /path/to/settings] [--focus focus] [--skip skip] [--[no]lazy_deploy] [--testdir test/e2e] cluster [cluster ...]"
+FLAGS_HELP="USAGE: $0 [--focus focus] [--skip skip] [--[no]lazy_deploy] [--testdir test/e2e] cluster [cluster ...]"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
