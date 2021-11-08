@@ -23,7 +23,7 @@ RUN_IN_DAPPER := ./.dapper -m bind $(SELINUX_CONTEXT)
 
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
-$(filter-out .dapper shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
+$(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
 	-docker network create -d bridge kind
 	+$(RUN_IN_DAPPER) make --debug=b $@
 
@@ -36,6 +36,19 @@ $(BASE_DAPPER) $(LINTING_DAPPER):
 $(LINTING_GOALS): .dapper $(LINTING_DAPPER)
 	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -q make $@
 
+# [prune-images] removes all Submariner-provided images and all untagged images
+# Use this to ensure you use current images
+# Copied from Makefile to provide this everywhere (until we can share
+# non-Dapper goals across projects)
+prune-images:
+	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
+	    if [ "$$tag" != "<none>" ]; then \
+	        docker rmi $$image:$$tag; \
+	    else \
+	        docker rmi $$hash; \
+	    fi \
+	done
+
 shell: .dapper $(BASE_DAPPER)
 	$(RUN_IN_DAPPER) -s
 
@@ -44,4 +57,4 @@ shell: .dapper $(BASE_DAPPER)
 targets: $(LINTING_DAPPER)
 	@$(RUN_IN_DAPPER) -f $(LINTING_DAPPER) -q eval "\$${SCRIPTS_DIR}/targets.sh"
 
-.PHONY: shell targets $(LINTING_GOALS)
+.PHONY: prune-images shell targets $(LINTING_GOALS)

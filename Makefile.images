@@ -31,4 +31,4 @@ images: $(foreach image,$(IMAGES),package/.image.$(image))
 release-images:
 	$(SCRIPTS_DIR)/release_images.sh $(IMAGES) $(RELEASE_ARGS)
 
-.PHONY: release-images
+.PHONY: images release-images

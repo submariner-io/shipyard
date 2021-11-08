@@ -164,7 +164,9 @@ EOM
 }
 
 function _yq() {
-    yq e "$*" "${settings}"
+    local output
+    output=$(yq e "$*" "${settings}")
+    [[ "${output}" == "null" ]] || echo "${output}"
 }
 
 function load_settings_from_yaml() {
@@ -181,6 +183,6 @@ function load_settings_from_yaml() {
         cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
-        [[ "${cluster_subm[${cluster}]}" != "null" ]] || cluster_subm["${cluster}"]=$(_yq ".submariner")
+        cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
 }
