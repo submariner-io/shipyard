@@ -58,7 +58,7 @@ container="$(basename "$(pwd)"):${gitid}"
 docker build -t "${container}" -f "${file}" --build-arg "BASE_BRANCH=${BASE_BRANCH:-devel}" .
 
 extract_var() {
-    docker inspect "$1" | sed -n -E "/\"$2=/{s/[[:space:]]+\"$2=([^\"]+)\",/\1/;p;q}"
+    docker inspect "$1" | sed -n -E "/\"$2=/{s/[[:space:]]+\"$2=([^\"]+)\",?/\1/;p;q}"
 }
 
 DAPPER_CP="$(extract_var "${container}" DAPPER_CP)"
