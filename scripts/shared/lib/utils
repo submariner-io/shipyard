@@ -145,14 +145,12 @@ function run_if_defined() {
 }
 
 function load_settings() {
-    if [[ -n "${settings}" ]]; then
-        load_settings_from_yaml
-    else
-        # Always source the shared cluster settings, to set defaults in case something wasn't set in the provided settings
-        source "${SCRIPTS_DIR}/lib/cluster_settings"
-        [[ -z "${cluster_settings}" ]] || source "${cluster_settings}"
+    if [[ -z "${settings}" ]]; then
+        echo "Settings file must be specified!"
+        exit 1
     fi
 
+    load_settings_from_yaml
     cat << EOM
 Cluster settings::
   broker - ${broker@Q}
@@ -164,7 +162,9 @@ EOM
 }
 
 function _yq() {
-    yq e "$*" "${settings}"
+    local output
+    output=$(yq e "$*" "${settings}")
+    [[ "${output}" == "null" ]] || echo "${output}"
 }
 
 function load_settings_from_yaml() {
@@ -181,6 +181,6 @@ function load_settings_from_yaml() {
         cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
-        [[ "${cluster_subm[${cluster}]}" != "null" ]] || cluster_subm["${cluster}"]=$(_yq ".submariner")
+        cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
 }

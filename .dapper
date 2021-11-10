@@ -1,0 +1,88 @@
+#!/bin/sh
+
+file=Dockerfile.dapper
+socket=false
+dockerargs=
+
+while true
+do
+    case "$1" in
+        --file|-f)
+            file="$2"
+            shift 2
+            ;;
+        --socket|-k)
+            socket=true
+            shift
+            ;;
+        --directory|-C)
+            cd "$2" || exit
+            shift 2
+            ;;
+        --shell|-s)
+            command=bash
+            DAPPER_ENV="${DAPPER_ENV} TERM"
+            shift
+            ;;
+        --debug|-d)
+            shift
+            set -x
+            ;;
+        --version|-v)
+            echo Submariner Dapper
+            exit 0
+            ;;
+        --mount-suffix|-S)
+            suffix=":$2"
+            shift 2
+            ;;
+        --)
+            shift
+            break
+            ;;
+        -*)
+            echo "$0 doesn't support $1" >&2
+            exit 1
+            ;;
+        *)
+            break
+            ;;
+    esac
+done
+
+[ -n "$command" ] && set -- "$command"
+
+gitid="$(git symbolic-ref --short HEAD 2>/dev/null | tr / _ || :)"
+gitid="${gitid:-$(git show --format=%h -s)}"
+container="$(basename "$(pwd)"):${gitid}"
+docker build -t "${container}" -f "${file}" \
+       --build-arg "BASE_BRANCH=${BASE_BRANCH:-devel}" \
+       --build-arg "PROJECT=${PROJECT}" \
+       .
+
+extract_var() {
+    docker inspect "$1" | sed -n -E "/\"$2=/{s/[[:space:]]+\"$2=([^\"]+)\",?/\1/;p;q}"
+}
+
+DAPPER_CP="$(extract_var "${container}" DAPPER_CP)"
+[ -z "${DAPPER_CP}" ] && DAPPER_CP="$(pwd)"
+DAPPER_ENV="${DAPPER_ENV} $(extract_var "${container}" DAPPER_ENV)"
+DAPPER_SOURCE="$(extract_var "${container}" DAPPER_SOURCE)"
+[ -z "${DAPPER_SOURCE}" ] && DAPPER_SOURCE="/source/"
+DAPPER_DOCKER_SOCKET="$(extract_var "${container}" DAPPER_DOCKER_SOCKET)"
+DAPPER_RUN_ARGS="$(extract_var "${container}" DAPPER_RUN_ARGS)"
+
+if [ "${socket}" = true ] || [ "${DAPPER_DOCKER_SOCKET}" = true ]
+then
+    if [ -S /var/run/docker.sock ]; then
+        # Docker
+        dockerargs="${dockerargs} -v /var/run/docker.sock:/var/run/docker.sock${suffix}"
+    else
+        # Assume rootless Podman
+        dockerargs="${dockerargs} -v /run/user/$(id -u)/podman/podman.sock:/var/run/docker.sock${suffix}"
+    fi
+fi
+
+[ -t 1 ] && dockerargs="${dockerargs} -t"
+
+docker run -i --rm $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$(id -u)" -e "DAPPER_GID=$(id -g)" -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" ${dockerargs} ${DAPPER_RUN_ARGS} "${container}" "$@"

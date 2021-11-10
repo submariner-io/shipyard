@@ -34,6 +34,7 @@ type TestContextType struct {
 	KubeConfig          string
 	KubeContexts        contextArray
 	ClusterIDs          []string
+	NumNodesInCluster   map[ClusterIndex]int
 	ReportDir           string
 	ReportPrefix        string
 	SubmarinerNamespace string
