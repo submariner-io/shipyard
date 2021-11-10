@@ -105,19 +105,9 @@ function verify_gw_status() {
     return 1
 }
 
-function add_subm_gateway_label() {
-    [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
-    kubectl label node "${cluster}-worker" "submariner.io/gateway=true" --overwrite
-}
-
-function del_subm_gateway_label() {
-    [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
-    kubectl label node "${cluster}-worker" "submariner.io/gateway-" --overwrite
-}
-
 function prepare_cluster() {
     [[ ${cluster_subm[$cluster]} = "true" ]] || return 0
-    add_subm_gateway_label
+    kubectl label node "${cluster}-worker" "submariner.io/gateway=true" --overwrite
 }
 
 function deploy_resource() {
