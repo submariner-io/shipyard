@@ -22,7 +22,7 @@ endif
 
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
+override E2E_ARGS += --nolazy_deploy cluster1
 
 # Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;
