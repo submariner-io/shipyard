@@ -113,7 +113,7 @@ function deploy_cni() {
 
 function deploy_weave_cni(){
     echo "Applying weave network..."
-    kubectl apply -f "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}"
+    curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!' | kubectl apply -f -
     echo "Waiting for weave-net pods to be ready..."
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
