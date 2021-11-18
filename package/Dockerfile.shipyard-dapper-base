@@ -52,9 +52,9 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
 ENV LINT_VERSION=v1.43.0 \
-    HELM_VERSION=v3.4.1 \
+    HELM_VERSION=v3.7.1 \
     KIND_VERSION=v0.11.1 \
-    BUILDX_VERSION=v0.5.1 \
+    BUILDX_VERSION=v0.7.0 \
     GH_VERSION=2.2.0 \
     YQ_VERSION=4.14.1
 
