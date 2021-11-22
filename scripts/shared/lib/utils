@@ -143,3 +143,44 @@ function run_if_defined() {
     type -t "${func}" | grep -q function || return 0
     "${func}" "${@:2}"
 }
+
+function load_settings() {
+    if [[ -z "${settings}" ]]; then
+        echo "Settings file must be specified!"
+        exit 1
+    fi
+
+    load_settings_from_yaml
+    cat << EOM
+Cluster settings::
+  broker - ${broker@Q}
+  clusters - ${clusters[*]@Q}
+  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+}
+
+function _yq() {
+    local output
+    output=$(yq e "$*" "${settings}")
+    [[ "${output}" == "null" ]] || echo "${output}"
+}
+
+function load_settings_from_yaml() {
+    declare -ga clusters
+    declare -gA cluster_cni cluster_nodes cluster_subm
+
+    readarray -t clusters < <(_yq ".clusters | keys | .[]")
+
+    # Determine broker, default to first declared cluster
+    broker=$(_yq ".clusters[] | select(. | has(\"broker\")) | path | .[-1] // \"${clusters[0]}\"")
+
+    # Determine per cluster settings, default to global if not defined
+    for cluster in "${clusters[@]}"; do
+        cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
+        cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
+        cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
+        cluster_subm["${cluster}"]=$(_yq ".submariner")
+    done
+}

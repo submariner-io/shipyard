@@ -15,30 +15,20 @@ ifneq (,$(DAPPER_HOST_ARCH))
 include Makefile.inc
 
 ifneq (,$(filter ovn,$(_using)))
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings.ovn
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
-CLUSTER_SETTINGS_FLAG = --cluster_settings $(DAPPER_SOURCE)/scripts/cluster_settings
+CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
 override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override E2E_ARGS += $(CLUSTER_SETTINGS_FLAG) --nolazy_deploy cluster1
-
-TARGETS := $(shell ls -p scripts | grep -v -e /)
-
-# Add any project-specific arguments here
-$(TARGETS):
-	./scripts/$@
-
-.PHONY: $(TARGETS)
+override E2E_ARGS += --nolazy_deploy cluster1
 
 # Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here
-deploy: nettest
-
-nettest: package/.image.nettest
+deploy: package/.image.nettest
 
 e2e: $(VENDOR_MODULES) clusters
 
@@ -54,24 +44,10 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clusters deploy deploy-latest e2e golangci-lint nettest post-mortem print-version unit upgrade-e2e: images
+clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit upgrade-e2e: images
 
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends
-
-# This removes all Submariner-provided images and all untagged images
-# Use this to ensure you use current images
-prune-images:
-	docker images | grep -E '(admiral|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
-	    if [ "$$tag" != "<none>" ]; then \
-	        docker rmi $$image:$$tag; \
-	    else \
-	        docker rmi $$hash; \
-	    fi \
-	done
-
-NON_DAPPER_GOALS += prune-images
-.PHONY: prune-images
 
 include Makefile.dapper
 
