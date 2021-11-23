@@ -61,7 +61,7 @@ docker build -t "${container}" -f "${file}" \
        .
 
 extract_var() {
-    docker inspect "$1" | sed -n -E "/\"$2=/{s/[[:space:]]+\"$2=([^\"]+)\",?/\1/;p;q}"
+    docker inspect "$1" | grep "$2" | sed -E "s/.*\"$2=(.*)\",?/\1/;q"
 }
 
 DAPPER_CP="$(extract_var "${container}" DAPPER_CP)"
