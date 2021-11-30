@@ -78,6 +78,12 @@ override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
 endif
 
+ifdef SETTINGS
+export SETTINGS
+override CLUSTERS_ARGS += --settings $(SETTINGS)
+override DEPLOY_ARGS += --settings $(SETTINGS)
+endif
+
 GO ?= go
 export GO
 
