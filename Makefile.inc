@@ -214,3 +214,5 @@ vendor/modules.txt: go.mod
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
+
+print-%: ; @echo $* = $($*)
