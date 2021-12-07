@@ -23,7 +23,7 @@ override E2E_ARGS += --nolazy_deploy cluster1
 
 include Makefile.inc
 
-# Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
+# Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here

@@ -125,6 +125,10 @@ preload-images: images
 		import_image quay.io/submariner/$${image};\
 	done
 
+# [reload-images] rebuilds and reload the images, optionally restarting with `restart` variable
+reload-images: preload-images
+	$(SCRIPTS_DIR)/reload_images.sh
+
 # [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images
 	$(SCRIPTS_DIR)/deploy.sh $(DEPLOY_ARGS)
