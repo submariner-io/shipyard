@@ -4,7 +4,7 @@
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
-DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle)'
+DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
 DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
 DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
@@ -44,9 +44,90 @@ readonly CE_IPSEC_NATTPORT=4500
 readonly SUBM_COLORCODES=blue
 readonly SUBM_IMAGE_REPO=localhost:5000
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
+readonly SUBM_CS="submariner-catalog-source"
+readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
+readonly MARKETPLACE_NAMESPACE="olm"
 readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+
+### Common functions ###
+
+# Create a namespace
+# 1st argument is the namespace
+function create_namespace {
+  local ns=$1
+  echo "[INFO](${cluster}) Create the ${ns} namespace..."
+  kubectl create namespace "${ns}" || :
+}
+
+# Create a CatalogSource
+# 1st argument is the catalogsource name
+# 2nd argument is the namespace
+# 3rd argument is index image url
+function create_catalog_source() {
+  local cs=$1
+  local ns=$2
+  # shellcheck disable=SC2034 # this variable is used elsewhere
+  local iib=$3  # Index Image Build
+  echo "[INFO](${cluster}) Create the catalog source ${cs}..."
+
+  kubectl delete catalogsource/operatorhubio-catalog -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
+  kubectl delete catalogsource/"${cs}" -n "${MARKETPLACE_NAMESPACE}" --wait --ignore-not-found
+
+  # Create the CatalogSource
+  render_template "${RESOURCES_DIR}"/common/catalogSource.yaml | kubectl apply -f -
+
+  # Wait for the CatalogSource readiness
+  if ! with_retries 60 kubectl get catalogsource -n "${MARKETPLACE_NAMESPACE}" "${cs}" -o jsonpath='{.status.connectionState.lastObservedState}'; then
+    echo "[ERROR](${cluster}) CatalogSource ${cs} is not ready."
+    exit 1
+  fi
+
+  echo "[INFO](${cluster}) Catalog source ${cs} created"
+}
+
+# Create an OperatorGroup
+# 1st argument is the operatorgroup name
+# 2nd argument is the target namespace
+function create_operator_group() {
+  local og=$1
+  local ns=$2
+
+  echo "[INFO](${cluster}) Create the OperatorGroup ${og}..."
+  # Create the OperatorGroup
+  render_template "${RESOURCES_DIR}"/common/operatorGroup.yaml | kubectl apply -f -
+}
+
+# Install the bundle, subscript and approve.
+# 1st argument is the subscription name
+# 2nd argument is the target catalogsource name
+# 3nd argument is the source namespace
+# 4th argument is the bundle name
+function install_bundle() {
+  local sub=$1
+  local cs=$2
+  local ns=$3
+  local bundle=$4
+  local installPlan
+
+  # Delete previous CatalogSource and Subscription
+  kubectl delete sub/"${sub}" -n "${ns}" --wait --ignore-not-found
+
+  # Create the Subscription (Approval should be Manual not Automatic in order to pin the bundle version)
+  echo "[INFO](${cluster}) Install the bundle ${bundle} ..."
+  render_template "${RESOURCES_DIR}"/common/subscription.yaml | kubectl apply -f -
+
+  # Manual Approve
+  echo "[INFO](${cluster}) Approve the InstallPlan..."
+  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${ns}" subs/"${sub}" || (echo "[ERROR](${cluster}) InstallPlan not found."; exit 1)
+  installPlan=$(kubectl get subscriptions.operators.coreos.com "${sub}" -n "${ns}" -o jsonpath='{.status.installPlanRef.name}')
+  if [ -n "${installPlan}" ]; then
+    kubectl patch installplan -n "${ns}" "${installPlan}" -p '{"spec":{"approved":true}}' --type merge
+  fi
+
+  echo "[INFO](${cluster}) Bundle ${bundle} installed"
+}
 
 ### Main ###
 
@@ -77,4 +158,3 @@ else
 fi
 
 run_if_defined post_deploy
-

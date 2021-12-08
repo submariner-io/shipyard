@@ -41,10 +41,16 @@ ifneq (,$(filter helm,$(_using)))
 override DEPLOY_ARGS += --deploytool helm
 endif
 
-ifneq (,$(filter olm,$(_using)))
+ifneq (,$(filter bundle,$(_using)))
 override CLUSTERS_ARGS += --olm
 override DEPLOY_ARGS += --deploytool bundle
 PRELOAD_IMAGES += submariner-operator-index
+endif
+
+ifneq (,$(filter ocm,$(_using)))
+override CLUSTERS_ARGS += --olm
+override DEPLOY_ARGS += --service_discovery --deploytool ocm
+PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
@@ -208,3 +214,5 @@ vendor/modules.txt: go.mod
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
+
+print-%: ; @echo $* = $($*)
