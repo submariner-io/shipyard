@@ -13,18 +13,9 @@ require (
 	golang.org/x/oauth2 v0.0.0-20200107190931-bf48bf16ab8d // indirect
 	gopkg.in/check.v1 v1.0.0-20200227125254-8fa46927fb4f // indirect
 	gopkg.in/yaml.v3 v3.0.0-20200605160147-a5ece683394c // indirect
-	k8s.io/api v0.19.10
-	k8s.io/apimachinery v0.19.10
-	k8s.io/client-go v0.19.10
+	k8s.io/api v0.19.16
+	k8s.io/apimachinery v0.19.16
+	k8s.io/client-go v0.19.16
 	k8s.io/klog v1.0.0
 	sigs.k8s.io/mcs-api v0.1.0
-)
-
-// Pinned to kubernetes-1.19.10
-replace (
-	k8s.io/api => k8s.io/api v0.19.10
-	k8s.io/apiextensions-apiserver => k8s.io/apiextensions-apiserver v0.19.10
-	k8s.io/apimachinery => k8s.io/apimachinery v0.19.10
-	k8s.io/client-go => k8s.io/client-go v0.19.10
-	k8s.io/cloud-provider => k8s.io/cloud-provider v0.19.10
 )
