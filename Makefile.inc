@@ -179,7 +179,7 @@ markdownlint:
 
 # [shellcheck] validates your shell files
 shellcheck:
-	shellcheck $(SHELLCHECK_ARGS)
+	shellcheck -x -P $${SCRIPTS_DIR} $(SHELLCHECK_ARGS)
 
 # [yamllint] validates YAML files in the project
 yamllint:
