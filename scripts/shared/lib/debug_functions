@@ -13,7 +13,7 @@ function trap_commands() {
           ! [[ "$cmd" =~ ^(echo|read|\[|while|for|local) ]] &&
           { [[ ! "$cmd" =~ \$\( ]] || cmd="${cmd@Q}"; } &&
           ctxt="${cluster:+[${cluster}]}" &&
-          cmd=`eval echo "[${PWD##*/}]\$ $ctxt $cmd" 2>/dev/null` &&
+          cmd=`eval echo "[$(date -u)] [${PWD##*/}]\$ $ctxt $cmd" 2>/dev/null` &&
           echo "${CYAN_COLOR}$cmd${NO_COLOR}" >&2; true' DEBUG
 }
 
