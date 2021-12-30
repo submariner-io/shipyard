@@ -1,0 +1,166 @@
+# shellcheck shell=bash
+# shellcheck source=scripts/shared/lib/source_only
+. "${BASH_SOURCE%/*}"/source_only
+
+### Constants ###
+readonly OCM_NS="open-cluster-management"
+readonly OCM_AGENT_NS="open-cluster-management-agent"
+readonly HUB="cluster1"
+
+# Variables
+
+### Functions ###
+
+function deploytool_prereqs() {
+  # shellcheck disable=SC2153 # this variable is defined elsewhere
+  [[ -z "${SUBM_NS}" ]] && (echo "[ERROR] Required environment variables SUBM_NS not loaded"; exit 3)
+  # shellcheck disable=SC2153 # this variable is defined elsewhere
+  [[ -z "${SUBM_CS}" ]] && (echo "[ERROR] Required environment variables SUBM_CS not loaded"; exit 3)
+  # shellcheck disable=SC2153 # this variable is defined elsewhere
+  [[ -z "${SUBM_INDEX_IMG}" ]] && (echo "[ERROR] Required environment variables SUBM_INDEX_IMG not loaded"; exit 3)
+
+  # Create new namespace
+  with_context "${HUB}" "create_namespace ${OCM_NS}"
+  run_subm_clusters "create_namespace ${OCM_AGENT_NS}"
+  run_subm_clusters "create_namespace ${SUBM_NS}"
+
+  # Create the custom catalog source
+  run_subm_clusters "create_catalog_source ${SUBM_CS} ${SUBM_NS} ${SUBM_INDEX_IMG}"
+
+  # Install the cluster-manager on the hub
+  with_context "${HUB}" install_cluster_manager
+
+  # Install submariner-addon on the hub
+  with_context "${HUB}" install_submariner_addon
+
+  # Install the klusterlet on the managed clusters
+  run_subm_clusters "install_klusterlet"
+
+  # Import the managed Clusters
+  with_context "${HUB}" create_managed_clusters
+}
+
+function install_cluster_manager() {
+  local cluster_manager_dir
+
+  echo "[INFO](${cluster}) Deploy OCM cluster manager..."
+  # Clone the repo
+  [ -d /tmp/registration_operator ] && rm -Rf /tmp/registration_operator
+  git clone --depth 1 --single-branch --branch "${OCM_BASE_BRANCH}" https://github.com/open-cluster-management/registration-operator /tmp/registration_operator
+  cluster_manager_dir=/tmp/registration_operator/deploy/cluster-manager
+  # Deploy
+  kubectl apply -k ${cluster_manager_dir}/config/manifests
+  kubectl apply -k ${cluster_manager_dir}/config/samples
+}
+
+function install_klusterlet() {
+  local klusterlet_dir
+  local master_ip
+
+  # shellcheck disable=SC2034 # this variable is used elsewhere
+  master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}"-control-plane | head -n 1)
+  echo "[INFO](${cluster}) Deploy OCM klusterlet..."
+  # Clone the repo
+  if [ ! -d /tmp/registration_operator ]; then
+    git clone --depth 1 --single-branch --branch "${OCM_BASE_BRANCH}" https://github.com/open-cluster-management/registration-operator /tmp/registration_operator
+  fi
+  klusterlet_dir=/tmp/registration_operator/deploy/klusterlet
+  # Deploy
+  kubectl apply -k ${klusterlet_dir}/config/manifests
+  kubectl -n ${OCM_AGENT_NS} create secret generic bootstrap-hub-kubeconfig --from-file="kubeconfig=${KUBECONFIGS_DIR}/kind-config-${HUB}"
+  render_template "${RESOURCES_DIR}"/ocm/klusterlet.yaml | kubectl apply -f -
+  # Tag worker node with submariner.io/gateway=true
+  kubectl label nodes "${cluster}-worker" "submariner.io/gateway=true" --overwrite
+}
+
+function install_submariner_addon() {
+  local submariner_addon_dir
+  local broker_api_server
+
+  echo "[INFO](${cluster}) Deploy OCM submariner-addon..."
+  # Clone the repo
+  if [ -f "${DAPPER_SOURCE}"/deploy/config/manifests/bases/submariner-addon.clusterserviceversion.yaml ]; then
+    submariner_addon_dir="${DAPPER_SOURCE}"/deploy
+  else
+    [ -d /tmp/submariner-addon ] && rm -Rf /tmp/submariner-addon
+    git clone --depth 1 --single-branch --branch "${OCM_BASE_BRANCH}" https://github.com/open-cluster-management/submariner-addon /tmp/submariner-addon
+    submariner_addon_dir=/tmp/submariner-addon/deploy
+  fi
+  # Set submariner-addon imagePullPolicy to IfNotPresent
+  sed -i -- '/image: quay.io*/a\        imagePullPolicy: IfNotPresent' ${submariner_addon_dir}/config/operator/operator.yaml
+  # Add master apiserver to submariner-addon deployment
+  broker_api_server=$(kubectl get endpoints kubernetes -n default -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+  yq eval -i '.spec.template.spec.containers[].env += {"name": "BROKER_API_SERVER", "value": "'"${broker_api_server}"'"}' \
+  ${submariner_addon_dir}/config/operator/operator.yaml
+  # Deploy
+  kubectl apply -k ${submariner_addon_dir}/config/manifests
+}
+
+function create_managed_clusters() {
+  local csr_name
+
+  # Loop the submariner clusters
+  for mc in "${clusters[@]}"; do
+    if [[ ${cluster_subm[$mc]} == "true" ]]; then
+      echo "[INFO](${cluster}) Accept the managed cluster ${mc} and approve its Certificate Signing Request (CSR)..."
+      # Wait for the managed cluster resource
+      if ! with_retries 120 kubectl get managedclusters.cluster.open-cluster-management.io "${mc}"; then
+        echo "[ERROR] Unable to find the managed cluster ${mc}."
+        exit 1
+      fi
+      # Accept the managed cluster
+      kubectl patch managedclusters.cluster.open-cluster-management.io "${mc}" \
+      --type merge --patch '{"spec":{"hubAcceptsClient":true}}'
+      # Approve the managed cluster CSR
+      csr_name=$(kubectl get csr | grep "${mc}" | grep "Pending" | awk '{print $1}')
+      kubectl certificate approve "${csr_name}"
+      # Wait for the managed cluster readiness
+      kubectl wait --for condition=ManagedClusterJoined --timeout=5m managedclusters.cluster.open-cluster-management.io "${mc}" \
+      || (echo "[ERROR](${cluster}) The managed cluster ${mc} is not ready."; exit 1)
+      # Add the managed cluster to the submariner clusterset
+      kubectl label managedclusters.cluster.open-cluster-management.io "${mc}" \
+      "cluster.open-cluster-management.io/clusterset=submariner" --overwrite
+    fi
+  done
+
+  echo "[INFO](${cluster}) Create the Managed Cluster Set ..."
+  render_template "${RESOURCES_DIR}"/ocm/managedClusterSet.yaml | kubectl apply -f -
+}
+
+function setup_broker() {
+  echo "[INFO](${cluster}) The broker setup is done by OCM."
+}
+
+function install_subm() {
+  # Loop the submariner clusters and set up the managed cluster addon
+  for mc in "${clusters[@]}"; do
+    if [[ ${cluster_subm[$mc]} == "true" ]]; then
+      echo "[INFO](${cluster}) Install submariner on ${mc}..."
+      # Create the Submariner Subscription config
+      render_template "${RESOURCES_DIR}"/ocm/submarinerConfig.yaml | kubectl apply -f -
+      # Create the Submariner addon to start the deployment
+      render_template "${RESOURCES_DIR}"/ocm/managedClusterAddOn.yaml | kubectl apply -f -
+      # Label the managed clusters and klusterletaddonconfigs to deploy submariner
+      kubectl label managedclusters.cluster.open-cluster-management.io "${mc}" "cluster.open-cluster-management.io/submariner-agent=true" --overwrite
+      echo "[INFO](${cluster}) Submariner installed on ${mc}"
+    fi
+  done
+  # Loop the submariner clusters and wait for the connection establishment
+  for mc in "${clusters[@]}"; do
+    if [[ ${cluster_subm[$mc]} == "true" ]]; then
+      with_retries 60 kubectl get manifestworks -n "${mc}" addon-submariner-deploy
+      with_retries 60 kubectl get manifestworks -n "${mc}" submariner-operator
+      kubectl wait --for=condition=Available --timeout=5m manifestworks -n "${mc}" addon-submariner-deploy
+      kubectl wait --for=condition=Available --timeout=5m manifestworks -n "${mc}" submariner-operator
+      with_retries 60 kubectl get managedclusteraddons -n "${mc}" submariner
+      kubectl wait --for=condition=Available --timeout=5m managedclusteraddons -n "${mc}" submariner && \
+      kubectl wait --for=condition=SubmarinerAgentDegraded=false --timeout=5m managedclusteraddons -n "${mc}" submariner && \
+      kubectl wait --for=condition=SubmarinerConnectionDegraded=false --timeout=5m managedclusteraddons -n "${mc}" submariner
+      echo "[INFO](${cluster}) Submariner installed on ${mc}"
+    fi
+  done
+}
+
+function install_subm_all_clusters() {
+  with_context "${HUB}" install_subm
+}
