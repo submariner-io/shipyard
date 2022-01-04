@@ -78,6 +78,12 @@ override DEPLOY_ARGS += --plugin $(PLUGIN)
 override CLEANUP_ARGS += --plugin $(PLUGIN)
 endif
 
+ifdef SETTINGS
+export SETTINGS
+override CLUSTERS_ARGS += --settings $(SETTINGS)
+override DEPLOY_ARGS += --settings $(SETTINGS)
+endif
+
 GO ?= go
 export GO
 
@@ -118,6 +124,10 @@ preload-images: images
 	for image in $(PRELOAD_IMAGES); do\
 		import_image quay.io/submariner/$${image};\
 	done
+
+# [reload-images] rebuilds and reload the images, optionally restarting with `restart` variable
+reload-images: preload-images
+	$(SCRIPTS_DIR)/reload_images.sh
 
 # [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images

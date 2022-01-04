@@ -13,19 +13,17 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-include Makefile.inc
-
 ifneq (,$(filter ovn,$(_using)))
-CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
+SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
-CLUSTER_SETTINGS_FLAG = --settings $(DAPPER_SOURCE)/.shipyard.e2e.yml
+SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
-override CLUSTERS_ARGS += $(CLUSTER_SETTINGS_FLAG)
-override DEPLOY_ARGS += $(CLUSTER_SETTINGS_FLAG)
 override E2E_ARGS += --nolazy_deploy cluster1
 
-# Prevent rebuilding images inside dapper since thy're already built outside it in Shipyard's case
+include Makefile.inc
+
+# Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here
