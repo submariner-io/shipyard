@@ -35,6 +35,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # subctl *         | Submariner's deploy tool (operator)
 # upx              | binary compression
 # yamllint         | YAML linting
+# yq               | YAML processing (OCM deploy tool)
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
@@ -60,17 +61,17 @@ ENV LINT_VERSION=v1.43.0 \
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
-    curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf - && \
+    i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
+    GOFLAGS="" go get -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \
     mkdir -p ~/.docker/cli-plugins && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
     chmod 755 ~/.docker/cli-plugins/docker-buildx && \
     curl -L https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz | tar xzf - && \
     mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
     rm -rf gh_${GH_VERSION}_linux_${ARCH} && \
-    curl -Lo /go/bin/yq "https://github.com/mikefarah/yq/releases/download/v${YQ_VERSION}/yq_linux_${ARCH}" && chmod a+x /go/bin/yq && \
     find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \)
 

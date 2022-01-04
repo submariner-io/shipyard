@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm', 'olm']
+        deploytool: ['operator', 'helm', 'bundle', 'ocm']
         lighthouse: ['']
         ovn: ['']
         include:
@@ -52,15 +52,16 @@ jobs:
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
-          - deploytool: olm
+          - deploytool: bundle
             lighthouse: lighthouse
+        exclude:
+          # OCM does not support globalnet at this moment
+          - deploytool: ocm
+            globalnet: globalnet
     steps:
-      - name: Setup kernel for react native, increase watchers
-        if: ${{ matrix.deploytool == 'olm' }}
-        run: |
-          echo -e "fs.inotify.max_user_watches=524288\nfs.inotify.max_user_instances=512" \
-          | sudo tee -a /etc/sysctl.conf && \
-          sudo sysctl -p
+      - name: Set up kernel, increase the inotify settings
+        if: ${{ matrix.deploytool == 'bundle' || matrix.deploytool == 'ocm' }}
+        run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
 
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ matrix.ovn != '' }}

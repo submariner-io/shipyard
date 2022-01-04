@@ -1,0 +1,21 @@
+---
+apiVersion: submarineraddon.open-cluster-management.io/v1alpha1
+kind: SubmarinerConfig
+metadata:
+  name: submariner
+  namespace: ${mc}
+spec:
+  IPSecIKEPort: ${CE_IPSEC_IKEPORT}
+  IPSecNATTPort: ${CE_IPSEC_NATTPORT}
+  NATTEnable: false
+  cableDriver: libreswan
+  gatewayConfig:
+    gateways: 1
+  imagePullSpecs:
+    submarinerImagePullSpec: ${SUBM_IMAGE_REPO}/submariner-gateway:${SUBM_IMAGE_TAG}
+    submarinerRouteAgentImagePullSpec: ${SUBM_IMAGE_REPO}/submariner-route-agent:${SUBM_IMAGE_TAG}
+    lighthouseAgentImagePullSpec: ${SUBM_IMAGE_REPO}/lighthouse-agent:${SUBM_IMAGE_TAG}
+    lighthouseCoreDNSImagePullSpec: ${SUBM_IMAGE_REPO}/lighthouse-coredns:${SUBM_IMAGE_TAG}
+  subscriptionConfig:
+    source: ${SUBM_CS}
+    sourceNamespace: ${MARKETPLACE_NAMESPACE}

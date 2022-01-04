@@ -10,12 +10,13 @@ kind_k8s_versions[1.19]=1.19.11@sha256:07db187ae84b4b7de440a73886f008cf903fcf576
 kind_k8s_versions[1.20]=1.20.7@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
 kind_k8s_versions[1.21]=1.21.1@sha256:69860bda5563ac81e3c0057d654b5253219618a22ec3a346306239bba8cfa1a6
 kind_k8s_versions[1.22]=1.22.0@sha256:b8bda84bb3a190e6e028b1760d277454a72267a5454b57db34437c34a588d047
+kind_k8s_versions[1.23]=1.23.0@sha256:49824ab1727c04e56a21a5d8372a402fcd32ea51ac96a2706a12af38934f81ac
 
 ## Process command line flags ##
 
 source ${SCRIPTS_DIR}/lib/shflags
 DEFINE_string 'k8s_version' "${DEFAULT_K8S_VERSION}" 'Version of K8s to use'
-DEFINE_string 'olm_version' '0.16.1' 'Version of OLM to use'
+DEFINE_string 'olm_version' 'v0.18.3' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
@@ -171,9 +172,10 @@ function run_local_registry() {
 
 function deploy_olm() {
     echo "Applying OLM CRDs..."
-    kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$olm_version/crds.yaml --validate=false
+    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/crds.yaml" --validate=false
+    kubectl wait --for=condition=Established -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/crds.yaml"
     echo "Applying OLM resources..."
-    kubectl apply -f https://github.com/operator-framework/operator-lifecycle-manager/releases/download/$olm_version/olm.yaml
+    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/olm.yaml"
 
     echo "Waiting for olm-operator deployment to be ready..."
     kubectl rollout status deployment/olm-operator --namespace=olm --timeout="${timeout}"
