@@ -15,7 +15,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-ifneq (,$(filter ovn,$(_using)))
+ifneq (,$(filter ovn,$(USING)))
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
