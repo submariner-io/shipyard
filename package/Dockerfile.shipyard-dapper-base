@@ -28,7 +28,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # kubectl          | e2e tests (in kubernetes-client)
 # make             | OLM installation
 # markdownlint     | Markdown linting
-# moby-engine      | Dapper (Docker)
+# moby-engine      | Docker (for Dapper)
 # npm              | Required for installing markdownlint
 # qemu-user-static | Emulation (for multiarch builds)
 # ShellCheck       | shell script linting
