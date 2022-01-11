@@ -1,7 +1,9 @@
 BASE_BRANCH ?= devel
 OCM_BASE_BRANCH ?= main
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
-NON_DAPPER_GOALS += images
+MULTIARCH_IMAGES ?= nettest
+PLATFORMS ?= linux/amd64,linux/arm64
+NON_DAPPER_GOALS += images multiarch-images
 SHELLCHECK_ARGS := scripts/shared/lib/*
 FOCUS ?=
 SKIP ?=
