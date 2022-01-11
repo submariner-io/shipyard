@@ -14,15 +14,12 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - shell: bash
-      env:
-        IMAGES_ARGS: --nocache ${{ inputs.image_args }}
-      run: |
-        echo "::group::Build new images"
-        make images
-        echo "::endgroup::"
-
-    - name: Release newly built images
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
+      with:
+        image: tonistiigi/binfmt:latest
+        platforms: all
+    - name: Build and release images
       shell: bash
       env:
         QUAY_USERNAME: ${{ inputs.username }}

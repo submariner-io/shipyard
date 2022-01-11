@@ -23,15 +23,15 @@ source ${SCRIPTS_DIR}/lib/debug_functions
 
 function release_image() {
     local image=$1
+    local manifest=${image##*/}
 
     for target_tag in $VERSION $release_tag; do
         local target_image="${image}:${target_tag#v}"
-        docker tag ${image}:${DEV_VERSION} ${target_image}
-        docker push ${target_image}
+	    buildah manifest push --all ${manifest} docker://${target_image}
     done
 }
 
-echo "$QUAY_PASSWORD" | docker login quay.io -u "$QUAY_USERNAME" --password-stdin
+echo "$QUAY_PASSWORD" | buildah login -u "$QUAY_USERNAME" --password-stdin quay.io
 for image in "$@"; do
     release_image ${repo}/${image}
 done

@@ -13,6 +13,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # Requirements:
 # Component        | Usage
 # -------------------------------------------------------------
+# buildah          | container image construction
 # curl             | download other tools
 # findutils        | make unit (find unit test dirs)
 # gcc              | needed by `go test -race` (https://github.com/golang/go/issues/27089)
@@ -28,7 +29,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # kubectl          | e2e tests (in kubernetes-client)
 # make             | OLM installation
 # markdownlint     | Markdown linting
-# moby-engine      | Dapper (Docker)
+# moby-engine      | Docker (for Dapper)
 # npm              | Required for installing markdownlint
 # qemu-user-static | Emulation (for multiarch builds)
 # ShellCheck       | shell script linting
@@ -39,7 +40,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
-                   gcc git-core curl moby-engine make golang kubernetes-client \
+                   gcc git-core curl buildah moby-engine make golang kubernetes-client \
                    findutils upx jq ShellCheck npm gitlint yamllint \
                    qemu-user-static python3-pip && \
     npm install -g markdownlint-cli && \
@@ -55,7 +56,6 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 ENV LINT_VERSION=v1.43.0 \
     HELM_VERSION=v3.7.1 \
     KIND_VERSION=v0.11.1 \
-    BUILDX_VERSION=v0.7.1 \
     GH_VERSION=2.2.0 \
     YQ_VERSION=4.14.1
 
@@ -66,9 +66,6 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     GOFLAGS="" go get -v github.com/onsi/ginkgo/ginkgo && \
     GOFLAGS="" go get -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \
-    mkdir -p ~/.docker/cli-plugins && \
-    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
-    chmod 755 ~/.docker/cli-plugins/docker-buildx && \
     curl -L https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz | tar xzf - && \
     mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
     rm -rf gh_${GH_VERSION}_linux_${ARCH} && \

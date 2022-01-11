@@ -90,10 +90,10 @@ export GO
 # Shipyard provided targets
 
 ##### CLEANING TARGETS #####
-.PHONY: clean clean-clusters clean-generated clean-buildx
+.PHONY: clean clean-clusters clean-generated
 
 # [clean] cleans everything (running clusters, generated files ...)
-clean: clean-clusters clean-generated clean-buildx
+clean: clean-clusters clean-generated
 
 # [clean-generated] removes files we generated
 clean-generated:
@@ -103,12 +103,6 @@ clean-generated:
 clean-clusters:
 	$(SCRIPTS_DIR)/cleanup.sh $(CLEANUP_ARGS)
 cleanup: clean-clusters
-
-# [clean-buildx] removes the buildx builder, if any
-clean-buildx:
-	docker buildx version > /dev/null 2>&1 && \
-	docker buildx use buildx_builder > /dev/null 2>&1 && \
-	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
 .PHONY: clusters preload-images deploy e2e upgrade-e2e deploy-latest
