@@ -114,7 +114,57 @@ function deploy_cni() {
 
 function deploy_weave_cni(){
     echo "Applying weave network..."
-    curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!' | kubectl apply -f -
+
+    WEAVE_YAML=`curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!'`
+
+    # Search the YAML for images that need to be downloaded
+    IMAGE_LIST=( $(echo "${WEAVE_YAML}" | grep "image:" | awk -F"'" '{print $2}') )
+    echo "IMAGE_LIST=${IMAGE_LIST[@]}"
+    for i in "${!IMAGE_LIST[@]}"
+    do
+        IMAGE_FAILURE=false
+
+        # Check if image is already present, and if not, download it.
+        echo "Processing Image: ${IMAGE_LIST[$i]}"
+        if [ -z "`docker images -q ${IMAGE_LIST[$i]}`" ] ; then
+            echo "Image ${IMAGE_LIST[$i]} not found, downloading..."
+            docker pull "${IMAGE_LIST[$i]}"
+            if [ $? != 0 ] ; then
+                echo "**** 'docker pull ${IMAGE_LIST[$i]}' failed. Manually run. ****"
+                IMAGE_FAILURE=true
+            fi
+        else
+            echo "Image ${IMAGE_LIST[$i]} already downloaded."
+        fi
+
+        if [ "${IMAGE_FAILURE}" == false ] ; then
+            LCL_REG_IMAGE_NAME=`echo "${IMAGE_LIST[$i]}" | sed 's!weaveworks/!localhost:5000/!'`
+            # Copy image to local registry if not there
+            if [ -z "`docker images -q ${LCL_REG_IMAGE_NAME}`" ] ; then
+                echo "Image ${LCL_REG_IMAGE_NAME} not found, tagging and pushing ..."
+                docker tag "${IMAGE_LIST[$i]}" "${LCL_REG_IMAGE_NAME}"
+                if [ $? != 0 ] ; then
+                    echo "'docker tag ${IMAGE_LIST[$i]} ${LCL_REG_IMAGE_NAME}' failed."
+                    IMAGE_FAILURE=true
+                else
+                    docker push "${LCL_REG_IMAGE_NAME}"
+                    if [ $? != 0 ] ; then
+                        echo "'docker push ${LCL_REG_IMAGE_NAME}' failed."
+                        IMAGE_FAILURE=true
+                    fi
+                fi
+            else
+                echo "Image ${LCL_REG_IMAGE_NAME} already present."
+            fi
+        fi
+
+        if [ "${IMAGE_FAILURE}" == false ] ; then
+            # Update the YAML by replacing upstream image name with the local registry image name
+            WEAVE_YAML=`echo "${WEAVE_YAML}" | sed "s!image: '${IMAGE_LIST[$i]}'!image: '${LCL_REG_IMAGE_NAME}'!g"`
+        fi
+    done
+
+    echo "${WEAVE_YAML}" | kubectl apply -f -
     echo "Waiting for weave-net pods to be ready..."
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
