@@ -41,6 +41,7 @@ multiarch-images: $(foreach image,$(MULTIARCH_IMAGES),package/$(image).tar)
 
 # [release-images] uploads the project's images to a public repository
 release-images:
-	$(SCRIPTS_DIR)/release_images.sh $(IMAGES) $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release_images.sh $(filter-out $(MULTIARCH_IMAGES),$(IMAGES)) $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release_images.sh --oci package/ $(MULTIARCH_IMAGES) $(RELEASE_ARGS)
 
 .PHONY: images multiarch-images release-images
