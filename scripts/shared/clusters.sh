@@ -69,6 +69,44 @@ function kind_fixup_config() {
     chmod a+r $KUBECONFIG
 }
 
+# In development environments where clusters are brought up and down
+# multiple times, several Docker images are repeatedly pulled and deleted,
+# leading to the Docker error:
+#   "toomanyrequests: You have reached your pull rate limit"
+# Preload the KIND image. Also tag it so the `docker system prune` during
+# cleanup won't remove it.
+function download_kind() {
+    if [[ -z "${k8s_version}" ]]; then
+        echo "k8s_version not set."
+        return
+    fi
+
+    # Example: kindest/node:v1.20.7@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
+    kind_image="kindest/node:v${k8s_version}"
+    # Example: kindest/node:v1.20.7
+    kind_image_tag="kindest/node:v$(echo ${k8s_version}|awk -F"@" '{print $1}')"
+    # Example: kindest/node:@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
+    kind_image_sha="kindest/node@$(echo ${k8s_version}|awk -F"@" '{print $2}')"
+
+    # Check if image is already present, and if not, download it.
+    echo "Processing Image: $kind_image_tag ($kind_image)"
+    if [[ -n $(docker images -q "$kind_image_tag") ]] ; then
+        echo "Image $kind_image_tag already downloaded."
+        return
+    fi
+
+    echo "Image $kind_image_tag not found, downloading..."
+    if ! docker pull "$kind_image"; then
+        echo "**** 'docker pull $kind_image' failed. Manually run. ****"
+        return
+    fi
+
+    image_id=$(docker images -q "$kind_image_sha")
+    if ! docker tag "$image_id" "$kind_image_tag"; then
+        echo "'docker tag ${image_id} ${kind_image_tag}' failed."
+    fi
+}
+
 function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
     rm -f "$KUBECONFIG"
@@ -271,6 +309,7 @@ function warn_inotify() {
 rm -rf ${KUBECONFIGS_DIR}
 mkdir -p ${KUBECONFIGS_DIR}
 
+download_kind
 load_settings
 run_local_registry
 declare_cidrs
