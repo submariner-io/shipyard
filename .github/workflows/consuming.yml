@@ -19,7 +19,7 @@ jobs:
         project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
         deploytool: ['operator', 'helm']
         cabledriver: ['libreswan']
-        k8s_version: ['1.19']
+        k8s_version: ['1.23']
         exclude:
           # Admiral E2E doesn't respect deploy-tool params, as it uses clusters without Submariner
           - project: admiral
@@ -31,8 +31,6 @@ jobs:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner
             cabledriver: wireguard
-            deploytool: operator
-            k8s_version: '1.19'
           # Test multiple K8s versions only in submariner-operator, balancing coverage and jobs
           - project: submariner-operator
             k8s_version: '1.20'
@@ -40,8 +38,6 @@ jobs:
             k8s_version: '1.21'
           - project: submariner-operator
             k8s_version: '1.22'
-          - project: submariner-operator
-            k8s_version: '1.23'
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
