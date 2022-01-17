@@ -95,7 +95,12 @@ PULLSUBJ=$(join " " "${PULLS[@]/#/#}") # Generates something like "#12345 #56789
 declare -r PULLSUBJ
 
 echo "+++ Updating remotes..."
-git remote update "${UPSTREAM_REMOTE}" "${FORK_REMOTE}"
+if ! git remote update "${UPSTREAM_REMOTE}" "${FORK_REMOTE}"; then
+  echo "Failed to run git remote update. You may need to manually provide the names of your remotes."
+  echo "export UPSTREAM_REMOTE=<remote name for upstream>"
+  echo "export FORK_REMOTE=<remote name for your fork>"
+  exit 1
+fi
 
 if ! git log -n1 --format=%H "${BRANCH}" >/dev/null 2>&1; then
   echo "!!! '${BRANCH}' not found. The second argument should be something like release-0.9."
