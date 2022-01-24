@@ -56,6 +56,9 @@ function post_analyze() {
     print_section "* Output of 'subctl show all' in $cluster *"
     subctl show all
 
+    print_section "* Output of 'subctl diagnose all' in $cluster *"
+    subctl diagnose all
+
     return 0
 }
 
