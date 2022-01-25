@@ -56,6 +56,10 @@ runs:
         free -h
         echo "::endgroup::"
 
+    - name: Set up kernel, increase the inotify settings
+      shell: bash
+      run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
+
     - name: Install WireGuard specific modules
       shell: bash
       run: |
