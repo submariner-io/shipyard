@@ -85,8 +85,16 @@ fi
 
 [ -t 1 ] && dockerargs="${dockerargs} -t"
 
+DAPPER_UID=$(id -u)
+DAPPER_GID=$(id -g)
+# If docker is provided by Podman, assume rootless and tell the container to use root internally
+if docker 2>&1 | grep -q podman; then
+  DAPPER_UID=0
+  DAPPER_GID=0
+fi
+
 # seccomp is unconfined to avoid problems with clone3 in Fedora 35
 # See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
 # Remove "--security-opt seccomp=unconfined" once all supported container runtimes
 # handle clone3
-docker run -i --rm --security-opt seccomp=unconfined $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$(id -u)" -e "DAPPER_GID=$(id -g)" -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" ${dockerargs} ${DAPPER_RUN_ARGS} "${container}" "$@"
+docker run -i --rm --security-opt seccomp=unconfined $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$DAPPER_UID" -e "DAPPER_GID=$DAPPER_GID" -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" ${dockerargs} ${DAPPER_RUN_ARGS} "${container}" "$@"
