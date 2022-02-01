@@ -66,31 +66,29 @@ func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	}
 }
 
-var (
-	testPod = v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "example-pod",
-			Labels: map[string]string{
-				"example-pod": "",
-			},
+var testPod = v1.Pod{
+	ObjectMeta: metav1.ObjectMeta{
+		GenerateName: "example-pod",
+		Labels: map[string]string{
+			"example-pod": "",
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:    "example-pod",
-					Image:   "busybox",
-					Command: []string{"sh", "-c", "echo Hello Kubernetes, I am at $POD_IP! && sleep 3600"},
-					Env: []v1.EnvVar{
-						{
-							Name:      "POD_IP",
-							ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}},
-						},
+	},
+	Spec: v1.PodSpec{
+		Containers: []v1.Container{
+			{
+				Name:    "example-pod",
+				Image:   "busybox",
+				Command: []string{"sh", "-c", "echo Hello Kubernetes, I am at $POD_IP! && sleep 3600"},
+				Env: []v1.EnvVar{
+					{
+						Name:      "POD_IP",
+						ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}},
 					},
 				},
 			},
 		},
-	}
-)
+	},
+}
 
 func testCreatingAPod(f *framework.Framework) {
 	for _, cs := range framework.KubeClients {

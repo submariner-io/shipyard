@@ -121,7 +121,6 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 }
 
 func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
-
 	By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP", framework.TestContext.ClusterIDs[p.ToCluster]))
 	listenerPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ListenerPod,

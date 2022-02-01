@@ -38,7 +38,8 @@ func New(name string) *Docker {
 func (d *Docker) GetIP(networkName string) string {
 	var stdout bytes.Buffer
 
-	cmdargs := []string{"inspect", d.Name, "-f",
+	cmdargs := []string{
+		"inspect", d.Name, "-f",
 		fmt.Sprintf("{{(index .NetworkSettings.Networks \"%s\").IPAddress}}", networkName),
 	}
 	cmd := exec.Command("docker", cmdargs...)

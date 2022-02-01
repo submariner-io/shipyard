@@ -52,10 +52,10 @@ linters:
     - goerr113
     # - godot TODO
     # - godox #  Let's not forbid inline TODOs, FIXMEs et al
-    # - gofmt TODO
-    # - gofumpt TODO
+    - gofmt
+    - gofumpt
     # - goheader # We do license header linting another way
-    # - goimports TODO
+    - goimports
     # - golint # Deprecated since v1.41.0
     # - gomnd # It doesn't seem useful in general to enforce constants for all numeric values
     - gomoddirectives
