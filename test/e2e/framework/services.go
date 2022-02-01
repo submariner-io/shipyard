@@ -35,7 +35,7 @@ const (
 )
 
 func (f *Framework) NewService(name, portName string, port int, protocol corev1.Protocol, selector map[string]string,
-		isHeadless bool) *corev1.Service {
+	isHeadless bool) *corev1.Service {
 	service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -64,7 +64,7 @@ func (f *Framework) NewService(name, portName string, port int, protocol corev1.
 
 func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel:selectorName}, false)
+		map[string]string{TestAppLabel: selectorName}, false)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)
@@ -72,7 +72,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 
 func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel:selectorName}, true)
+		map[string]string{TestAppLabel: selectorName}, true)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)

@@ -78,8 +78,10 @@ type PatchUInt32Value struct {
 	Value uint32 `json:"value"`
 }
 
-type DoOperationFunc func() (interface{}, error)
-type CheckResultFunc func(result interface{}) (bool, string, error)
+type (
+	DoOperationFunc func() (interface{}, error)
+	CheckResultFunc func(result interface{}) (bool, string, error)
+)
 
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 // Eventual goal is to merge this with integration test framework.
@@ -122,13 +124,16 @@ func AddBeforeSuite(beforeSuite func()) {
 	beforeSuiteFuncs = append(beforeSuiteFuncs, beforeSuite)
 }
 
-var By func(string)
-var Fail func(string)
-var userAgentFunction func() string
+var (
+	By                func(string)
+	Fail              func(string)
+	userAgentFunction func() string
+)
 
 func SetStatusFunction(by func(string)) {
 	By = by
 }
+
 func SetFailFunction(fail func(string)) {
 	Fail = fail
 }
@@ -217,7 +222,6 @@ func (f *Framework) BeforeEach() {
 	} else {
 		f.UniqueName = string(uuid.NewUUID())
 	}
-
 }
 
 func DetectGlobalnet() {
@@ -332,7 +336,6 @@ func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 }
 
 func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
-
 	clientSet, err := dynamic.NewForConfig(restConfig)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -391,7 +394,6 @@ func (f *Framework) AfterEach() {
 			Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
 		}
 	}()
-
 }
 
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {

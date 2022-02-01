@@ -94,7 +94,6 @@ const (
 )
 
 func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
-
 	// check if all necessary details are provided
 	Expect(config.Scheduling).ShouldNot(Equal(InvalidScheduling))
 	Expect(config.Type).ShouldNot(Equal(InvalidPodType))
@@ -243,7 +242,6 @@ func (np *NetworkPod) GetLog() string {
 // The pod will listen on TestPort over TCP, send sendString over the connection,
 // and write the network response in the pod  termination log, then exit with 0 status
 func (np *NetworkPod) buildTCPCheckListenerPod() {
-
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-listener",
@@ -284,7 +282,6 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 // connection, and write the network response in the pod termination log, then
 // exit with 0 status
 func (np *NetworkPod) buildTCPCheckConnectorPod() {
-
 	tcpCheckConnectorPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-pod",
@@ -418,7 +415,8 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
-						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
+						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 					},

@@ -27,13 +27,11 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 )
 
-var (
-	gvr = schema.GroupVersionResource{
-		Group:    "multicluster.x-k8s.io",
-		Version:  "v1alpha1",
-		Resource: "serviceexports",
-	}
-)
+var gvr = schema.GroupVersionResource{
+	Group:    "multicluster.x-k8s.io",
+	Version:  "v1alpha1",
+	Resource: "serviceexports",
+}
 
 func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 	resourceServiceExport := &unstructured.Unstructured{}

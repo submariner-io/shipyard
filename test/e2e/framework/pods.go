@@ -54,7 +54,7 @@ func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector
 // AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
 func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, namespace string, expectedCount int) *v1.PodList {
-	return f.AwaitPodsByLabelSelector(cluster, "app=" + appName, namespace, expectedCount)
+	return f.AwaitPodsByLabelSelector(cluster, "app="+appName, namespace, expectedCount)
 }
 
 // AwaitSubmarinerGatewayPod finds the submariner gateway pod in a given cluster, waiting if necessary for a period of time
@@ -96,8 +96,7 @@ func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation s
 func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName string, prevPodUID types.UID) *v1.Pod {
 	var found *v1.Pod
 
-	AwaitUntil(fmt.Sprintf("find route agent pod on node %q", nodeName), func() (interface {
-	}, error) {
+	AwaitUntil(fmt.Sprintf("find route agent pod on node %q", nodeName), func() (interface{}, error) {
 		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app=" + RouteAgent,
 		})
