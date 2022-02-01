@@ -23,7 +23,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -131,7 +130,7 @@ func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcNam
 func (f *Framework) CreateService(sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
 	return AwaitUntil("create service", func() (interface{}, error) {
 		service, err := sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
-		if errors.IsAlreadyExists(err) {
+		if apierrors.IsAlreadyExists(err) {
 			err = sc.Delete(context.TODO(), serviceSpec.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return nil, err

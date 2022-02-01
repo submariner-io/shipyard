@@ -29,7 +29,6 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -417,14 +416,14 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
-	baseName string, labels map[string]string) *v1.Namespace {
+	baseName string, labels map[string]string) *corev1.Namespace {
 
 	ns := createTestNamespace(clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
 	return ns
 }
 
-func (f *Framework) AddNamespacesToDelete(namespaces ...*v1.Namespace) {
+func (f *Framework) AddNamespacesToDelete(namespaces ...*corev1.Namespace) {
 	for _, ns := range namespaces {
 		if ns == nil {
 			continue
@@ -434,7 +433,7 @@ func (f *Framework) AddNamespacesToDelete(namespaces ...*v1.Namespace) {
 	}
 }
 
-func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *v1.Namespace {
+func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-", baseName),
@@ -447,12 +446,12 @@ func generateNamespace(client kubeclientset.Interface, baseName string, labels m
 	return namespace
 }
 
-func createTestNamespace(client kubeclientset.Interface, name string, labels map[string]string) *v1.Namespace {
+func createTestNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
 	namespace := createNamespace(client, name, labels)
 	return namespace
 }
 
-func createNamespace(client kubeclientset.Interface, name string, labels map[string]string) *v1.Namespace {
+func createNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
