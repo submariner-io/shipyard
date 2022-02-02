@@ -56,7 +56,7 @@ func (contexts *contextArray) Set(value string) error {
 	return nil
 }
 
-var TestContext *TestContextType = &TestContextType{
+var TestContext = &TestContextType{
 	ClientQPS:   20,
 	ClientBurst: 50,
 }

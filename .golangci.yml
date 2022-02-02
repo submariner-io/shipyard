@@ -85,7 +85,7 @@ linters:
     - prealloc
     - predeclared
     - promlinter
-    # - revive TODO
+    - revive
     # - rowserrcheck # We don't use SQL
     # - scopelint # Deprecated since v1.39.0
     # - sqlclosecheck # We don't use SQL

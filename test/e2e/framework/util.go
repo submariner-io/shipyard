@@ -22,6 +22,8 @@ import (
 	"strings"
 
 	. "github.com/onsi/gomega"
+
+	// We need GCP authentication.
 	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
