@@ -151,7 +151,7 @@ func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 }
 
 // AwaitUntilAnnotationOnService queries the service and looks for the presence of annotation.
-func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation string, svcName string, namespace string) *corev1.Service {
+func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation, svcName, namespace string) *corev1.Service {
 	return AwaitUntil("get"+annotation+" annotation for service "+svcName, func() (interface{}, error) {
 		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(context.TODO(), svcName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {

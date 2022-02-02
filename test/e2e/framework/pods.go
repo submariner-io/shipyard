@@ -30,7 +30,7 @@ import (
 
 // AwaitPodsByLabelSelector finds pods in a given cluster whose labels match a specified label selector. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
-func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector string, namespace string, expectedCount int) *v1.PodList {
+func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector, namespace string, expectedCount int) *v1.PodList {
 	return AwaitUntil("find pods for label "+labelSelector, func() (interface{}, error) {
 		return KubeClients[cluster].CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: labelSelector,
@@ -41,9 +41,9 @@ func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector
 			return false, fmt.Sprintf("Actual pod count %d does not match the expected pod count %d", len(pods.Items), expectedCount), nil
 		}
 
-		for _, pod := range pods.Items {
-			if pod.Status.Phase != v1.PodRunning {
-				return false, fmt.Sprintf("Status for pod %q is %v", pod.Name, pod.Status.Phase), nil
+		for i := range pods.Items {
+			if pods.Items[i].Status.Phase != v1.PodRunning {
+				return false, fmt.Sprintf("Status for pod %q is %v", pods.Items[i].Name, pods.Items[i].Status.Phase), nil
 			}
 		}
 
@@ -53,7 +53,7 @@ func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector
 
 // AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
-func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName string, namespace string, expectedCount int) *v1.PodList {
+func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName, namespace string, expectedCount int) *v1.PodList {
 	return f.AwaitPodsByLabelSelector(cluster, "app="+appName, namespace, expectedCount)
 }
 
@@ -64,14 +64,14 @@ func (f *Framework) AwaitSubmarinerGatewayPod(cluster ClusterIndex) *v1.Pod {
 }
 
 // DeletePod deletes the pod for the given name and namespace.
-func (f *Framework) DeletePod(cluster ClusterIndex, podName string, namespace string) {
+func (f *Framework) DeletePod(cluster ClusterIndex, podName, namespace string) {
 	AwaitUntil("delete pod", func() (interface{}, error) {
 		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(context.TODO(), podName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
 
 // AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
-func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation string, podName string, namespace string) *v1.Pod {
+func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation, podName, namespace string) *v1.Pod {
 	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (interface{}, error) {
 		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
