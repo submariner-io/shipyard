@@ -91,7 +91,7 @@ linters:
     # - sqlclosecheck # We don't use SQL
     - staticcheck
     - structcheck
-    # - stylecheck TODO
+    - stylecheck
     # - tagliatelle # Inconsistent with stylecheck and not as good
     # - tenv # Not relevant for our Ginkgo UTs
     # - testpackage TODO
