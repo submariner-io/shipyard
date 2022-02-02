@@ -94,7 +94,7 @@ linters:
     - stylecheck
     # - tagliatelle # Inconsistent with stylecheck and not as good
     # - tenv # Not relevant for our Ginkgo UTs
-    # - testpackage TODO
+    - testpackage
     # - thelper # Not relevant for our Ginkgo UTs
     # - tparallel # Not relevant for our Ginkgo UTs
     - typecheck
