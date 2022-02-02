@@ -24,9 +24,11 @@ runs:
         free -h
         echo "::endgroup::"
 
-    - name: Set up kernel, increase the inotify settings
-      shell: bash
-      run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
+    - shell: bash
+      run: |
+        echo "::group::Increase inotify settings"
+        sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
+        echo "::endgroup::"
 
     - shell: bash
       run: |
