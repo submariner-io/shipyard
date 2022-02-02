@@ -61,7 +61,7 @@ linters:
     - gomoddirectives
     # - gomodguard # We don't block any modules
     # - goprintffuncname # This doesn't seem useful at all
-    # - gosec TODO
+    - gosec
     - gosimple
     - govet
     # - ifshort # This is a style preference and doesn't seem compelling
