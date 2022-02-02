@@ -205,14 +205,15 @@ func (f *Framework) BeforeEach() {
 		}
 
 		for idx, clientSet := range KubeClients {
-			switch ClusterIndex(idx) {
-			case ClusterA: // On the first cluster we let k8s generate a name for the namespace
+			if ClusterIndex(idx) == ClusterA {
+				// On the first cluster we let k8s generate a name for the namespace
 				namespace := generateNamespace(clientSet, f.BaseName, namespaceLabels)
 				f.Namespace = namespace.GetName()
 				f.UniqueName = namespace.GetName()
 				f.AddNamespacesToDelete(namespace)
 				By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
-			default: // On the other clusters we use the same name to make tracing easier
+			} else {
+				// On the other clusters we use the same name to make tracing easier
 				By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
 				f.CreateNamespace(clientSet, f.Namespace, namespaceLabels)
 			}

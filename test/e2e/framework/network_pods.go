@@ -123,6 +123,8 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildLatencyServerPod()
 	case CustomPod:
 		networkPod.buildCustomPod()
+	case InvalidPodType:
+		panic("config.Type can't equal InvalidPodType here, we checked above")
 	}
 
 	return networkPod
@@ -159,14 +161,11 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 		}, func(result interface{}) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 
-			switch np.Pod.Status.Phase {
-			case v1.PodSucceeded:
+			if np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed {
 				return true, "", nil
-			case v1.PodFailed:
-				return true, "", nil
-			default:
-				return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
 			}
+
+			return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
 		})
 
 	finished := np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed
@@ -528,6 +527,8 @@ func (np *NetworkPod) buildCustomPod() {
 }
 
 func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
+	Expect(scheduling).ShouldNot(Equal(InvalidScheduling))
+
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
@@ -537,6 +538,9 @@ func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
 	case NonGatewayNode:
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+
+	case InvalidScheduling:
+		panic("scheduling can't equal InvalidScheduling here, we checked above")
 	}
 
 	return &v1.Affinity{
