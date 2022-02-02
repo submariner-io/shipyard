@@ -42,7 +42,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 			func() (interface{}, error) {
 				resGip, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
 				if apierrors.IsNotFound(err) {
-					return nil, nil
+					return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 				}
 				return resGip, err
 			},
