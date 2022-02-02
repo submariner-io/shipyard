@@ -28,7 +28,7 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func (f *Framework) FindDeployment(cluster ClusterIndex, appName string, namespace string) *appsv1.Deployment {
+func (f *Framework) FindDeployment(cluster ClusterIndex, appName, namespace string) *appsv1.Deployment {
 	deployments := AwaitUntil("list deployments", func() (interface{}, error) {
 		return KubeClients[cluster].AppsV1().Deployments(namespace).List(context.TODO(), metav1.ListOptions{
 			LabelSelector: "app=" + appName,

@@ -159,8 +159,8 @@ func BeforeSuite() {
 	if len(TestContext.KubeConfig) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
 			"Either KubeConfig or KubeConfigs must be specified but not both")
-		for _, context := range TestContext.KubeContexts {
-			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, context))
+		for _, ctx := range TestContext.KubeContexts {
+			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, ctx))
 		}
 
 		// if cluster IDs are not provided we assume that cluster-id == context
@@ -341,11 +341,11 @@ func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
 	return clientSet
 }
 
-func createRestConfig(kubeConfig, context string) *rest.Config {
-	restConfig, err := loadConfig(kubeConfig, context)
+func createRestConfig(kubeConfig, kubeContext string) *rest.Config {
+	restConfig, err := loadConfig(kubeConfig, kubeContext)
 	if err != nil {
 		Errorf("Unable to load kubeconfig file %s for context %s, this is a non-recoverable error",
-			TestContext.KubeConfig, context)
+			TestContext.KubeConfig, kubeContext)
 		Errorf("loadConfig err: %s", err.Error())
 		fmt.Printf("Non-recoverable error: %s", err.Error())
 		os.Exit(1)
@@ -369,30 +369,26 @@ func deleteNamespace(client kubeclientset.Interface, namespaceName string) error
 func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
-	// DeleteNamespace at the very end in defer, to avoid any
-	// expectation failures preventing deleting the namespace.
-	defer func() {
-		var nsDeletionErrors []error
+	var nsDeletionErrors []error
 
-		// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
-		// if delete-namespace set to false, namespace will always be preserved.
-		// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
-		for ns := range f.namespacesToDelete {
-			if err := f.deleteNamespaceFromAllClusters(ns); err != nil {
-				nsDeletionErrors = append(nsDeletionErrors, err)
-			}
-
-			delete(f.namespacesToDelete, ns)
+	// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
+	// if delete-namespace set to false, namespace will always be preserved.
+	// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
+	for ns := range f.namespacesToDelete {
+		if err := f.deleteNamespaceFromAllClusters(ns); err != nil {
+			nsDeletionErrors = append(nsDeletionErrors, err)
 		}
 
-		// Paranoia-- prevent reuse!
-		f.Namespace = ""
+		delete(f.namespacesToDelete, ns)
+	}
 
-		// if we had errors deleting, report them now.
-		if len(nsDeletionErrors) != 0 {
-			Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
-		}
-	}()
+	// Paranoia-- prevent reuse!
+	f.Namespace = ""
+
+	// if we had errors deleting, report them now.
+	if len(nsDeletionErrors) != 0 {
+		Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
+	}
 }
 
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
@@ -465,7 +461,7 @@ func createNamespace(client kubeclientset.Interface, name string, labels map[str
 }
 
 // PatchString performs a REST patch operation for the given path and string value.
-func PatchString(path string, value string, patchFunc PatchFunc) {
+func PatchString(path, value string, patchFunc PatchFunc) {
 	payload := []PatchStringValue{{
 		Op:    "add",
 		Path:  path,

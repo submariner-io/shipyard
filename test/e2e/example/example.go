@@ -59,8 +59,8 @@ func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	Expect(err).NotTo(HaveOccurred())
 	By("Checking that we had more than 0 nodes on the response")
 	Expect(len(nodes.Items)).ToNot(BeZero())
-	for _, node := range nodes.Items {
-		inIP, err := getIP(v1.NodeInternalIP, &node)
+	for i := range nodes.Items {
+		inIP, err := getIP(v1.NodeInternalIP, &nodes.Items[i])
 		Expect(err).NotTo(HaveOccurred())
 		framework.Logf("Detected node with IP: %v", inIP)
 	}
@@ -115,9 +115,9 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 		}
 
 		// check all pods are running
-		for _, pod := range pods.Items {
-			if pod.Status.Phase != v1.PodRunning {
-				if pod.Status.Phase != v1.PodPending {
+		for i := range pods.Items {
+			if pods.Items[i].Status.Phase != v1.PodRunning {
+				if pods.Items[i].Status.Phase != v1.PodPending {
 					return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\"")
 				}
 				return false, nil // pod is still pending
@@ -129,8 +129,8 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 	By("Collecting pod ClusterIPs just for fun")
 	pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 	Expect(err).NotTo(HaveOccurred())
-	for _, pod := range pods.Items {
-		framework.Logf("Detected pod with IP: %v", pod.Status.PodIP)
+	for i := range pods.Items {
+		framework.Logf("Detected pod with IP: %v", pods.Items[i].Status.PodIP)
 	}
 }
 

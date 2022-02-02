@@ -47,7 +47,7 @@ linters:
     # - gochecknoinits # We use init functions for valid reasons
     - gocognit
     - goconst
-    # - gocritic TODO
+    - gocritic
     - gocyclo
     - goerr113
     # - godot TODO
