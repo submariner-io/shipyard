@@ -54,11 +54,15 @@ func testListingNodes() {
 
 func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	nc := cs.CoreV1().Nodes()
+
 	By("Requesting node list from API")
+
 	nodes, err := nc.List(context.TODO(), metav1.ListOptions{})
 	Expect(err).NotTo(HaveOccurred())
+
 	By("Checking that we had more than 0 nodes on the response")
 	Expect(len(nodes.Items)).ToNot(BeZero())
+
 	for i := range nodes.Items {
 		inIP, err := getIP(v1.NodeInternalIP, &nodes.Items[i])
 		Expect(err).NotTo(HaveOccurred())
@@ -98,12 +102,16 @@ func testCreatingAPod(f *framework.Framework) {
 
 func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework) {
 	pc := cs.CoreV1().Pods(f.Namespace)
+
 	By("Creating a bunch of pods")
+
 	for i := 0; i < 3; i++ {
 		_, err := pc.Create(context.TODO(), &testPod, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 	}
+
 	By("Waiting for the example-pod(s) to be scheduled and running")
+
 	err := wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
 		pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 		if err != nil {
@@ -126,9 +134,12 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 		return true, nil // all pods are running
 	})
 	Expect(err).NotTo(HaveOccurred())
+
 	By("Collecting pod ClusterIPs just for fun")
+
 	pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 	Expect(err).NotTo(HaveOccurred())
+
 	for i := range pods.Items {
 		framework.Logf("Detected pod with IP: %v", pods.Items[i].Status.PodIP)
 	}
@@ -140,5 +151,6 @@ func getIP(iptype v1.NodeAddressType, node *v1.Node) (string, error) {
 			return addr.Address, nil
 		}
 	}
+
 	return "", fmt.Errorf("did not find %s on Node", iptype)
 }

@@ -112,11 +112,10 @@ var (
 
 // NewBareFramework creates a test framework, without ginkgo dependencies.
 func NewBareFramework(baseName string) *Framework {
-	f := &Framework{
+	return &Framework{
 		BaseName:           baseName,
 		namespacesToDelete: map[string]bool{},
 	}
-	return f
 }
 
 func AddBeforeSuite(beforeSuite func()) {
@@ -159,6 +158,7 @@ func BeforeSuite() {
 	if len(TestContext.KubeConfig) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
 			"Either KubeConfig or KubeConfigs must be specified but not both")
+
 		for _, ctx := range TestContext.KubeContexts {
 			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, ctx))
 		}
@@ -167,7 +167,6 @@ func BeforeSuite() {
 		if len(TestContext.ClusterIDs) == 0 {
 			TestContext.ClusterIDs = TestContext.KubeContexts
 		}
-
 	} else if len(TestContext.KubeConfigs) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
 			"One ClusterID must be provided for each item in the KubeConfigs")
@@ -265,6 +264,7 @@ func DetectGlobalnet() {
 
 func InitNumClusterNodes() error {
 	TestContext.NumNodesInCluster = map[ClusterIndex]int{}
+
 	for i := range KubeClients {
 		nodes, err := KubeClients[i].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
@@ -302,6 +302,7 @@ func fetchClusterIDs() {
 
 		const envVarName = "SUBMARINER_CLUSTERID"
 		found := false
+
 		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
 			if envVar.Name == envVarName {
 				if TestContext.ClusterIDs[i] != envVar.Value {
@@ -310,6 +311,7 @@ func fetchClusterIDs() {
 				}
 
 				found = true
+
 				break
 			}
 		}
@@ -328,9 +330,11 @@ func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 	if restConfig.GroupVersion == nil {
 		restConfig.GroupVersion = &schema.GroupVersion{}
 	}
+
 	if restConfig.NegotiatedSerializer == nil {
 		restConfig.NegotiatedSerializer = scheme.Codecs
 	}
+
 	return clientSet
 }
 
@@ -355,9 +359,11 @@ func createRestConfig(kubeConfig, kubeContext string) *rest.Config {
 
 	restConfig.QPS = TestContext.ClientQPS
 	restConfig.Burst = TestContext.ClientBurst
+
 	if TestContext.GroupVersion != nil {
 		restConfig.GroupVersion = TestContext.GroupVersion
 	}
+
 	return restConfig
 }
 
@@ -393,8 +399,10 @@ func (f *Framework) AfterEach() {
 
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	var errs []error
+
 	for i, clientSet := range KubeClients {
 		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+
 		if err := deleteNamespace(clientSet, ns); err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
@@ -413,9 +421,9 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
 	baseName string, labels map[string]string) *corev1.Namespace {
-
 	ns := createTestNamespace(clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
+
 	return ns
 }
 
@@ -439,6 +447,7 @@ func generateNamespace(client kubeclientset.Interface, baseName string, labels m
 
 	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error generating namespace %v", namespaceObj)
+
 	return namespace
 }
 
@@ -457,6 +466,7 @@ func createNamespace(client kubeclientset.Interface, name string, labels map[str
 
 	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error creating namespace %v", namespaceObj)
+
 	return namespace
 }
 
@@ -500,6 +510,7 @@ func NoopCheckResult(interface{}) (bool, string, error) {
 func AwaitUntil(opMsg string, doOperation DoOperationFunc, checkResult CheckResultFunc) interface{} {
 	result, errMsg, err := AwaitResultOrError(opMsg, doOperation, checkResult)
 	Expect(err).NotTo(HaveOccurred(), errMsg)
+
 	return result
 }
 

@@ -75,5 +75,6 @@ func getGlobalIPs(obj *unstructured.Unstructured) []string {
 		globalIPs, _, _ := unstructured.NestedStringSlice(obj.Object, "status", "allocatedIPs")
 		return globalIPs
 	}
+
 	return []string{}
 }

@@ -87,6 +87,7 @@ func (f *Framework) AwaitGatewaysWithStatus(cluster ClusterIndex, status string)
 
 func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 	gwClient := gatewayClient(cluster)
+
 	AwaitUntil(fmt.Sprintf("await Gateway on %q removed", name),
 		func() (interface{}, error) {
 			_, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})

@@ -44,6 +44,7 @@ func findNodesByGatewayLabel(cluster int, isGateway bool) []*v1.Node {
 
 	expLabelValue := strconv.FormatBool(isGateway)
 	retNodes := []*v1.Node{}
+
 	for i := range nodes.Items {
 		value, exists := nodes.Items[i].Labels[GatewayLabel]
 		if !exists {

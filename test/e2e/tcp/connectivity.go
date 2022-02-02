@@ -76,6 +76,7 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 			// Globalnet Controller MASQUERADEs the source-ip of the POD to the corresponding global-ip
 			// that is assigned to the POD.
 			By("Verifying the output of listener pod which must contain the globalIP of the connector POD")
+
 			podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
 			Expect(podGlobalIP).ToNot(Equal(""))
 			Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
@@ -123,6 +124,7 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
 	By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP",
 		framework.TestContext.ClusterIDs[p.ToCluster]))
+
 	listenerPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ListenerPod,
 		Cluster:            p.ToCluster,
@@ -133,9 +135,11 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	remoteIP := listenerPod.Pod.Status.PodIP
 	var service *v1.Service
+
 	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalServiceIP {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
 			framework.TestContext.ClusterIDs[p.ToCluster]))
+
 		service = listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
 
@@ -151,6 +155,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
 		framework.TestContext.ClusterIDs[p.FromCluster]))
+
 	connectorPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ConnectorPod,
 		Cluster:            p.FromCluster,
