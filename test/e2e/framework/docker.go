@@ -55,6 +55,7 @@ func (d *Docker) GetLog() (string, string) {
 	var stdout, stderr bytes.Buffer
 
 	// get stdout and stderr of `docker log {d.Name}` command
+	// #nosec G204 -- the caller-controlled value is only used as the logs argument
 	cmd := exec.Command("docker", "logs", d.Name)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
