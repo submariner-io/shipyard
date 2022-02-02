@@ -234,7 +234,7 @@ func DetectGlobalnet() {
 	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
 		clusters, err := clusters.List(context.TODO(), metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil
+			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return clusters, err
 	}, func(result interface{}) (bool, string, error) {
@@ -288,7 +288,7 @@ func fetchClusterIDs() {
 		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
 			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil
+				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 
 			return ds, err

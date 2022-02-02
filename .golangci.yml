@@ -77,7 +77,7 @@ linters:
     - nakedret
     # - nestif # This calculates cognitive complexity but we're doing that elsewhere
     - nilerr
-    # - nilnil TODO
+    - nilnil
     # - nlreturn # This is reasonable with a block-size of 2 but setting it above isn't honored
     # - noctx # We don't send HTTP requests
     - nolintlint
