@@ -188,7 +188,7 @@ func (np *NetworkPod) CreateService() *v1.Service {
 	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
 }
 
-// RunCommand run the specified command in this NetworkPod
+// RunCommand run the specified command in this NetworkPod.
 func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 	req := KubeClients[np.Config.Cluster].CoreV1().RESTClient().Post().
 		Resource("pods").Name(np.Pod.Name).Namespace(np.Pod.Namespace).
@@ -221,7 +221,7 @@ func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 	return stdout.String(), stderr.String()
 }
 
-// GetLog returns container log from this NetworkPod
+// GetLog returns container log from this NetworkPod.
 func (np *NetworkPod) GetLog() string {
 	req := KubeClients[np.Config.Cluster].CoreV1().Pods(np.Pod.Namespace).GetLogs(np.Pod.Name, &v1.PodLogOptions{})
 
@@ -239,7 +239,7 @@ func (np *NetworkPod) GetLog() string {
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will listen on TestPort over TCP, send sendString over the connection,
-// and write the network response in the pod  termination log, then exit with 0 status
+// and write the network response in the pod  termination log, then exit with 0 status.
 func (np *NetworkPod) buildTCPCheckListenerPod() {
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -279,7 +279,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will connect to remoteIP:TestPort over TCP, send sendString over the
 // connection, and write the network response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildTCPCheckConnectorPod() {
 	tcpCheckConnectorPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -322,7 +322,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will initiate iperf3 throughput test to remoteIP and write the test
 // response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildThroughputClientPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -360,7 +360,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
-// The pod will start iperf3 in server mode
+// The pod will start iperf3 in server mode.
 func (np *NetworkPod) buildThroughputServerPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -396,7 +396,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will initiate netperf latency test to remoteIP and write the test
 // response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildLatencyClientPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -432,7 +432,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
-// The pod will start netserver (server of netperf)
+// The pod will start netserver (server of netperf).
 func (np *NetworkPod) buildLatencyServerPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
