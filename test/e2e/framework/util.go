@@ -35,9 +35,11 @@ func loadConfig(configPath, context string) (*restclient.Config, error) {
 
 	rules.DefaultClientConfig = &clientcmd.DefaultClientConfig
 	overrides := &clientcmd.ConfigOverrides{ClusterDefaults: clientcmd.ClusterDefaults}
+
 	if context != "" {
 		overrides.CurrentContext = context
 	}
+
 	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(rules, overrides).ClientConfig()
 }
 
@@ -51,5 +53,6 @@ func ExpectNoErrorWithOffset(offset int, err error, explain ...interface{}) {
 	if err != nil {
 		Logf("Unexpected error occurred: %v", err)
 	}
+
 	ExpectWithOffset(1+offset, err).NotTo(HaveOccurred(), explain...)
 }

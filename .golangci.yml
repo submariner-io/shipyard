@@ -104,9 +104,9 @@ linters:
     - varcheck
     # - varnamelen # It doesn't seem necessary to enforce a minimum variable name length
     - wastedassign
-    # - whitespace TODO
+    - whitespace
     - wrapcheck
-    # - wsl TODO
+    - wsl
 issues:
   exclude-rules:
     # Allow dot-imports for Gomega BDD directives per idiomatic Gomega

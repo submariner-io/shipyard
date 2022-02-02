@@ -72,12 +72,13 @@ func (f *Framework) ExecWithOptions(options *ExecOptions, index ClusterIndex) (s
 	}, scheme.ParameterCodec)
 
 	var stdout, stderr bytes.Buffer
-	attempts := 5
-	for ; attempts > 0; attempts-- {
+
+	for attempts := 5; attempts > 0; attempts-- {
 		err = execute("POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
 		if err == nil {
 			break
 		}
+
 		time.Sleep(time.Millisecond * 5000)
 		Logf("Retrying due to error  %+v", err)
 	}
@@ -94,6 +95,7 @@ func execute(method string, reqURL *url.URL, config *restclient.Config, stdin io
 	if err != nil {
 		return err
 	}
+
 	return exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,

@@ -33,9 +33,12 @@ var (
 // test to hook into SynchronizedAfterSuite().
 func AddCleanupAction(fn func()) CleanupActionHandle {
 	p := CleanupActionHandle(new(int))
+
 	cleanupActionsLock.Lock()
 	defer cleanupActionsLock.Unlock()
+
 	cleanupActions[p] = fn
+
 	return p
 }
 
@@ -52,13 +55,16 @@ func RemoveCleanupAction(p CleanupActionHandle) {
 // may remove themselves.
 func RunCleanupActions() {
 	list := []func(){}
+
 	func() {
 		cleanupActionsLock.Lock()
 		defer cleanupActionsLock.Unlock()
+
 		for _, fn := range cleanupActions {
 			list = append(list, fn)
 		}
 	}()
+
 	// Run unlocked.
 	for _, fn := range list {
 		fn()

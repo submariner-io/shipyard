@@ -228,6 +228,7 @@ func (np *NetworkPod) GetLog() string {
 
 	closer, err := req.Stream(context.TODO())
 	Expect(err).NotTo(HaveOccurred())
+
 	defer closer.Close()
 
 	out := new(strings.Builder)
@@ -561,6 +562,7 @@ func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
 func removeDupDataplaneLines(output string) string {
 	var newLines []string
 	var lastLine string
+
 	for _, line := range strings.Split(output, "\n") {
 		if !strings.HasPrefix(line, "[dataplane]") || line != lastLine {
 			newLines = append(newLines, line)
