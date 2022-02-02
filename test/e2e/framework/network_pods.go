@@ -153,20 +153,21 @@ func (np *NetworkPod) AwaitFinish() {
 func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
-	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
-		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
-	}, func(result interface{}) (bool, string, error) {
-		np.Pod = result.(*v1.Pod)
+	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name),
+		func() (interface{}, error) {
+			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
+		}, func(result interface{}) (bool, string, error) {
+			np.Pod = result.(*v1.Pod)
 
-		switch np.Pod.Status.Phase {
-		case v1.PodSucceeded:
-			return true, "", nil
-		case v1.PodFailed:
-			return true, "", nil
-		default:
-			return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
-		}
-	})
+			switch np.Pod.Status.Phase {
+			case v1.PodSucceeded:
+				return true, "", nil
+			case v1.PodFailed:
+				return true, "", nil
+			default:
+				return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
+			}
+		})
 
 	finished := np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed
 	if finished {
@@ -257,7 +258,14 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
-					Command: []string{"sh", "-c", "for i in $(seq 50); do echo [dataplane] listener says $SEND_STRING; done | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh",
+						"-c",
+						"for i in $(seq 50);" +
+							" do echo [dataplane] listener says $SEND_STRING;" +
+							" done" +
+							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "LISTEN_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
@@ -298,7 +306,17 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
-					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh",
+						"-c",
+						"for in in $(seq 50);" +
+							" do echo [dataplane] connector says $SEND_STRING; done" +
+							" | for i in $(seq $CONN_TRIES);" +
+							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
+							" then break;" +
+							" else sleep $RETRY_SLEEP;" +
+							" fi; done >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "REMOTE_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
@@ -339,7 +357,13 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh", "-c", "for i in $(seq $CONN_TRIES);" +
+							" do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP;" +
+							" then break;" +
+							" else echo [going to retry]; sleep $RETRY_SLEEP;" +
+							" fi; done >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
@@ -414,7 +438,10 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
-						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1",
+						"sh",
+						"-c",
+						"netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate" +
+							" >/dev/termination-log 2>&1",
 					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},

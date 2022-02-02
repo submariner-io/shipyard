@@ -70,7 +70,7 @@ linters:
     # - ireturn # The argument to always "Return Concrete Types" doesn't seem compelling. It is perfectly valid to return
     #             an interface to avoid exposing the entire underlying struct
     # - interfacer # Deprecated since v1.38.0
-    # - lll TODO
+    - lll
     - makezero
     # - maligned # Deprecated since v1.38.0
     - misspell
