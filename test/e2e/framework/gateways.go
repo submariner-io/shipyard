@@ -55,7 +55,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != status {
-				return false, "", fmt.Errorf("Gateway %q exists but has wrong status %q, expected %q",
+				return false, "", fmt.Errorf("gateway %q exists but has wrong status %q, expected %q",
 					gw.GetName(), haStatus, status)
 			}
 			return true, "", nil
