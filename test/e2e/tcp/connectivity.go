@@ -121,7 +121,8 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 }
 
 func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
-	By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP", framework.TestContext.ClusterIDs[p.ToCluster]))
+	By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP",
+		framework.TestContext.ClusterIDs[p.ToCluster]))
 	listenerPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ListenerPod,
 		Cluster:            p.ToCluster,
@@ -133,7 +134,8 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	remoteIP := listenerPod.Pod.Status.PodIP
 	var service *v1.Service
 	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalServiceIP {
-		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q", framework.TestContext.ClusterIDs[p.ToCluster]))
+		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
+			framework.TestContext.ClusterIDs[p.ToCluster]))
 		service = listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
 
@@ -147,7 +149,8 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	framework.Logf("Will send traffic to IP: %v", remoteIP)
 
-	By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP", framework.TestContext.ClusterIDs[p.FromCluster]))
+	By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
+		framework.TestContext.ClusterIDs[p.FromCluster]))
 	connectorPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ConnectorPod,
 		Cluster:            p.FromCluster,
@@ -160,7 +163,8 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	if p.ToEndpointType == GlobalServiceIP && p.Networking == framework.PodNetworking {
 		// Wait for the globalIP annotation on the connectorPod.
-		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name, connectorPod.Pod.Namespace)
+		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name,
+			connectorPod.Pod.Namespace)
 		sourceIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
 		framework.Logf("Will send traffic from IP: %v", sourceIP)
 	}
