@@ -35,7 +35,7 @@ type EndpointType int
 const (
 	PodIP EndpointType = iota
 	ServiceIP
-	// TODO: Remove GlobalIP once all consumer code switches to GlobalServiceIP
+	// TODO: Remove GlobalIP once all consumer code switches to GlobalServiceIP.
 	GlobalIP
 	GlobalPodIP
 	GlobalServiceIP = GlobalIP

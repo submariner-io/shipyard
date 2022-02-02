@@ -45,7 +45,7 @@ import (
 )
 
 const (
-	// Polling interval while trying to create objects
+	// Polling interval while trying to create objects.
 	PollInterval = 100 * time.Millisecond
 )
 
@@ -110,7 +110,7 @@ var (
 	DynClients  []dynamic.Interface
 )
 
-// NewBareFramework creates a test framework, without ginkgo dependencies
+// NewBareFramework creates a test framework, without ginkgo dependencies.
 func NewBareFramework(baseName string) *Framework {
 	f := &Framework{
 		BaseName:           baseName,

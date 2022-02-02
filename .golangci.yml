@@ -50,7 +50,7 @@ linters:
     - gocritic
     - gocyclo
     - goerr113
-    # - godot TODO
+    - godot
     # - godox #  Let's not forbid inline TODOs, FIXMEs et al
     - gofmt
     - gofumpt
