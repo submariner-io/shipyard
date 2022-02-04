@@ -26,13 +26,12 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
-
-	. "github.com/onsi/gomega"
 )
 
 type NetworkingType bool
@@ -94,7 +93,6 @@ const (
 )
 
 func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
-
 	// check if all necessary details are provided
 	Expect(config.Scheduling).ShouldNot(Equal(InvalidScheduling))
 	Expect(config.Type).ShouldNot(Equal(InvalidPodType))
@@ -125,6 +123,8 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 		networkPod.buildLatencyServerPod()
 	case CustomPod:
 		networkPod.buildCustomPod()
+	case InvalidPodType:
+		panic("config.Type can't equal InvalidPodType here, we checked above")
 	}
 
 	return networkPod
@@ -155,20 +155,18 @@ func (np *NetworkPod) AwaitFinish() {
 func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
-	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name), func() (interface{}, error) {
-		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
-	}, func(result interface{}) (bool, string, error) {
-		np.Pod = result.(*v1.Pod)
+	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name),
+		func() (interface{}, error) {
+			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
+		}, func(result interface{}) (bool, string, error) {
+			np.Pod = result.(*v1.Pod)
 
-		switch np.Pod.Status.Phase {
-		case v1.PodSucceeded:
-			return true, "", nil
-		case v1.PodFailed:
-			return true, "", nil
-		default:
+			if np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed {
+				return true, "", nil
+			}
+
 			return false, fmt.Sprintf("Pod status is %v", np.Pod.Status.Phase), nil
-		}
-	})
+		})
 
 	finished := np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed
 	if finished {
@@ -190,7 +188,7 @@ func (np *NetworkPod) CreateService() *v1.Service {
 	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
 }
 
-// RunCommand run the specified command in this NetworkPod
+// RunCommand run the specified command in this NetworkPod.
 func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 	req := KubeClients[np.Config.Cluster].CoreV1().RESTClient().Post().
 		Resource("pods").Name(np.Pod.Name).Namespace(np.Pod.Namespace).
@@ -223,12 +221,13 @@ func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 	return stdout.String(), stderr.String()
 }
 
-// GetLog returns container log from this NetworkPod
+// GetLog returns container log from this NetworkPod.
 func (np *NetworkPod) GetLog() string {
 	req := KubeClients[np.Config.Cluster].CoreV1().Pods(np.Pod.Namespace).GetLogs(np.Pod.Name, &v1.PodLogOptions{})
 
 	closer, err := req.Stream(context.TODO())
 	Expect(err).NotTo(HaveOccurred())
+
 	defer closer.Close()
 
 	out := new(strings.Builder)
@@ -241,9 +240,8 @@ func (np *NetworkPod) GetLog() string {
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will listen on TestPort over TCP, send sendString over the connection,
-// and write the network response in the pod  termination log, then exit with 0 status
+// and write the network response in the pod  termination log, then exit with 0 status.
 func (np *NetworkPod) buildTCPCheckListenerPod() {
-
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-listener",
@@ -260,7 +258,14 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
-					Command: []string{"sh", "-c", "for i in $(seq 50); do echo [dataplane] listener says $SEND_STRING; done | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh",
+						"-c",
+						"for i in $(seq 50);" +
+							" do echo [dataplane] listener says $SEND_STRING;" +
+							" done" +
+							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "LISTEN_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
@@ -282,9 +287,8 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will connect to remoteIP:TestPort over TCP, send sendString over the
 // connection, and write the network response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildTCPCheckConnectorPod() {
-
 	tcpCheckConnectorPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-pod",
@@ -302,7 +306,17 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Image: "quay.io/submariner/nettest:devel",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
-					Command: []string{"sh", "-c", "for in in $(seq 50); do echo [dataplane] connector says $SEND_STRING; done | for i in $(seq $CONN_TRIES); do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh",
+						"-c",
+						"for in in $(seq 50);" +
+							" do echo [dataplane] connector says $SEND_STRING; done" +
+							" | for i in $(seq $CONN_TRIES);" +
+							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
+							" then break;" +
+							" else sleep $RETRY_SLEEP;" +
+							" fi; done >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "REMOTE_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
@@ -326,7 +340,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will initiate iperf3 throughput test to remoteIP and write the test
 // response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildThroughputClientPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -343,7 +357,13 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					Name:            "nettest-client-pod",
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
-					Command:         []string{"sh", "-c", "for i in $(seq $CONN_TRIES); do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP; then break; else echo [going to retry]; sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1"},
+					Command: []string{
+						"sh", "-c", "for i in $(seq $CONN_TRIES);" +
+							" do if iperf3 -w 256K --connect-timeout $CONN_TIMEOUT -P 10 -p $TARGET_PORT -c $TARGET_IP;" +
+							" then break;" +
+							" else echo [going to retry]; sleep $RETRY_SLEEP;" +
+							" fi; done >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
@@ -364,7 +384,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
-// The pod will start iperf3 in server mode
+// The pod will start iperf3 in server mode.
 func (np *NetworkPod) buildThroughputServerPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -400,7 +420,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will initiate netperf latency test to remoteIP and write the test
 // response in the pod termination log, then
-// exit with 0 status
+// exit with 0 status.
 func (np *NetworkPod) buildLatencyClientPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -418,7 +438,11 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Image:           "quay.io/submariner/nettest:devel",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
-						"sh", "-c", "netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate >/dev/termination-log 2>&1"},
+						"sh",
+						"-c",
+						"netperf -H $TARGET_IP -t TCP_RR  -- -o min_latency,mean_latency,max_latency,stddev_latency,transaction_rate" +
+							" >/dev/termination-log 2>&1",
+					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 					},
@@ -435,7 +459,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
-// The pod will start netserver (server of netperf)
+// The pod will start netserver (server of netperf).
 func (np *NetworkPod) buildLatencyServerPod() {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -503,6 +527,8 @@ func (np *NetworkPod) buildCustomPod() {
 }
 
 func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
+	Expect(scheduling).ShouldNot(Equal(InvalidScheduling))
+
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
@@ -512,6 +538,9 @@ func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
 	case NonGatewayNode:
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+
+	case InvalidScheduling:
+		panic("scheduling can't equal InvalidScheduling here, we checked above")
 	}
 
 	return &v1.Affinity{
@@ -537,6 +566,7 @@ func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
 func removeDupDataplaneLines(output string) string {
 	var newLines []string
 	var lastLine string
+
 	for _, line := range strings.Split(output, "\n") {
 		if !strings.HasPrefix(line, "[dataplane]") || line != lastLine {
 			newLines = append(newLines, line)

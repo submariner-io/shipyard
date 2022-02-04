@@ -23,7 +23,6 @@ import (
 	"fmt"
 
 	corev1 "k8s.io/api/core/v1"
-	"k8s.io/apimachinery/pkg/api/errors"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/intstr"
@@ -35,7 +34,7 @@ const (
 )
 
 func (f *Framework) NewService(name, portName string, port int, protocol corev1.Protocol, selector map[string]string,
-		isHeadless bool) *corev1.Service {
+	isHeadless bool) *corev1.Service {
 	service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
@@ -64,7 +63,7 @@ func (f *Framework) NewService(name, portName string, port int, protocol corev1.
 
 func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel:selectorName}, false)
+		map[string]string{TestAppLabel: selectorName}, false)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)
@@ -72,7 +71,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 
 func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel:selectorName}, true)
+		map[string]string{TestAppLabel: selectorName}, true)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)
@@ -131,7 +130,7 @@ func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcNam
 func (f *Framework) CreateService(sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
 	return AwaitUntil("create service", func() (interface{}, error) {
 		service, err := sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
-		if errors.IsAlreadyExists(err) {
+		if apierrors.IsAlreadyExists(err) {
 			err = sc.Delete(context.TODO(), serviceSpec.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return nil, err
@@ -152,7 +151,7 @@ func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 }
 
 // AwaitUntilAnnotationOnService queries the service and looks for the presence of annotation.
-func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation string, svcName string, namespace string) *corev1.Service {
+func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation, svcName, namespace string) *corev1.Service {
 	return AwaitUntil("get"+annotation+" annotation for service "+svcName, func() (interface{}, error) {
 		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(context.TODO(), svcName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {

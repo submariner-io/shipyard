@@ -29,7 +29,6 @@ import (
 	"github.com/pkg/errors"
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
-	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
@@ -46,7 +45,7 @@ import (
 )
 
 const (
-	// Polling interval while trying to create objects
+	// Polling interval while trying to create objects.
 	PollInterval = 100 * time.Millisecond
 )
 
@@ -78,8 +77,10 @@ type PatchUInt32Value struct {
 	Value uint32 `json:"value"`
 }
 
-type DoOperationFunc func() (interface{}, error)
-type CheckResultFunc func(result interface{}) (bool, string, error)
+type (
+	DoOperationFunc func() (interface{}, error)
+	CheckResultFunc func(result interface{}) (bool, string, error)
+)
 
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 // Eventual goal is to merge this with integration test framework.
@@ -109,26 +110,28 @@ var (
 	DynClients  []dynamic.Interface
 )
 
-// NewBareFramework creates a test framework, without ginkgo dependencies
+// NewBareFramework creates a test framework, without ginkgo dependencies.
 func NewBareFramework(baseName string) *Framework {
-	f := &Framework{
+	return &Framework{
 		BaseName:           baseName,
 		namespacesToDelete: map[string]bool{},
 	}
-	return f
 }
 
 func AddBeforeSuite(beforeSuite func()) {
 	beforeSuiteFuncs = append(beforeSuiteFuncs, beforeSuite)
 }
 
-var By func(string)
-var Fail func(string)
-var userAgentFunction func() string
+var (
+	By                func(string)
+	Fail              func(string)
+	userAgentFunction func() string
+)
 
 func SetStatusFunction(by func(string)) {
 	By = by
 }
+
 func SetFailFunction(fail func(string)) {
 	Fail = fail
 }
@@ -155,15 +158,15 @@ func BeforeSuite() {
 	if len(TestContext.KubeConfig) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
 			"Either KubeConfig or KubeConfigs must be specified but not both")
-		for _, context := range TestContext.KubeContexts {
-			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, context))
+
+		for _, ctx := range TestContext.KubeContexts {
+			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, ctx))
 		}
 
 		// if cluster IDs are not provided we assume that cluster-id == context
 		if len(TestContext.ClusterIDs) == 0 {
 			TestContext.ClusterIDs = TestContext.KubeContexts
 		}
-
 	} else if len(TestContext.KubeConfigs) > 0 {
 		Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
 			"One ClusterID must be provided for each item in the KubeConfigs")
@@ -202,14 +205,15 @@ func (f *Framework) BeforeEach() {
 		}
 
 		for idx, clientSet := range KubeClients {
-			switch ClusterIndex(idx) {
-			case ClusterA: // On the first cluster we let k8s generate a name for the namespace
+			if ClusterIndex(idx) == ClusterA {
+				// On the first cluster we let k8s generate a name for the namespace
 				namespace := generateNamespace(clientSet, f.BaseName, namespaceLabels)
 				f.Namespace = namespace.GetName()
 				f.UniqueName = namespace.GetName()
 				f.AddNamespacesToDelete(namespace)
 				By(fmt.Sprintf("Generated namespace %q in cluster %q to execute the tests in", f.Namespace, TestContext.ClusterIDs[idx]))
-			default: // On the other clusters we use the same name to make tracing easier
+			} else {
+				// On the other clusters we use the same name to make tracing easier
 				By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
 				f.CreateNamespace(clientSet, f.Namespace, namespaceLabels)
 			}
@@ -217,7 +221,6 @@ func (f *Framework) BeforeEach() {
 	} else {
 		f.UniqueName = string(uuid.NewUUID())
 	}
-
 }
 
 func DetectGlobalnet() {
@@ -232,7 +235,7 @@ func DetectGlobalnet() {
 	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
 		clusters, err := clusters.List(context.TODO(), metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil
+			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return clusters, err
 	}, func(result interface{}) (bool, string, error) {
@@ -262,6 +265,7 @@ func DetectGlobalnet() {
 
 func InitNumClusterNodes() error {
 	TestContext.NumNodesInCluster = map[ClusterIndex]int{}
+
 	for i := range KubeClients {
 		nodes, err := KubeClients[i].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
 		if err != nil {
@@ -285,7 +289,7 @@ func fetchClusterIDs() {
 		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
 			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil
+				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 
 			return ds, err
@@ -299,6 +303,7 @@ func fetchClusterIDs() {
 
 		const envVarName = "SUBMARINER_CLUSTERID"
 		found := false
+
 		for _, envVar := range daemonSet.Spec.Template.Spec.Containers[0].Env {
 			if envVar.Name == envVarName {
 				if TestContext.ClusterIDs[i] != envVar.Value {
@@ -307,6 +312,7 @@ func fetchClusterIDs() {
 				}
 
 				found = true
+
 				break
 			}
 		}
@@ -325,25 +331,26 @@ func createKubernetesClient(restConfig *rest.Config) *kubeclientset.Clientset {
 	if restConfig.GroupVersion == nil {
 		restConfig.GroupVersion = &schema.GroupVersion{}
 	}
+
 	if restConfig.NegotiatedSerializer == nil {
 		restConfig.NegotiatedSerializer = scheme.Codecs
 	}
+
 	return clientSet
 }
 
 func createDynamicClient(restConfig *rest.Config) dynamic.Interface {
-
 	clientSet, err := dynamic.NewForConfig(restConfig)
 	Expect(err).NotTo(HaveOccurred())
 
 	return clientSet
 }
 
-func createRestConfig(kubeConfig, context string) *rest.Config {
-	restConfig, err := loadConfig(kubeConfig, context)
+func createRestConfig(kubeConfig, kubeContext string) *rest.Config {
+	restConfig, err := loadConfig(kubeConfig, kubeContext)
 	if err != nil {
 		Errorf("Unable to load kubeconfig file %s for context %s, this is a non-recoverable error",
-			TestContext.KubeConfig, context)
+			TestContext.KubeConfig, kubeContext)
 		Errorf("loadConfig err: %s", err.Error())
 		fmt.Printf("Non-recoverable error: %s", err.Error())
 		os.Exit(1)
@@ -353,9 +360,11 @@ func createRestConfig(kubeConfig, context string) *rest.Config {
 
 	restConfig.QPS = TestContext.ClientQPS
 	restConfig.Burst = TestContext.ClientBurst
+
 	if TestContext.GroupVersion != nil {
 		restConfig.GroupVersion = TestContext.GroupVersion
 	}
+
 	return restConfig
 }
 
@@ -367,37 +376,34 @@ func deleteNamespace(client kubeclientset.Interface, namespaceName string) error
 func (f *Framework) AfterEach() {
 	RemoveCleanupAction(f.cleanupHandle)
 
-	// DeleteNamespace at the very end in defer, to avoid any
-	// expectation failures preventing deleting the namespace.
-	defer func() {
-		var nsDeletionErrors []error
+	var nsDeletionErrors []error
 
-		// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
-		// if delete-namespace set to false, namespace will always be preserved.
-		// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
-		for ns := range f.namespacesToDelete {
-			if err := f.deleteNamespaceFromAllClusters(ns); err != nil {
-				nsDeletionErrors = append(nsDeletionErrors, err)
-			}
-
-			delete(f.namespacesToDelete, ns)
+	// Whether to delete namespace is determined by 3 factors: delete-namespace flag, delete-namespace-on-failure flag and the test result
+	// if delete-namespace set to false, namespace will always be preserved.
+	// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
+	for ns := range f.namespacesToDelete {
+		if err := f.deleteNamespaceFromAllClusters(ns); err != nil {
+			nsDeletionErrors = append(nsDeletionErrors, err)
 		}
 
-		// Paranoia-- prevent reuse!
-		f.Namespace = ""
+		delete(f.namespacesToDelete, ns)
+	}
 
-		// if we had errors deleting, report them now.
-		if len(nsDeletionErrors) != 0 {
-			Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
-		}
-	}()
+	// Paranoia-- prevent reuse!
+	f.Namespace = ""
 
+	// if we had errors deleting, report them now.
+	if len(nsDeletionErrors) != 0 {
+		Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
+	}
 }
 
 func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	var errs []error
+
 	for i, clientSet := range KubeClients {
 		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+
 		if err := deleteNamespace(clientSet, ns); err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
@@ -415,14 +421,14 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
-	baseName string, labels map[string]string) *v1.Namespace {
-
+	baseName string, labels map[string]string) *corev1.Namespace {
 	ns := createTestNamespace(clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
+
 	return ns
 }
 
-func (f *Framework) AddNamespacesToDelete(namespaces ...*v1.Namespace) {
+func (f *Framework) AddNamespacesToDelete(namespaces ...*corev1.Namespace) {
 	for _, ns := range namespaces {
 		if ns == nil {
 			continue
@@ -432,7 +438,7 @@ func (f *Framework) AddNamespacesToDelete(namespaces ...*v1.Namespace) {
 	}
 }
 
-func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *v1.Namespace {
+func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-", baseName),
@@ -442,15 +448,16 @@ func generateNamespace(client kubeclientset.Interface, baseName string, labels m
 
 	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error generating namespace %v", namespaceObj)
+
 	return namespace
 }
 
-func createTestNamespace(client kubeclientset.Interface, name string, labels map[string]string) *v1.Namespace {
+func createTestNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
 	namespace := createNamespace(client, name, labels)
 	return namespace
 }
 
-func createNamespace(client kubeclientset.Interface, name string, labels map[string]string) *v1.Namespace {
+func createNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
@@ -460,11 +467,12 @@ func createNamespace(client kubeclientset.Interface, name string, labels map[str
 
 	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error creating namespace %v", namespaceObj)
+
 	return namespace
 }
 
 // PatchString performs a REST patch operation for the given path and string value.
-func PatchString(path string, value string, patchFunc PatchFunc) {
+func PatchString(path, value string, patchFunc PatchFunc) {
 	payload := []PatchStringValue{{
 		Op:    "add",
 		Path:  path,
@@ -503,6 +511,7 @@ func NoopCheckResult(interface{}) (bool, string, error) {
 func AwaitUntil(opMsg string, doOperation DoOperationFunc, checkResult CheckResultFunc) interface{} {
 	result, errMsg, err := AwaitResultOrError(opMsg, doOperation, checkResult)
 	Expect(err).NotTo(HaveOccurred(), errMsg)
+
 	return result
 }
 

@@ -15,15 +15,16 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 */
-package e2e
+package e2e_test
 
 import (
 	"testing"
 
+	"github.com/submariner-io/shipyard/test/e2e"
 	_ "github.com/submariner-io/shipyard/test/e2e/dataplane"
 	_ "github.com/submariner-io/shipyard/test/e2e/example"
 )
 
 func TestE2E(t *testing.T) {
-	RunE2ETests(t)
+	e2e.RunE2ETests(t)
 }

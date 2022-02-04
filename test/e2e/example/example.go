@@ -54,43 +54,45 @@ func testListingNodes() {
 
 func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	nc := cs.CoreV1().Nodes()
+
 	By("Requesting node list from API")
+
 	nodes, err := nc.List(context.TODO(), metav1.ListOptions{})
 	Expect(err).NotTo(HaveOccurred())
+
 	By("Checking that we had more than 0 nodes on the response")
 	Expect(len(nodes.Items)).ToNot(BeZero())
-	for _, node := range nodes.Items {
-		inIP, err := getIP(v1.NodeInternalIP, &node)
+
+	for i := range nodes.Items {
+		inIP, err := getIP(v1.NodeInternalIP, &nodes.Items[i])
 		Expect(err).NotTo(HaveOccurred())
 		framework.Logf("Detected node with IP: %v", inIP)
 	}
 }
 
-var (
-	testPod = v1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "example-pod",
-			Labels: map[string]string{
-				"example-pod": "",
-			},
+var testPod = v1.Pod{
+	ObjectMeta: metav1.ObjectMeta{
+		GenerateName: "example-pod",
+		Labels: map[string]string{
+			"example-pod": "",
 		},
-		Spec: v1.PodSpec{
-			Containers: []v1.Container{
-				{
-					Name:    "example-pod",
-					Image:   "busybox",
-					Command: []string{"sh", "-c", "echo Hello Kubernetes, I am at $POD_IP! && sleep 3600"},
-					Env: []v1.EnvVar{
-						{
-							Name:      "POD_IP",
-							ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}},
-						},
+	},
+	Spec: v1.PodSpec{
+		Containers: []v1.Container{
+			{
+				Name:    "example-pod",
+				Image:   "busybox",
+				Command: []string{"sh", "-c", "echo Hello Kubernetes, I am at $POD_IP! && sleep 3600"},
+				Env: []v1.EnvVar{
+					{
+						Name:      "POD_IP",
+						ValueFrom: &v1.EnvVarSource{FieldRef: &v1.ObjectFieldSelector{FieldPath: "status.podIP"}},
 					},
 				},
 			},
 		},
-	}
-)
+	},
+}
 
 func testCreatingAPod(f *framework.Framework) {
 	for _, cs := range framework.KubeClients {
@@ -100,12 +102,16 @@ func testCreatingAPod(f *framework.Framework) {
 
 func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework) {
 	pc := cs.CoreV1().Pods(f.Namespace)
+
 	By("Creating a bunch of pods")
+
 	for i := 0; i < 3; i++ {
 		_, err := pc.Create(context.TODO(), &testPod, metav1.CreateOptions{})
 		Expect(err).NotTo(HaveOccurred())
 	}
+
 	By("Waiting for the example-pod(s) to be scheduled and running")
+
 	err := wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
 		pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 		if err != nil {
@@ -117,9 +123,9 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 		}
 
 		// check all pods are running
-		for _, pod := range pods.Items {
-			if pod.Status.Phase != v1.PodRunning {
-				if pod.Status.Phase != v1.PodPending {
+		for i := range pods.Items {
+			if pods.Items[i].Status.Phase != v1.PodRunning {
+				if pods.Items[i].Status.Phase != v1.PodPending {
 					return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\"")
 				}
 				return false, nil // pod is still pending
@@ -128,11 +134,14 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 		return true, nil // all pods are running
 	})
 	Expect(err).NotTo(HaveOccurred())
+
 	By("Collecting pod ClusterIPs just for fun")
+
 	pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
 	Expect(err).NotTo(HaveOccurred())
-	for _, pod := range pods.Items {
-		framework.Logf("Detected pod with IP: %v", pod.Status.PodIP)
+
+	for i := range pods.Items {
+		framework.Logf("Detected pod with IP: %v", pods.Items[i].Status.PodIP)
 	}
 }
 
@@ -142,5 +151,6 @@ func getIP(iptype v1.NodeAddressType, node *v1.Node) (string, error) {
 			return addr.Address, nil
 		}
 	}
+
 	return "", fmt.Errorf("did not find %s on Node", iptype)
 }

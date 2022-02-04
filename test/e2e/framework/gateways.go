@@ -43,7 +43,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil
+				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -55,7 +55,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != status {
-				return false, "", fmt.Errorf("Gateway %q exists but has wrong status %q, expected %q",
+				return false, "", fmt.Errorf("gateway %q exists but has wrong status %q, expected %q",
 					gw.GetName(), haStatus, status)
 			}
 			return true, "", nil
@@ -87,6 +87,7 @@ func (f *Framework) AwaitGatewaysWithStatus(cluster ClusterIndex, status string)
 
 func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 	gwClient := gatewayClient(cluster)
+
 	AwaitUntil(fmt.Sprintf("await Gateway on %q removed", name),
 		func() (interface{}, error) {
 			_, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
@@ -107,7 +108,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil
+				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -171,7 +172,7 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	AwaitUntil("delete gateway", func() (interface{}, error) {
 		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil
+			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return nil, err
 	}, NoopCheckResult)

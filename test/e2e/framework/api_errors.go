@@ -31,7 +31,6 @@ func IsTransientError(err error, opMsg string) bool {
 		errors.IsServiceUnavailable(err) ||
 		errors.IsUnexpectedServerError(err) ||
 		errors.IsTooManyRequests(err) {
-
 		Logf("Transient failure when attempting to %s: %v", opMsg, err)
 		return true
 	}

@@ -38,8 +38,9 @@ func New(name string) *Docker {
 func (d *Docker) GetIP(networkName string) string {
 	var stdout bytes.Buffer
 
-	cmdargs := []string{"inspect", d.Name, "-f",
-		fmt.Sprintf("{{(index .NetworkSettings.Networks \"%s\").IPAddress}}", networkName),
+	cmdargs := []string{
+		"inspect", d.Name, "-f",
+		fmt.Sprintf("{{(index .NetworkSettings.Networks %q).IPAddress}}", networkName),
 	}
 	cmd := exec.Command("docker", cmdargs...)
 	cmd.Stdout = &stdout
@@ -54,6 +55,7 @@ func (d *Docker) GetLog() (string, string) {
 	var stdout, stderr bytes.Buffer
 
 	// get stdout and stderr of `docker log {d.Name}` command
+	// #nosec G204 -- the caller-controlled value is only used as the logs argument
 	cmd := exec.Command("docker", "logs", d.Name)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
