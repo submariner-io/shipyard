@@ -218,20 +218,18 @@ function deploy_ovn_cni(){
 }
 
 function deploy_kind_ovn(){
-    local OVN_SRC_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
+    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
     export K8s_VERSION="${k8s_version}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
 
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
-    export REGISTRY_IP="kind-registry"
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
-    sed -i 's/^kind load/#kind load/g' $OVN_DIR/contrib/kind.sh
 
-    (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
+    ( ./ovn-kubernetes/contrib/kind.sh -ov $OVN_IMAGE -cn ${KIND_CLUSTER_NAME} -ric -lr -dd ${KIND_CLUSTER_NAME}.local; ) &
     if ! wait $! ; then
         echo "Failed to install kind with OVN"
         kind delete cluster --name=${cluster}
@@ -304,6 +302,19 @@ function warn_inotify() {
     fi
 }
 
+# If any of the clusters use OVN-K as the CNI then clone the
+# ovn-kubernetes repo from master in order to access the required
+# kind scripts, and manifest generation templates.
+function download_ovnk() {
+    if [[ ${cluster_cni[*]} != *"ovn"* ]]; then
+        return
+    fi
+
+    echo "Cloning ovn-kubernetes from source"
+    git clone https://github.com/ovn-org/ovn-kubernetes.git \
+	|| { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
+}
+
 ### Main ###
 
 rm -rf ${KUBECONFIGS_DIR}
@@ -311,6 +322,7 @@ mkdir -p ${KUBECONFIGS_DIR}
 
 download_kind
 load_settings
+download_ovnk
 run_local_registry
 declare_cidrs
 

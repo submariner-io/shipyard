@@ -9,3 +9,4 @@ junit.xml
 *.out
 *.coverprofile
 *~
+/ovn-kubernetes
