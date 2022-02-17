@@ -44,7 +44,6 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 
 	framework.BeforeSuite()
 	return nil
-
 }, func(data []byte) {
 	// Run on all Ginkgo nodes
 })
@@ -56,7 +55,7 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 var _ = ginkgo.SynchronizedAfterSuite(func() {
 	// Run on all Ginkgo nodes
 
-	//framework.Logf("Running AfterSuite actions on all node")
+	// framework.Logf("Running AfterSuite actions on all node")
 	framework.RunCleanupActions()
 }, func() {
 	// Run only Ginkgo on node 1

@@ -106,7 +106,7 @@ func Skip(message string, callerSkip ...int) {
 }
 
 // ginkgo adds a lot of test running infrastructure to the stack, so
-// we filter those out
+// we filter those out.
 var stackSkipPattern = regexp.MustCompile(`onsi/ginkgo`)
 
 func pruneStack(skip int) string {

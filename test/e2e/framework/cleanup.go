@@ -20,20 +20,25 @@ package framework
 
 import "sync"
 
-// CleanupActionHandle is an integer pointer type for handling cleanup action
+// CleanupActionHandle is an integer pointer type for handling cleanup action.
 type CleanupActionHandle *int
 
-var cleanupActionsLock sync.Mutex
-var cleanupActions = map[CleanupActionHandle]func(){}
+var (
+	cleanupActionsLock sync.Mutex
+	cleanupActions     = map[CleanupActionHandle]func(){}
+)
 
 // AddCleanupAction installs a function that will be called in the event of the
 // whole test being terminated.  This allows arbitrary pieces of the overall
 // test to hook into SynchronizedAfterSuite().
 func AddCleanupAction(fn func()) CleanupActionHandle {
 	p := CleanupActionHandle(new(int))
+
 	cleanupActionsLock.Lock()
 	defer cleanupActionsLock.Unlock()
+
 	cleanupActions[p] = fn
+
 	return p
 }
 
@@ -50,13 +55,16 @@ func RemoveCleanupAction(p CleanupActionHandle) {
 // may remove themselves.
 func RunCleanupActions() {
 	list := []func(){}
+
 	func() {
 		cleanupActionsLock.Lock()
 		defer cleanupActionsLock.Unlock()
+
 		for _, fn := range cleanupActions {
 			list = append(list, fn)
 		}
 	}()
+
 	// Run unlocked.
 	for _, fn := range list {
 		fn()

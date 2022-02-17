@@ -31,7 +31,7 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-// ExecOptions passed to ExecWithOptions
+// ExecOptions passed to ExecWithOptions.
 type ExecOptions struct {
 	Command []string
 
@@ -49,7 +49,7 @@ type ExecOptions struct {
 // ExecWithOptions executes a command in the specified container,
 // returning stdout, stderr and error. `options` allowed for
 // additional parameters to be passed.
-func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (string, string, error) {
+func (f *Framework) ExecWithOptions(options *ExecOptions, index ClusterIndex) (string, string, error) {
 	Logf("ExecWithOptions %+v", options)
 
 	var err error
@@ -72,12 +72,13 @@ func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (st
 	}, scheme.ParameterCodec)
 
 	var stdout, stderr bytes.Buffer
-	attempts := 5
-	for ; attempts > 0; attempts-- {
+
+	for attempts := 5; attempts > 0; attempts-- {
 		err = execute("POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
 		if err == nil {
 			break
 		}
+
 		time.Sleep(time.Millisecond * 5000)
 		Logf("Retrying due to error  %+v", err)
 	}
@@ -89,11 +90,12 @@ func (f *Framework) ExecWithOptions(options ExecOptions, index ClusterIndex) (st
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
-func execute(method string, url *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
-	exec, err := remotecommand.NewSPDYExecutor(config, method, url)
+func execute(method string, reqURL *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
+	exec, err := remotecommand.NewSPDYExecutor(config, method, reqURL)
 	if err != nil {
 		return err
 	}
+
 	return exec.Stream(remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,
