@@ -73,7 +73,8 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
     rm -rf gh_${GH_VERSION}_linux_${ARCH} && \
     find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
-    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \)
+    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
+    go clean -cache -modcache
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
