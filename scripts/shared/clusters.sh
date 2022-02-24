@@ -2,7 +2,7 @@
 
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
-DEFAULT_K8S_VERSION=1.20
+DEFAULT_K8S_VERSION=1.23
 declare -A kind_k8s_versions
 kind_k8s_versions[1.17]=1.17.17@sha256:66f1d0d91a88b8a001811e2f1054af60eef3b669a9a74f9b6db871f2f1eeed00
 kind_k8s_versions[1.18]=1.18.19@sha256:7af1492e19b3192a79f606e43c35fb741e520d195f96399284515f077b3b622c
