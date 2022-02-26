@@ -177,7 +177,7 @@ packagedoc-lint:
 	done 2>/dev/null; \
 	exit $$result
 
-lint: gitlint golangci-lint markdownlint yamllint
+lint: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
