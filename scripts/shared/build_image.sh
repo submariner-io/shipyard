@@ -41,7 +41,16 @@ if [[ "$cache" = true ]]; then
     if [[ -z "$(docker image ls -q ${cache_image})" ]]; then
         docker pull ${cache_image} || :
     fi
-    for parent in $(grep FROM ${dockerfile} | cut -f2 -d' ' | grep -v scratch); do
+    # The shellcheck linting tool recommends piping to a while read loop, but that doesn't work for us
+    # because the while loop ends up in a subshell
+    # shellcheck disable=SC2013
+    for parent in $(awk '/FROM/ {
+                             for (i = 2; i <= NF; i++) {
+                                 if ($i == "AS") next;
+                                 if (!($i ~ /^--platform/ || $i ~ /scratch/))
+                                     print gensub("\\${BASE_BRANCH}", ENVIRON["BASE_BRANCH"], "g", $i)
+                             }
+                         }' "${dockerfile}"); do
         cache_flag+=" --cache-from ${parent}"
         docker pull ${parent} || :
     done
