@@ -100,7 +100,6 @@ fi
 docker run -i --rm --security-opt seccomp=unconfined \
        $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$DAPPER_UID" -e "DAPPER_GID=$DAPPER_GID" \
        -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" \
-       -v "${HOME}/.docker/config.json:/root/.docker/config.json${suffix}" \
        ${dockerargs} \
        ${DAPPER_RUN_ARGS} \
        "${container}" "$@"
