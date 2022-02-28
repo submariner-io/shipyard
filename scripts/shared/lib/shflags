@@ -10,7 +10,7 @@ ensure_shflags() {
 
     if [ ! -s .shflags ]; then
         echo "Downloading shflags ${SHFLAGS_VERSION}"
-        if ! curl -L "https://raw.githubusercontent.com/kward/shflags/v${SHFLAGS_VERSION}/shflags" > .shflags; then
+        if ! curl -L "https://raw.githubusercontent.com/kward/shflags/${SHFLAGS_VERSION}/src/shflags" > .shflags; then
             rm -f .shflags
             echo "$0 needs shflags in /usr/share/shflags/shflags or locally as .shflags." 1>&2
             echo "It was unable to download it; please install it and try again." 1>&2
@@ -21,5 +21,5 @@ ensure_shflags() {
     . ./.shflags
 }
 
-SHFLAGS_VERSION=${SHFLAGS_VERSION:=1.2.3}
+SHFLAGS_VERSION=${SHFLAGS_VERSION:=1.0.3}
 ensure_shflags
