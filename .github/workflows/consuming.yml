@@ -100,8 +100,47 @@ jobs:
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
-      - name: Run all linters
-        run: make -C ${{ matrix.project }} lint
+      - name: Run gitlint
+        if: always()
+        run: make -C ${{ matrix.project }} gitlint
+
+      - name: Run golangci-lint
+        if: ${{ always() && matrix.project != 'submariner-charts' }}
+        run: make -C ${{ matrix.project }} golangci-lint
+
+      - name: Run markdownlint
+        if: always()
+        run: make -C ${{ matrix.project }} markdownlint
+
+      - name: Run packagedoc-lint
+        if: >-
+          ${{
+          always()
+          && matrix.project != 'cloud-prepare'
+          && matrix.project != 'coastguard'
+          && matrix.project != 'lighthouse'
+          && matrix.project != 'submariner-charts'
+          && matrix.project != 'submariner-operator'
+          }}
+        run: make -C ${{ matrix.project }} packagedoc-lint
+
+      - name: Run shellcheck
+        if: >-
+          ${{
+          always()
+          && matrix.project != 'admiral'
+          && matrix.project != 'cloud-prepare'
+          && matrix.project != 'coastguard'
+          && matrix.project != 'lighthouse'
+          && matrix.project != 'submariner'
+          && matrix.project != 'submariner-charts'
+          && matrix.project != 'submariner-operator'
+          }}
+        run: make -C ${{ matrix.project }} shellcheck
+
+      - name: Run yamllint
+        if: ${{ always() && matrix.project != 'submariner-charts' }}
+        run: make -C ${{ matrix.project }} yamllint
 
   unit-consuming:
     name: Unit Tests
