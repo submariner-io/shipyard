@@ -49,7 +49,7 @@ jobs:
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.12
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.12
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -127,7 +127,7 @@ jobs:
         uses: actions/checkout@5a4ac9002d0be2fb38bd78e4b4dbde5606d7042f
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.12
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 

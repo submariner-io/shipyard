@@ -1,4 +1,4 @@
-BASE_BRANCH ?= devel
+BASE_BRANCH ?= release-0.12
 OCM_BASE_BRANCH ?= main
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 MULTIARCH_IMAGES ?= nettest
