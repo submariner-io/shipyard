@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm', 'bundle', 'ocm']
+        deploytool: ['operator', 'helm']
         lighthouse: ['']
         ovn: ['']
         include:
@@ -52,17 +52,7 @@ jobs:
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
-          - deploytool: bundle
-            lighthouse: lighthouse
-        exclude:
-          # OCM does not support globalnet at this moment
-          - deploytool: ocm
-            globalnet: globalnet
     steps:
-      - name: Set up kernel, increase the inotify settings
-        if: ${{ matrix.deploytool == 'bundle' || matrix.deploytool == 'ocm' }}
-        run: sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
-
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ matrix.ovn != '' }}
         run: rm -rf /usr/share/dotnet
