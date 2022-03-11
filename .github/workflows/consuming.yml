@@ -33,8 +33,6 @@ jobs:
             cabledriver: wireguard
           # Test multiple K8s versions only in submariner-operator, balancing coverage and jobs
           - project: submariner-operator
-            k8s_version: '1.20'
-          - project: submariner-operator
             k8s_version: '1.21'
           - project: submariner-operator
             k8s_version: '1.22'
