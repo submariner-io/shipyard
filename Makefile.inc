@@ -189,7 +189,12 @@ packagedoc-lint:
 
 # [shellcheck] validates your shell files
 shellcheck:
+# Only run shellcheck if there are files to check
+ifneq (,$(SHELLCHECK_ARGS))
 	shellcheck -x -P $${SCRIPTS_DIR} $(SHELLCHECK_ARGS)
+else
+	@echo 'There are no shell scripts to check; if this is incorrect, specify them in SHELLCHECK_ARGS.'
+endif
 
 # [yamllint] validates YAML files in the project
 yamllint:
