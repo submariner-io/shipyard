@@ -24,6 +24,8 @@ else ifneq (,$(filter wireguard,$(_using)))
 override DEPLOY_ARGS += --cable_driver wireguard
 else ifneq (,$(filter vxlan,$(_using)))
 override DEPLOY_ARGS += --cable_driver vxlan
+else ifneq (,$(filter iptun,$(_using)))
+override DEPLOY_ARGS += --cable_driver iptun
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
@@ -189,7 +191,12 @@ markdownlint:
 
 # [shellcheck] validates your shell files
 shellcheck:
+# Only run shellcheck if there are files to check
+ifneq (,$(SHELLCHECK_ARGS))
 	shellcheck -x -P $${SCRIPTS_DIR} $(SHELLCHECK_ARGS)
+else
+	@echo 'There are no shell scripts to check; if this is incorrect, specify them in SHELLCHECK_ARGS.'
+endif
 
 # [yamllint] validates YAML files in the project
 yamllint:
