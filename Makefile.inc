@@ -165,8 +165,12 @@ VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h
 
 # [golangci-lint] validates Go code in the project
 golangci-lint: $(VENDOR_MODULES)
+ifneq (,$(shell find . -name '*.go'))
 	golangci-lint linters
 	golangci-lint run --timeout 10m
+else
+	@echo 'There are no Go files to lint.'
+endif
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
