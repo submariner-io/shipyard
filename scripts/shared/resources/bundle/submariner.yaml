@@ -9,7 +9,6 @@ spec:
   clusterCIDR: "${cluster_CIDRs[$cluster]}"
   globalCIDR: "${global_CIDRs[$cluster]}"
   clusterID: "${cluster}"
-  colorCodes: "${SUBM_COLORCODES}"
   debug: false
   natEnabled: false
   serviceDiscoveryEnabled: ${service_discovery}

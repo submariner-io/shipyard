@@ -69,7 +69,6 @@ function subctl_install_subm() {
                 ${subctlrepver} \
                 --nattport "${CE_IPSEC_NATTPORT}" \
                 --ikeport "${CE_IPSEC_IKEPORT}" \
-                --colorcodes "${SUBM_COLORCODES}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --natt=false \
                 --cable-driver "${cable_driver}" \
