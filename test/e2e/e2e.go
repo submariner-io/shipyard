@@ -91,5 +91,10 @@ func RunE2ETests(t *testing.T) bool {
 		config.DefaultReporterConfig.SlowSpecThreshold = 45.0
 	}
 
+	// Set junit report path and filename if required by user
+	// The default of the parameter is set to empty, so if not used
+	// creation of report will be skipped
+	config.DefaultReporterConfig.ReportFile = framework.TestContext.JunitReport
+
 	return ginkgo.RunSpecs(t, "Submariner E2E suite")
 }
