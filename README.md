@@ -29,7 +29,7 @@ The Dockerfile should build upon `quay.io/submariner/shipyard-dapper-base`.
 For example, this very basic file allows E2E testing:
 
 ```Dockerfile
-FROM quay.io/submariner/shipyard-dapper-base:devel
+FROM quay.io/submariner/shipyard-dapper-base:feature-multi-active-gw
 
 ENV DAPPER_SOURCE=/go/src/github.com/submariner-io/submariner DAPPER_DOCKER_SOCKET=true
 ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output
@@ -51,7 +51,7 @@ To use Shipyard's target, simply include the [Makefile.inc](Makefile.inc) file i
 The simplest Makefile would look like this:
 
 ```Makefile
-BASE_BRANCH=devel
+BASE_BRANCH=feature-multi-active-gw
 PROJECT=shipyard
 export BASE_BRANCH
 export PROJECT

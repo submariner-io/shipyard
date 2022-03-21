@@ -56,7 +56,7 @@ gitid="$(git symbolic-ref --short HEAD 2>/dev/null | tr / _ || :)"
 gitid="${gitid:-$(git show --format=%h -s)}"
 container="$(basename "$(pwd)"):${gitid}"
 docker build -t "${container}" -f "${file}" \
-       --build-arg "BASE_BRANCH=${BASE_BRANCH:-devel}" \
+       --build-arg "BASE_BRANCH=${BASE_BRANCH:-feature-multi-active-gw}" \
        --build-arg "PROJECT=${PROJECT}" \
        .
 

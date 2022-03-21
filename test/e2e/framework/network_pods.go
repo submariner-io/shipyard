@@ -255,7 +255,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-listener",
-					Image: "quay.io/submariner/nettest:devel",
+					Image: "quay.io/submariner/nettest:feature-multi-active-gw",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{
@@ -303,7 +303,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-connector",
-					Image: "quay.io/submariner/nettest:devel",
+					Image: "quay.io/submariner/nettest:feature-multi-active-gw",
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
 					Command: []string{
@@ -355,7 +355,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 			Containers: []v1.Container{
 				{
 					Name:            "nettest-client-pod",
-					Image:           "quay.io/submariner/nettest:devel",
+					Image:           "quay.io/submariner/nettest:feature-multi-active-gw",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
 						"sh", "-c", "for i in $(seq $CONN_TRIES);" +
@@ -399,7 +399,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 			Containers: []v1.Container{
 				{
 					Name:            "nettest-server-pod",
-					Image:           "quay.io/submariner/nettest:devel",
+					Image:           "quay.io/submariner/nettest:feature-multi-active-gw",
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
 					Env: []v1.EnvVar{
@@ -435,7 +435,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 			Containers: []v1.Container{
 				{
 					Name:            "latency-client-pod",
-					Image:           "quay.io/submariner/nettest:devel",
+					Image:           "quay.io/submariner/nettest:feature-multi-active-gw",
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
 						"sh",
@@ -474,7 +474,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 			Containers: []v1.Container{
 				{
 					Name:            "latency-server-pod",
-					Image:           "quay.io/submariner/nettest:devel",
+					Image:           "quay.io/submariner/nettest:feature-multi-active-gw",
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"netserver", "-D"},
 				},
