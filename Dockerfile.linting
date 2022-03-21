@@ -1,4 +1,4 @@
-FROM quay.io/submariner/shipyard-linting:devel
+FROM quay.io/submariner/shipyard-linting:feature-multi-active-gw
 
 ENV DAPPER_ENV="GITHUB_SHA MAKEFLAGS" \
     DAPPER_SOURCE=/opt/linting
