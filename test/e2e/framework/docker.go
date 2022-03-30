@@ -23,8 +23,10 @@ import (
 	"fmt"
 	"os/exec"
 	"strings"
+	"time"
 
 	. "github.com/onsi/gomega"
+	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type Docker struct {
@@ -66,7 +68,7 @@ func (d *Docker) GetLog() (string, string) {
 	return stdout.String(), stderr.String()
 }
 
-func (d *Docker) RunCommand(command ...string) (string, string) {
+func (d *Docker) runCommand(command ...string) (string, string, error) {
 	var stdout, stderr bytes.Buffer
 
 	cmdargs := []string{"exec", "-i", d.Name}
@@ -76,7 +78,31 @@ func (d *Docker) RunCommand(command ...string) (string, string) {
 	cmd.Stderr = &stderr
 
 	err := cmd.Run()
+
+	return stdout.String(), stderr.String(), err
+}
+
+func (d *Docker) RunCommand(command ...string) (string, string) {
+	stdout, stderr, err := d.runCommand(command...)
 	Expect(err).NotTo(HaveOccurred())
 
-	return stdout.String(), stderr.String()
+	return stdout, stderr
+}
+
+func (d *Docker) RunCommandUntil(command ...string) (string, string) {
+	var cmdErr error
+	var stdout, stderr string
+
+	err := wait.PollImmediate(5*time.Second, time.Duration(TestContext.OperationTimeout)*time.Second,
+		func() (bool, error) {
+			stdout, stderr, cmdErr = d.runCommand(command...)
+			if cmdErr != nil {
+				Logf("Error attempting to run %v: %v", append([]string{}, command...), cmdErr)
+				return false, nil // nolint:nilerr // Returning nil value is intentional
+			}
+			return true, nil
+		})
+	Expect(err).NotTo(HaveOccurred())
+
+	return stdout, stderr
 }
