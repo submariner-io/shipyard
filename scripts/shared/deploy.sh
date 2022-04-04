@@ -41,7 +41,6 @@ source ${SCRIPTS_DIR}/lib/deploy_funcs
 ### Constants ###
 readonly CE_IPSEC_IKEPORT=500
 readonly CE_IPSEC_NATTPORT=4500
-readonly SUBM_COLORCODES=blue
 readonly SUBM_IMAGE_REPO=localhost:5000
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
 readonly SUBM_CS="submariner-catalog-source"

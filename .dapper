@@ -93,6 +93,12 @@ if docker 2>&1 | grep -q podman; then
   DAPPER_GID=0
 fi
 
+# Pass through ~/.docker so that the container can get any authentication tokens in ~/.docker/config.json
+# We can't mount config.json specifically because "docker login" attempts to rename it, which fails
+if [ -d "${HOME}/.docker" ]; then
+    dockerargs="${dockerargs} -v ${HOME}/.docker:/root/.docker${suffix}"
+fi
+
 # seccomp is unconfined to avoid problems with clone3 in Fedora 35
 # See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
 # Remove "--security-opt seccomp=unconfined" once all supported container runtimes
@@ -100,7 +106,6 @@ fi
 docker run -i --rm --security-opt seccomp=unconfined \
        $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$DAPPER_UID" -e "DAPPER_GID=$DAPPER_GID" \
        -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" \
-       -v "${HOME}/.docker/config.json:/root/.docker/config.json${suffix}" \
        ${dockerargs} \
        ${DAPPER_RUN_ARGS} \
        "${container}" "$@"

@@ -35,8 +35,7 @@ type TestContextType struct {
 	KubeContexts        contextArray
 	ClusterIDs          []string
 	NumNodesInCluster   map[ClusterIndex]int
-	ReportDir           string
-	ReportPrefix        string
+	JunitReport         string
 	SubmarinerNamespace string
 	ConnectionTimeout   uint
 	ConnectionAttempts  uint
@@ -65,10 +64,8 @@ func init() {
 	flag.StringVar(&TestContext.KubeConfig, "kubeconfig", os.Getenv("KUBECONFIG"),
 		"Path to kubeconfig containing embedded authinfo.")
 	flag.Var(&TestContext.KubeContexts, "dp-context", "kubeconfig context for dataplane clusters (use several times).")
-	flag.StringVar(&TestContext.ReportPrefix, "report-prefix", "",
-		"Optional prefix for JUnit XML reports. Default is empty, which doesn't prepend anything to the default name.")
-	flag.StringVar(&TestContext.ReportDir, "report-dir", "",
-		"Path to the directory where the JUnit XML reports should be saved. Default is empty, which doesn't generate these reports.")
+	flag.StringVar(&TestContext.JunitReport, "junit-report", "",
+		"Path to the directory and filename of the JUnit XML report. Default is empty, which doesn't generate these reports.")
 	flag.StringVar(&TestContext.SubmarinerNamespace, "submariner-namespace", "submariner",
 		"Namespace in which the submariner components are deployed.")
 	flag.UintVar(&TestContext.ConnectionTimeout, "connection-timeout", 18,

@@ -24,6 +24,8 @@ else ifneq (,$(filter wireguard,$(_using)))
 override DEPLOY_ARGS += --cable_driver wireguard
 else ifneq (,$(filter vxlan,$(_using)))
 override DEPLOY_ARGS += --cable_driver vxlan
+else ifneq (,$(filter iptun,$(_using)))
+override DEPLOY_ARGS += --cable_driver iptun
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
@@ -163,8 +165,12 @@ VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h
 
 # [golangci-lint] validates Go code in the project
 golangci-lint: $(VENDOR_MODULES)
+ifneq (,$(shell find . -name '*.go'))
 	golangci-lint linters
 	golangci-lint run --timeout 10m
+else
+	@echo 'There are no Go files to lint.'
+endif
 
 # [packagedoc-lint] checks that the package docs don’t include the SPDX header
 packagedoc-lint:
@@ -189,7 +195,12 @@ markdownlint:
 
 # [shellcheck] validates your shell files
 shellcheck:
+# Only run shellcheck if there are files to check
+ifneq (,$(SHELLCHECK_ARGS))
 	shellcheck -x -P $${SCRIPTS_DIR} $(SHELLCHECK_ARGS)
+else
+	@echo 'There are no shell scripts to check; if this is incorrect, specify them in SHELLCHECK_ARGS.'
+endif
 
 # [yamllint] validates YAML files in the project
 yamllint:
