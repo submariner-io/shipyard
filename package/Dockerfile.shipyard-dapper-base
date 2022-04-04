@@ -32,7 +32,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 # npm              | Required for installing markdownlint
 # qemu-user-static | Emulation (for multiarch builds)
 # ShellCheck       | shell script linting
-# skopeo           | container image manipulation
 # subctl *         | Submariner's deploy tool (operator)
 # upx              | binary compression
 # yamllint         | YAML linting
@@ -42,7 +41,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/usr/loc
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq ShellCheck npm gitlint yamllint \
-                   qemu-user-static python3-pip skopeo && \
+                   qemu-user-static python3-pip && \
     npm install -g markdownlint-cli && \
     pip install j2cli[yaml] --user && \
     rpm -e --nodeps containerd npm python3-pip && \
