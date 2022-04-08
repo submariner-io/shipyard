@@ -145,7 +145,8 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 }
 
 func (f *Framework) GetGatewaysWithHAStatus(
-	cluster ClusterIndex, status string) []unstructured.Unstructured {
+	cluster ClusterIndex, status string,
+) []unstructured.Unstructured {
 	gwClient := gatewayClient(cluster)
 	gwList, err := gwClient.List(context.TODO(), metav1.ListOptions{})
 
