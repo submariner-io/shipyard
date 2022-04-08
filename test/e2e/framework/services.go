@@ -34,7 +34,8 @@ const (
 )
 
 func (f *Framework) NewService(name, portName string, port int, protocol corev1.Protocol, selector map[string]string,
-	isHeadless bool) *corev1.Service {
+	isHeadless bool,
+) *corev1.Service {
 	service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
