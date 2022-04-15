@@ -1,5 +1,5 @@
 , := ,
-_using = $(subst $(,), ,$(using))
+_using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
 # Check Makefile.dapper freshness
