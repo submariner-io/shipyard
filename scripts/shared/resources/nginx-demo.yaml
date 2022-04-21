@@ -15,7 +15,7 @@ spec:
     spec:
       containers:
         - name: nginx-demo
-          image: quay.io/bitnami/nginx:latest
+          image: quay.io/jitesoft/nginx:latest
           ports:
             - containerPort: 8080
 ---
