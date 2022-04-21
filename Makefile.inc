@@ -1,5 +1,5 @@
 , := ,
-_using = $(subst $(,), ,$(using))
+_using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
 # Check Makefile.dapper freshness
@@ -150,7 +150,7 @@ deploy-latest:
 	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 ##### LINTING TARGETS #####
-.PHONY: gitlint golangci-lint lint markdownlint packagedoc-lint shellcheck yamllint
+.PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
 
 # [gitlint] validates the commits are valid
 gitlint:
@@ -172,6 +172,14 @@ else
 	@echo 'There are no Go files to lint.'
 endif
 
+# [markdownlint] validates Markdown files in the project
+markdownlint:
+	md_ignored=($(patsubst %/modules.txt,%,$(VENDOR_MODULES))); \
+	if [ -r .mdignore ]; then \
+		md_ignored+=($$(< .mdignore)); \
+	fi; \
+	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
+
 # [packagedoc-lint] checks that the package docs don’t include the SPDX header
 packagedoc-lint:
 	result=0; \
@@ -182,16 +190,6 @@ packagedoc-lint:
 		fi; \
 	done 2>/dev/null; \
 	exit $$result
-
-lint: gitlint golangci-lint markdownlint yamllint
-
-# [markdownlint] validates Markdown files in the project
-markdownlint:
-	md_ignored=($(patsubst %/modules.txt,%,$(VENDOR_MODULES))); \
-	if [ -r .mdignore ]; then \
-		md_ignored+=($$(< .mdignore)); \
-	fi; \
-	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
 
 # [shellcheck] validates your shell files
 shellcheck:

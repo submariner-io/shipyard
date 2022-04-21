@@ -7,7 +7,7 @@ on:
 
 jobs:
   e2e:
-    name: E2E
+    name: E2E Consuming
     timeout-minutes: 30
     runs-on: ubuntu-latest
     if: |
@@ -100,8 +100,29 @@ jobs:
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
-      - name: Run all linters
-        run: make -C ${{ matrix.project }} lint
+      - name: Run gitlint
+        if: always()
+        run: make -C ${{ matrix.project }} gitlint
+
+      - name: Run golangci-lint
+        if: always()
+        run: make -C ${{ matrix.project }} golangci-lint
+
+      - name: Run markdownlint
+        if: always()
+        run: make -C ${{ matrix.project }} markdownlint
+
+      - name: Run packagedoc-lint
+        if: always()
+        run: make -C ${{ matrix.project }} packagedoc-lint
+
+      - name: Run shellcheck
+        if: always()
+        run: make -C ${{ matrix.project }} shellcheck
+
+      - name: Run yamllint
+        if: always()
+        run: make -C ${{ matrix.project }} yamllint
 
   unit-consuming:
     name: Unit Tests

@@ -421,7 +421,8 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
-	baseName string, labels map[string]string) *corev1.Namespace {
+	baseName string, labels map[string]string,
+) *corev1.Namespace {
 	ns := createTestNamespace(clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
 
