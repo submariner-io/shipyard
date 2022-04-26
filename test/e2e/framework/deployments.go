@@ -106,14 +106,16 @@ func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 					Containers: []corev1.Container{
 						{
 							Name:            "nginx-demo",
-							Image:           "quay.io/testing-farm/nginx:latest",
+							Image:           "quay.io/submariner/nettest",
 							ImagePullPolicy: corev1.PullAlways,
 							Ports: []corev1.ContainerPort{
 								{
 									ContainerPort: port,
 								},
 							},
-							Command: []string{},
+							Command: []string{
+								"/app/simpleserver",
+							},
 						},
 					},
 					RestartPolicy: corev1.RestartPolicyAlways,

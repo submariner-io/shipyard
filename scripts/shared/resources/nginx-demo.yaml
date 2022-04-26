@@ -15,9 +15,10 @@ spec:
     spec:
       containers:
         - name: nginx-demo
-          image: quay.io/testing-farm/nginx:latest
+          image: localhost:5000/nettest:local
+          command: ["/app/simpleserver"]
           ports:
-            - containerPort: 80
+            - containerPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -30,6 +31,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
+      targetPort: 8080
   selector:
     app: nginx-demo
 ---
