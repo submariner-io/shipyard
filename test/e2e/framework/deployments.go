@@ -66,7 +66,7 @@ func (f *Framework) NewNetShootDeployment(cluster ClusterIndex) *corev1.PodList 
 					Containers: []corev1.Container{
 						{
 							Name:            "netshoot",
-							Image:           "quay.io/submariner/nettest",
+							Image:           "quay.io/submariner/nettest:devel",
 							ImagePullPolicy: corev1.PullAlways,
 							Command: []string{
 								"sleep", "600",
@@ -106,7 +106,7 @@ func (f *Framework) NewNginxDeployment(cluster ClusterIndex) *corev1.PodList {
 					Containers: []corev1.Container{
 						{
 							Name:            "nginx-demo",
-							Image:           "quay.io/submariner/nettest",
+							Image:           "quay.io/submariner/nettest:devel",
 							ImagePullPolicy: corev1.PullAlways,
 							Ports: []corev1.ContainerPort{
 								{
