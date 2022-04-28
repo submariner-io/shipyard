@@ -24,8 +24,6 @@ else ifneq (,$(filter wireguard,$(_using)))
 override DEPLOY_ARGS += --cable_driver wireguard
 else ifneq (,$(filter vxlan,$(_using)))
 override DEPLOY_ARGS += --cable_driver vxlan
-else ifneq (,$(filter iptun,$(_using)))
-override DEPLOY_ARGS += --cable_driver iptun
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
