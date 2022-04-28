@@ -76,6 +76,9 @@ function subctl_install_subm() {
                 ${deploytool_submariner_args} \
                 ${cidr_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
+
+    # Print installed versions for manual validation of CI
+    "${SUBCTL}" show versions --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster"
 }
 
 function install_subm_all_clusters() {
