@@ -147,7 +147,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEV_VERSION=latest CUTTING_EDGE=latest VERSION=latest DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
 
 ##### LINTING TARGETS #####
 .PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
@@ -166,6 +166,7 @@ VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h
 # [golangci-lint] validates Go code in the project
 golangci-lint: $(VENDOR_MODULES)
 ifneq (,$(shell find . -name '*.go'))
+	golangci-lint version
 	golangci-lint linters
 	golangci-lint run --timeout 10m
 else
