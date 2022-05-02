@@ -135,7 +135,7 @@ declare_cidrs
 declare_kubeconfig
 
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
-bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash" ||
+bash -c "curl -Ls https://astoycos.github.io/get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash" ||
 bash -c "curl -Ls https://get.submariner.io | VERSION=devel DESTDIR=/go/bin bash"
 
 load_deploytool $deploytool
