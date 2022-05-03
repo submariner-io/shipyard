@@ -37,3 +37,5 @@ COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
 # Copy shared scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
 COPY scripts/shared/ .
+
+USER 1000
