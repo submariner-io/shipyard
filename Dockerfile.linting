@@ -6,5 +6,7 @@ ENV DAPPER_OUTPUT=${DAPPER_SOURCE}/output
 
 WORKDIR ${DAPPER_SOURCE}
 
+RUN git config --global --add safe.directory ${DAPPER_SOURCE}
+
 ENTRYPOINT ["/opt/shipyard/scripts/entry"]
 CMD ["sh"]
