@@ -252,11 +252,26 @@ function run_local_registry() {
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
         local volume_flag
         if [[ $registry_inmemory = true ]]; then
-            volume_flag="-v /dev/shm/${KIND_REGISTRY}:/var/lib/registry"
+            volume_dir="/var/lib/registry"
+            volume_flag="-v /dev/shm/${KIND_REGISTRY}:${volume_dir}"
             selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
         fi
         docker run -d $volume_flag -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
         docker network connect kind $KIND_REGISTRY || true
+
+        # If the registry is stored in memory and the local volume mount directory is empty,
+        # then try to push any images with "localhost:5000". The volume mount directory is
+        # probably empty due to a host reboot.
+        if [[ $registry_inmemory = true ]] && [[ ! "$(docker exec -e tmp_dir=${volume_dir} -it $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
+            echo "Push images to local registry: $KIND_REGISTRY"
+            local_image_list=( $(docker images | grep "localhost:5000" | awk -F' ' '{print $1":"$2}'))
+            for image in "${local_image_list[@]}"
+            do
+                if ! docker push "${image}"; then
+                    echo "'docker push ${image}' failed."
+                fi
+            done
+        fi
     fi
 }
 
