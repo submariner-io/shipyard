@@ -34,7 +34,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'shipyard', 'submariner-bot', 'submariner', 'submariner-operator']
+        project: [
+          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'shipyard',
+          'subctl', 'submariner-bot', 'submariner', 'submariner-operator'
+        ]
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
