@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
+        project: ['admiral', 'lighthouse', 'subctl', 'submariner', 'submariner-operator']
         deploytool: ['operator', 'helm']
         cabledriver: ['libreswan']
         k8s_version: ['1.23']
@@ -78,7 +78,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
+        project: [
+          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
+        ]
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
@@ -130,7 +133,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
+        project: [
+          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
+        ]
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
