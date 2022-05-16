@@ -5,7 +5,7 @@ on:
   pull_request:
 
 jobs:
-  apply-suggestions-commits:
+  check-multiarch:
     name: Check the multi-arch builds
     runs-on: ubuntu-latest
     steps:
@@ -17,3 +17,5 @@ jobs:
         uses: docker/setup-buildx-action@dc7b9719a96d48369863986a06765841d7ea23f6
       - name: Build the multi-arch images
         run: make multiarch-images
+      - name: Check that we actually build multi-arch images
+        run: bash -c '[ "$(echo package/*.tar)" != "package/*.tar" ]'
