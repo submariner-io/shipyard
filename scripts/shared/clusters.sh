@@ -310,7 +310,9 @@ function deploy_cluster_capabilities() {
 
 function warn_inotify() {
     if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
-        echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
+        echo "Your inotify settings are lower than our recommendation."
+        echo "This may cause failures in large deployments, but we don't know if it caused this failure."
+        echo "You may need to increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
         echo sudo sysctl fs.inotify.max_user_watches=524288
         echo sudo sysctl fs.inotify.max_user_instances=512
         echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
@@ -344,6 +346,7 @@ declare_cidrs
 # Run in subshell to check response, otherwise `set -e` is not honored
 ( run_all_clusters with_retries 3 create_kind_cluster; ) &
 if ! wait $!; then
+    echo "Failed to create kind clusters."
     warn_inotify
     exit 1
 fi
