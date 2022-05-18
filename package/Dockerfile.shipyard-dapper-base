@@ -55,7 +55,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 
 ENV LINT_VERSION=v1.46.0 \
     HELM_VERSION=v3.8.0 \
-    KIND_VERSION=v0.12.0 \
+    KIND_VERSION=v0.14.0 \
     BUILDX_VERSION=v0.8.2 \
     GH_VERSION=2.5.1 \
     YQ_VERSION=4.20.2
