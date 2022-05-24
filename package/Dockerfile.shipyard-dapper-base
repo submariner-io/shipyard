@@ -67,14 +67,14 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     GOFLAGS="" go install -v github.com/onsi/ginkgo/ginkgo@latest && \
     GOFLAGS="" go install -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \
-    mkdir -p ~/.docker/cli-plugins && \
-    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o ~/.docker/cli-plugins/docker-buildx && \
-    chmod 755 ~/.docker/cli-plugins/docker-buildx && \
+    mkdir -p /usr/local/libexec/docker/cli-plugins && \
+    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
+    chmod 755 /usr/local/libexec/docker/cli-plugins/docker-buildx && \
     curl -L https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz | tar xzf - && \
     mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
     rm -rf gh_${GH_VERSION}_linux_${ARCH} && \
-    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
-    find /go/bin ~/.docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
+    find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
+    find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     go clean -cache -modcache
 
 # Copy kubecfg to always run on the shell
