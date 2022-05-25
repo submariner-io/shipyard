@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'focus' '' "Ginkgo focus for the E2E tests"
 DEFINE_string 'skip' '' "Ginkgo skip for the E2E tests"
 DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
@@ -27,8 +27,8 @@ context_clusters=("$@")
 
 set -em -o pipefail
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
 
 ### Functions ###
 
@@ -43,7 +43,7 @@ function deploy_env_once() {
 }
 
 function generate_context_flags() {
-    for cluster in ${context_clusters[*]}; do
+    for cluster in "${context_clusters[@]}"; do
         printf " -dp-context $cluster"
     done
 }
@@ -61,14 +61,14 @@ function generate_kubecontexts() {
 }
 
 function test_with_e2e_tests {
-    cd ${DAPPER_SOURCE}/${FLAGS_testdir}
+    cd "${DAPPER_SOURCE}/${FLAGS_testdir}"
 
     ${GO:-go} test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
-        -submariner-namespace $SUBM_NS $(generate_context_flags) ${globalnet} \
+        -submariner-namespace $SUBM_NS $(generate_context_flags) ${globalnet:+"$globalnet"} \
         -ginkgo.reportPassed -test.timeout 15m \
         "${ginkgo_args[@]}" \
-        -ginkgo.reportFile ${DAPPER_OUTPUT}/e2e-junit.xml 2>&1 | \
-        tee ${DAPPER_OUTPUT}/e2e-tests.log
+        -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" 2>&1 | \
+        tee "${DAPPER_OUTPUT}/e2e-tests.log"
 }
 
 function test_with_subctl {
@@ -80,7 +80,7 @@ function test_with_subctl {
 declare_kubeconfig
 [[ "${lazy_deploy}" = "false" ]] || deploy_env_once
 
-if [ -d ${DAPPER_SOURCE}/${FLAGS_testdir} ]; then
+if [ -d "${DAPPER_SOURCE}/${FLAGS_testdir}" ]; then
     test_with_e2e_tests
 else
     test_with_subctl

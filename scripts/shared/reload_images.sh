@@ -2,9 +2,9 @@
 
 set -e
 
-source ${SCRIPTS_DIR}/lib/utils
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/deploy_funcs
+source "${SCRIPTS_DIR}/lib/utils"
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 function find_resources() {
     local resource_type=$1

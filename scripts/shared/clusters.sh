@@ -14,7 +14,7 @@ kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'k8s_version' "${DEFAULT_K8S_VERSION}" 'Version of K8s to use'
 DEFINE_string 'olm_version' 'v0.18.3' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
@@ -41,8 +41,8 @@ echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=
 
 set -em
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
 
 ### Functions ###
 
@@ -56,17 +56,17 @@ function generate_cluster_yaml() {
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
 
-    render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/${cluster}-config.yaml
+    render_template "${RESOURCES_DIR}/kind-cluster-config.yaml" > "${RESOURCES_DIR}/${cluster}-config.yaml"
 }
 
 function kind_fixup_config() {
-    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${cluster}-control-plane | head -n 1)
-    sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" $KUBECONFIG
-    sed -i -- "s/user: kind-.*/user: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/name: kind-.*/name: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/cluster: kind-.*/cluster: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/current-context: .*/current-context: ${cluster}/g" $KUBECONFIG
-    chmod a+r $KUBECONFIG
+    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
+    sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" "$KUBECONFIG"
+    sed -i -- "s/user: kind-.*/user: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/name: kind-.*/name: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/cluster: kind-.*/cluster: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/current-context: .*/current-context: ${cluster}/g" "$KUBECONFIG"
+    chmod a+r "$KUBECONFIG"
 }
 
 # In development environments where clusters are brought up and down
@@ -113,7 +113,7 @@ function create_kind_cluster() {
 
     if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        kind export kubeconfig --name=${cluster}
+        kind export kubeconfig --name="${cluster}"
         kind_fixup_config
         return
     fi
@@ -131,15 +131,15 @@ function create_kind_cluster() {
     fi
 
     kind version
-    cat ${RESOURCES_DIR}/${cluster}-config.yaml
-    kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
+    cat "${RESOURCES_DIR}/${cluster}-config.yaml"
+    kind create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
         kubectl cluster-info dump 1>&2
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -164,7 +164,7 @@ function deploy_weave_cni(){
 
         # Check if image is already present, and if not, download it.
         echo "Processing Image: $image"
-        if [ -z "`docker images -q $image`" ] ; then
+        if [ -z "`docker images -q "$image"`" ] ; then
             echo "Image $image not found, downloading..."
             if ! docker pull "$image"; then
                 echo "**** 'docker pull $image' failed. Manually run. ****"
@@ -177,7 +177,7 @@ function deploy_weave_cni(){
         if [ "${IMAGE_FAILURE}" == false ] ; then
             LCL_REG_IMAGE_NAME="${image/weaveworks/localhost:5000}"
             # Copy image to local registry if not there
-            if [ -z "$(docker images -q ${LCL_REG_IMAGE_NAME})" ] ; then
+            if [ -z "$(docker images -q "${LCL_REG_IMAGE_NAME}")" ] ; then
                 echo "Image ${LCL_REG_IMAGE_NAME} not found, tagging and pushing ..."
                 if ! docker tag "$image" "${LCL_REG_IMAGE_NAME}"; then
                     echo "'docker tag $image ${LCL_REG_IMAGE_NAME}' failed."
@@ -229,17 +229,17 @@ function deploy_kind_ovn(){
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
 
-    ( ./ovn-kubernetes/contrib/kind.sh -ov $OVN_IMAGE -cn ${KIND_CLUSTER_NAME} -ric -lr -dd ${KIND_CLUSTER_NAME}.local; ) &
+    ( ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"; ) &
     if ! wait $! ; then
         echo "Failed to install kind with OVN"
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -295,11 +295,11 @@ function deploy_prometheus() {
     # TODO Install in a separate namespace
     kubectl create ns submariner-operator
     # Bundle from prometheus-operator, namespace changed to submariner-operator
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/bundle.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/bundle.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml"
 }
 
 function deploy_cluster_capabilities() {
@@ -334,8 +334,8 @@ function download_ovnk() {
 
 ### Main ###
 
-rm -rf ${KUBECONFIGS_DIR}
-mkdir -p ${KUBECONFIGS_DIR}
+rm -rf "${KUBECONFIGS_DIR}"
+mkdir -p "${KUBECONFIGS_DIR}"
 
 download_kind
 load_settings
