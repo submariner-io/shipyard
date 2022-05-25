@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
 
 ### Functions ###
 
@@ -18,12 +18,12 @@ function print_pods_logs() {
 
     print_section "** Pods logs for NS $namespace using selector '$selector' **"
     for pod in $(kubectl get pods --selector="$selector" -n "$namespace" -o jsonpath='{.items[*].metadata.name}'); do
-        if [ "$(kubectl get pods -n $namespace $pod -o jsonpath='{.status.containerStatuses[*].ready}')" != true ]; then
+        if [ "$(kubectl get pods -n "$namespace" "$pod" -o jsonpath='{.status.containerStatuses[*].ready}')" != true ]; then
             print_section "*** $pod (terminated) ***"
-            kubectl -n $namespace logs -p $pod
+            kubectl -n "$namespace" logs -p "$pod"
         else
             print_section "*** $pod ***"
-            kubectl -n $namespace logs $pod
+            kubectl -n "$namespace" logs "$pod"
         fi
     done
 }
@@ -37,11 +37,11 @@ function post_analyze() {
 
     print_section "* Details of pods with statuses other than Running in $cluster *"
     for pod in $(kubectl get pods -A | tail -n +2 | grep -v Running | sed 's/  */;/g'); do
-        ns=$(echo $pod | cut -f1 -d';')
-        name=$(echo $pod | cut -f2 -d';')
+        ns=$(echo "$pod" | cut -f1 -d';')
+        name=$(echo "$pod" | cut -f2 -d';')
         print_section "** NS: $ns; Pod: $name **"
-        kubectl -n $ns describe pod $name
-        kubectl -n $ns logs $name
+        kubectl -n "$ns" describe pod "$name"
+        kubectl -n "$ns" logs "$name"
     done
 
     print_section "* Kube-proxy pod logs for $cluster *"

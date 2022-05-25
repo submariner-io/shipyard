@@ -158,7 +158,7 @@ EOF
   gh pr create --title="Automated backport of ${numandtitle}" --body="${prtext}" --head "${GITHUB_USER}:${NEWBRANCH}" --base "${rel}" --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --label automated-backport
   for pull in "${PULLS[@]}"; do
     echo "+++ Adding 'backport-handled' label to"
-     gh pr edit $pull --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --add-label "backport-handled"
+     gh pr edit "$pull" --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --add-label "backport-handled"
   done
 }
 

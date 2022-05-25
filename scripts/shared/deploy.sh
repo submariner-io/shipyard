@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
 DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
@@ -31,12 +31,12 @@ echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploy
 
 set -em
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
-source ${SCRIPTS_DIR}/lib/deploy_funcs
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
+source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
-[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
+[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Constants ###
 readonly CE_IPSEC_IKEPORT=500
@@ -138,14 +138,14 @@ declare_kubeconfig
 bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash" ||
 bash -c "curl -Ls https://get.submariner.io | VERSION=devel DESTDIR=/go/bin bash"
 
-load_deploytool $deploytool
+load_deploytool "$deploytool"
 deploytool_prereqs
 
 run_if_defined pre_deploy
 
 run_subm_clusters prepare_cluster
 
-with_context $broker setup_broker
+with_context "$broker" setup_broker
 install_subm_all_clusters
 
 if [ "${#cluster_subm[@]}" -gt 1 ]; then
