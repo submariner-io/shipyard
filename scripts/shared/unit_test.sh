@@ -26,7 +26,7 @@ for module in "${modules[@]}"; do
     if [ -n "${packages}" ]; then
 	echo "Running tests in ${packages}"
 	[ "${ARCH}" == "amd64" ] && race=-race
-	(cd "$module" && ${GO:-go} test -v ${race} -cover "${packages}" -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml "$@") || result=1
+	(cd "$module" && ${GO:-go} test -v ${race} -cover ${packages} -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml "$@") || result=1
     fi
 done
 
