@@ -1,0 +1,15 @@
+---
+name: Unit Test Validation
+
+on:
+  pull_request:
+
+jobs:
+  check-unit-tests-fail:
+    name: 'Check that unit test failures are detected'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
+      - name: Run unit which is expected to fail
+        run: sh -c '! make unit'
