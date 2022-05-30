@@ -39,7 +39,7 @@ run_if_defined pre_cleanup
 
 # run_parallel expects cluster names as a single argument
 run_parallel "${clusters[*]}" delete_cluster
-[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT}"/*
+[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT:?}"/*
 
 stop_local_registry
 docker system prune --volumes -f
