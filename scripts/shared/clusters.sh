@@ -171,7 +171,7 @@ function deploy_weave_cni(){
 
         # Check if image is already present, and if not, download it.
         echo "Processing Image: $image"
-        if [ -z "`docker images -q "$image"`" ] ; then
+        if [ -z "$(docker images -q "$image")" ] ; then
             echo "Image $image not found, downloading..."
             if ! docker pull "$image"; then
                 echo "**** 'docker pull $image' failed. Manually run. ****"
