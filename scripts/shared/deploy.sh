@@ -36,6 +36,7 @@ source "${SCRIPTS_DIR}/lib/utils"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
+# shellcheck disable=SC1090
 [[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Constants ###
