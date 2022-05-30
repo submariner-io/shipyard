@@ -39,15 +39,25 @@ source "${SCRIPTS_DIR}/lib/deploy_funcs"
 [[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Constants ###
+# These are used in other scripts
+# shellcheck disable=SC2034
 readonly CE_IPSEC_IKEPORT=500
+# shellcheck disable=SC2034
 readonly CE_IPSEC_NATTPORT=4500
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_REPO=localhost:5000
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
+# shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
+# shellcheck disable=SC2034
 readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
+# shellcheck disable=SC2034
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
+# shellcheck disable=SC2034
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
 readonly MARKETPLACE_NAMESPACE="olm"
+# shellcheck disable=SC2034
 readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
 
 ### Common functions ###
