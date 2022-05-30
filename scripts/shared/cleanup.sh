@@ -32,10 +32,11 @@ function stop_local_registry {
 
 ### Main ###
 
-clusters=($(kind get clusters))
+readarray -t clusters < <(kind get clusters)
 
 run_if_defined pre_cleanup
 
+# run_parallel expects cluster names as a single argument
 run_parallel "${clusters[*]}" delete_cluster
 [[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT}"/*
 

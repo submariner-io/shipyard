@@ -6,8 +6,8 @@ function print_indent() {
 
 print_indent Target Description | tee >(tr '[:alnum:]' '-')
 
-make_targets=($(make -pRrq : 2>/dev/null |\
-    grep -oP '^(?!Makefile.*)[-[:alnum:]]*(?=:)' | sort -u))
+readarray -t make_targets < <(make -pRrq : 2>/dev/null |\
+    grep -oP '^(?!Makefile.*)[-[:alnum:]]*(?=:)' | sort -u)
 
 for target in "${make_targets[@]}"; do
     description=$(grep -hoP -m1 "(?<=\[${target}\] ).*" Makefile* "${SHIPYARD_DIR}"/Makefile* | head -1)

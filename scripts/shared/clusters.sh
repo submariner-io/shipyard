@@ -156,7 +156,7 @@ function deploy_weave_cni(){
     WEAVE_YAML=$(curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!')
 
     # Search the YAML for images that need to be downloaded
-    IMAGE_LIST=( $(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' - ) )
+    readarray -t IMAGE_LIST < <(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' -)
     echo "IMAGE_LIST=${IMAGE_LIST[@]}"
     for image in "${IMAGE_LIST[@]}"
     do
@@ -264,7 +264,7 @@ function run_local_registry() {
         # probably empty due to a host reboot.
         if [[ $registry_inmemory = true ]] && [[ ! "$(docker exec -e tmp_dir=${volume_dir} -it $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
             echo "Push images to local registry: $KIND_REGISTRY"
-            local_image_list=( $(docker images | grep "localhost:5000" | awk -F' ' '{print $1":"$2}'))
+            readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
             for image in "${local_image_list[@]}"
             do
                 if ! docker push "${image}"; then
