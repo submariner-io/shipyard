@@ -41,7 +41,7 @@ for module in "${modules[@]}"; do
 
     excluded_modules=""
     for exc_module in "${modules[@]}"; do
-        if [ "$exc_module" != "$module" -a "$exc_module" != "." ]; then
+        if [ "$exc_module" != "$module" ] && [ "$exc_module" != "." ]; then
             excluded_modules+=" ${exc_module:2}"
         fi
     done
