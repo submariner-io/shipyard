@@ -164,7 +164,7 @@ function deploy_weave_cni(){
 
     # Search the YAML for images that need to be downloaded
     readarray -t IMAGE_LIST < <(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' -)
-    echo "IMAGE_LIST=${IMAGE_LIST[@]}"
+    echo "IMAGE_LIST=${IMAGE_LIST[*]}"
     for image in "${IMAGE_LIST[@]}"
     do
         IMAGE_FAILURE=false
