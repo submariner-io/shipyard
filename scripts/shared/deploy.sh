@@ -58,8 +58,9 @@ readonly BROKER_NAMESPACE="submariner-k8s-broker"
 # shellcheck disable=SC2034
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
 readonly MARKETPLACE_NAMESPACE="olm"
+IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
 # shellcheck disable=SC2034
-readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+readonly IPSEC_PSK
 
 ### Common functions ###
 

@@ -66,7 +66,8 @@ function generate_cluster_yaml() {
 }
 
 function kind_fixup_config() {
-    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
+    local master_ip
+    master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
     sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" "$KUBECONFIG"
     sed -i -- "s/user: kind-.*/user: ${cluster}/g" "$KUBECONFIG"
     sed -i -- "s/name: kind-.*/name: ${cluster}/g" "$KUBECONFIG"
