@@ -42,18 +42,6 @@ function deploy_env_once() {
     declare_kubeconfig
 }
 
-function generate_context_flags() {
-    for cluster in "${context_clusters[@]}"; do
-        printf " -dp-context $cluster"
-    done
-}
-
-function generate_kubeconfigs() {
-    for cluster in "${context_clusters[@]}"; do
-	grep -l "current-context: ${cluster}" output/kubeconfigs/*
-    done
-}
-
 function join_by { local IFS="$1"; shift; echo "$*"; }
 
 function generate_kubecontexts() {
@@ -64,7 +52,7 @@ function test_with_e2e_tests {
     cd "${DAPPER_SOURCE}/${FLAGS_testdir}"
 
     ${GO:-go} test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
-        -submariner-namespace $SUBM_NS $(generate_context_flags) ${globalnet:+"$globalnet"} \
+        -submariner-namespace $SUBM_NS "${context_clusters[@]/#/-dp-context=}" ${globalnet:+"$globalnet"} \
         -ginkgo.reportPassed -test.timeout 15m \
         "${ginkgo_args[@]}" \
         -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" 2>&1 | \
@@ -72,7 +60,7 @@ function test_with_e2e_tests {
 }
 
 function test_with_subctl {
-    subctl verify --only connectivity --kubecontexts $(generate_kubecontexts)
+    subctl verify --only connectivity --kubecontexts "$(generate_kubecontexts)"
 }
 
 ### Main ###
