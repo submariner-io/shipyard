@@ -47,10 +47,16 @@ source "${SCRIPTS_DIR}/lib/utils"
 ### Functions ###
 
 function generate_cluster_yaml() {
-    local pod_cidr="${cluster_CIDRs[${cluster}]}"
-    local service_cidr="${service_CIDRs[${cluster}]}"
-    local dns_domain="${cluster}.local"
-    local disable_cni="false"
+    # These are used by render_template
+    local pod_cidr service_cidr dns_domain disable_cni
+    # shellcheck disable=SC2034
+    pod_cidr="${cluster_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    service_cidr="${service_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    dns_domain="${cluster}.local"
+    disable_cni="false"
+    # shellcheck disable=SC2034
     [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
