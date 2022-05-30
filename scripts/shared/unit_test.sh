@@ -54,8 +54,8 @@ for module in "${modules[@]}"; do
 
         echo "Running tests in ${packages[*]}"
         [ "${ARCH}" == "amd64" ] && race=-race
-        ${GO:-go} test -v ${race} -cover "${packages[@]}" -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml "$@" || result=1
-    )
+        ${GO:-go} test -v ${race} -cover "${packages[@]}" -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml "$@"
+    ) || result=1
 done
 
 exit $result
