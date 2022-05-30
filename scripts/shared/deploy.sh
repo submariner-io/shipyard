@@ -149,6 +149,7 @@ with_context "$broker" setup_broker
 install_subm_all_clusters
 
 if [ "${#cluster_subm[@]}" -gt 1 ]; then
+    # shellcheck disable=2206 # the array keys don't have spaces
     cls=(${!cluster_subm[@]})
     with_context "${cls[0]}" with_retries 30 verify_gw_status
     with_context "${cls[0]}" connectivity_tests "${cls[1]}"

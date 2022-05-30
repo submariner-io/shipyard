@@ -11,6 +11,7 @@ function find_resources() {
     kubectl -n "$(find_submariner_namespace)" get "${resource_type}" -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}"
 }
 
+# shellcheck disable=SC2153 # This is not a misspelling
 settings="${SETTINGS}"
 load_settings
 declare_kubeconfig
