@@ -250,13 +250,13 @@ function run_local_registry() {
         echo "Local registry $KIND_REGISTRY already running."
     else
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
-        local volume_flag
+        declare -a volume_flags
         if [[ $registry_inmemory = true ]]; then
             volume_dir="/var/lib/registry"
-            volume_flag="-v /dev/shm/${KIND_REGISTRY}:${volume_dir}"
+            volume_flags+=(-v "/dev/shm/${KIND_REGISTRY}:${volume_dir}")
             selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
         fi
-        docker run -d $volume_flag -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        docker run -d "${volume_flags[@]}" -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
         docker network connect kind $KIND_REGISTRY || true
 
         # If the registry is stored in memory and the local volume mount directory is empty,
