@@ -40,9 +40,9 @@ local_image=${repo}/${image}:${tag}
 cache_image=${repo}/${image}:${CUTTING_EDGE}
 
 # When using cache pull latest image from the repo, so that its layers may be reused.
-cache_flag=''
+declare -a cache_flags
 if [[ "$cache" = true ]]; then
-    cache_flag="--cache-from ${cache_image}"
+    cache_flags+=(--cache-from "${cache_image}")
     if [[ -z "$(docker image ls -q "${cache_image}")" ]]; then
         docker pull "${cache_image}" || :
     fi
@@ -56,7 +56,7 @@ if [[ "$cache" = true ]]; then
                                      print gensub("\\${BASE_BRANCH}", ENVIRON["BASE_BRANCH"], "g", $i)
                              }
                          }' "${dockerfile}"); do
-        cache_flag+=" --cache-from ${parent}"
+        cache_flags+=(--cache-from "${parent}")
         docker pull "${parent}" || :
     done
 fi
@@ -74,17 +74,17 @@ fi
 [[ -n "$platform" ]] || platform="$default_platform"
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
-buildargs_flag="--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg BASE_BRANCH=${BASE_BRANCH}"
-[[ -z "${buildargs}" ]] || buildargs_flag="${buildargs_flag} --build-arg ${buildargs}"
+buildargs_flags=(--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg "BASE_BRANCH=${BASE_BRANCH}")
+[[ -z "${buildargs}" ]] || buildargs_flags+=(--build-arg "${buildargs}")
 if [[ "${platform}" != "${default_platform}" ]] && docker buildx version > /dev/null 2>&1; then
     docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
-    docker buildx build "${output_flag}" -t "${local_image}" ${cache_flag} -f "${dockerfile}" --iidfile "${hashfile}" --platform "${platform}" ${buildargs_flag} .
+    docker buildx build "${output_flag}" -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" --platform "${platform}" "${buildargs_flags[@]}" .
 else
     # Fall back to plain BuildKit
     if [[ "${platform}" != "${default_platform}" ]]; then
         echo "WARNING: buildx isn't available, cross-arch builds won't work as expected"
     fi
-    DOCKER_BUILDKIT=1 docker build -t "${local_image}" ${cache_flag} -f "${dockerfile}" --iidfile "${hashfile}" ${buildargs_flag} .
+    DOCKER_BUILDKIT=1 docker build -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" "${buildargs_flags[@]}" .
 fi
 
 # We can only tag the image in non-OCI mode
