@@ -21,6 +21,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"strings"
 
 	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
@@ -39,6 +40,8 @@ var gatewayGVR = &schema.GroupVersionResource{
 
 func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
 	gwClient := gatewayClient(cluster)
+	// Set short name without a suffix as exists in the Gateway resource
+	name = strings.Split(name, ".")[0]
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
@@ -104,6 +107,8 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 
 func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string) *unstructured.Unstructured {
 	gwClient := gatewayClient(cluster)
+	// Set short name without a suffix as exists in the Gateway resource
+	name = strings.Split(name, ".")[0]
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
