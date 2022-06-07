@@ -336,7 +336,7 @@ function download_ovnk() {
 
     echo "Cloning ovn-kubernetes from source"
     git clone https://github.com/ovn-org/ovn-kubernetes.git \
-	|| { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
+        || { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
 }
 
 ### Main ###
