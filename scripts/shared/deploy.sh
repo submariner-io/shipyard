@@ -36,19 +36,31 @@ source "${SCRIPTS_DIR}/lib/utils"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
+# shellcheck disable=SC1090
 [[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Constants ###
+# These are used in other scripts
+# shellcheck disable=SC2034
 readonly CE_IPSEC_IKEPORT=500
+# shellcheck disable=SC2034
 readonly CE_IPSEC_NATTPORT=4500
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_REPO=localhost:5000
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
+# shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
+# shellcheck disable=SC2034
 readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
+# shellcheck disable=SC2034
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
+# shellcheck disable=SC2034
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
 readonly MARKETPLACE_NAMESPACE="olm"
-readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+# shellcheck disable=SC2034
+readonly IPSEC_PSK
 
 ### Common functions ###
 
@@ -149,6 +161,7 @@ with_context "$broker" setup_broker
 install_subm_all_clusters
 
 if [ "${#cluster_subm[@]}" -gt 1 ]; then
+    # shellcheck disable=2206 # the array keys don't have spaces
     cls=(${!cluster_subm[@]})
     with_context "${cls[0]}" with_retries 30 verify_gw_status
     with_context "${cls[0]}" connectivity_tests "${cls[1]}"

@@ -47,10 +47,16 @@ source "${SCRIPTS_DIR}/lib/utils"
 ### Functions ###
 
 function generate_cluster_yaml() {
-    local pod_cidr="${cluster_CIDRs[${cluster}]}"
-    local service_cidr="${service_CIDRs[${cluster}]}"
-    local dns_domain="${cluster}.local"
-    local disable_cni="false"
+    # These are used by render_template
+    local pod_cidr service_cidr dns_domain disable_cni
+    # shellcheck disable=SC2034
+    pod_cidr="${cluster_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    service_cidr="${service_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    dns_domain="${cluster}.local"
+    disable_cni="false"
+    # shellcheck disable=SC2034
     [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
@@ -60,7 +66,8 @@ function generate_cluster_yaml() {
 }
 
 function kind_fixup_config() {
-    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
+    local master_ip
+    master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
     sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" "$KUBECONFIG"
     sed -i -- "s/user: kind-.*/user: ${cluster}/g" "$KUBECONFIG"
     sed -i -- "s/name: kind-.*/name: ${cluster}/g" "$KUBECONFIG"
@@ -156,15 +163,15 @@ function deploy_weave_cni(){
     WEAVE_YAML=$(curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!')
 
     # Search the YAML for images that need to be downloaded
-    IMAGE_LIST=( $(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' - ) )
-    echo "IMAGE_LIST=${IMAGE_LIST[@]}"
+    readarray -t IMAGE_LIST < <(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' -)
+    echo "IMAGE_LIST=${IMAGE_LIST[*]}"
     for image in "${IMAGE_LIST[@]}"
     do
         IMAGE_FAILURE=false
 
         # Check if image is already present, and if not, download it.
         echo "Processing Image: $image"
-        if [ -z "`docker images -q "$image"`" ] ; then
+        if [ -z "$(docker images -q "$image")" ] ; then
             echo "Image $image not found, downloading..."
             if ! docker pull "$image"; then
                 echo "**** 'docker pull $image' failed. Manually run. ****"
@@ -250,13 +257,13 @@ function run_local_registry() {
         echo "Local registry $KIND_REGISTRY already running."
     else
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
-        local volume_flag
+        declare -a volume_flags
         if [[ $registry_inmemory = true ]]; then
             volume_dir="/var/lib/registry"
-            volume_flag="-v /dev/shm/${KIND_REGISTRY}:${volume_dir}"
+            volume_flags+=(-v "/dev/shm/${KIND_REGISTRY}:${volume_dir}")
             selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
         fi
-        docker run -d $volume_flag -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        docker run -d "${volume_flags[@]}" -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
         docker network connect kind $KIND_REGISTRY || true
 
         # If the registry is stored in memory and the local volume mount directory is empty,
@@ -264,7 +271,7 @@ function run_local_registry() {
         # probably empty due to a host reboot.
         if [[ $registry_inmemory = true ]] && [[ ! "$(docker exec -e tmp_dir=${volume_dir} -it $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
             echo "Push images to local registry: $KIND_REGISTRY"
-            local_image_list=( $(docker images | grep "localhost:5000" | awk -F' ' '{print $1":"$2}'))
+            readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
             for image in "${local_image_list[@]}"
             do
                 if ! docker push "${image}"; then
@@ -329,7 +336,7 @@ function download_ovnk() {
 
     echo "Cloning ovn-kubernetes from source"
     git clone https://github.com/ovn-org/ovn-kubernetes.git \
-	|| { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
+        || { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
 }
 
 ### Main ###

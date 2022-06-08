@@ -14,6 +14,7 @@ source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
 
 # Source plugin if the path is passed via plugin argument and the file exists
+# shellcheck disable=SC1090
 [[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Functions ###
@@ -32,12 +33,13 @@ function stop_local_registry {
 
 ### Main ###
 
-clusters=($(kind get clusters))
+readarray -t clusters < <(kind get clusters)
 
 run_if_defined pre_cleanup
 
+# run_parallel expects cluster names as a single argument
 run_parallel "${clusters[*]}" delete_cluster
-[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT}"/*
+[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT:?}"/*
 
 stop_local_registry
 docker system prune --volumes -f
