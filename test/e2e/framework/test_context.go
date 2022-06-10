@@ -44,6 +44,7 @@ type TestContextType struct {
 	ClientQPS           float32
 	ClientBurst         int
 	GroupVersion        *schema.GroupVersion
+	NettestImageURL     string
 }
 
 func (contexts *contextArray) String() string {
@@ -56,8 +57,9 @@ func (contexts *contextArray) Set(value string) error {
 }
 
 var TestContext = &TestContextType{
-	ClientQPS:   20,
-	ClientBurst: 50,
+	ClientQPS:       20,
+	ClientBurst:     50,
+	NettestImageURL: "quay.io/submariner/nettest:devel",
 }
 
 func init() {
