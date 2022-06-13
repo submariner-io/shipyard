@@ -215,9 +215,19 @@ function deploy_weave_cni(){
 
     echo "${WEAVE_YAML}" | kubectl apply -f -
     echo "Waiting for weave-net pods to be ready..."
+    with_retries 5 ensure_weave_pods
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
+}
+
+function ensure_weave_pods() {
+    if kubectl get pods -l name=weave-net -n kube-system | grep weave-net; then
+       return 0
+    fi
+
+    sleep 3
+    return 1
 }
 
 function deploy_ovn_cni(){
