@@ -41,7 +41,7 @@ multiarch-images: $(foreach image,$(MULTIARCH_IMAGES),package/$(image).tar)
 
 # [release-images] uploads the project's images to a public repository
 release-images:
-ifneq (,$(filter-out ($MULTIARCH_IMAGES),$(IMAGES)))
+ifneq (,$(filter-out $(MULTIARCH_IMAGES),$(IMAGES)))
 	$(SCRIPTS_DIR)/release_images.sh $(filter-out $(MULTIARCH_IMAGES),$(IMAGES)) $(RELEASE_ARGS)
 endif
 ifneq (,$(MULTIARCH_IMAGES))
