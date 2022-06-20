@@ -31,11 +31,16 @@ package/%.tar: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_r
 
 # [images] builds all the container images for the project
 # Default target to build images based on IMAGES variable
+# All these images are built for the default architecture; this enables
+# local consumption e.g. for deploy and e2e. Targets needing usable images
+# during a build must depend on this target.
 images: $(foreach image,$(IMAGES),package/.image.$(image))
 
 # [multiarch-images] builds all multi-arch container images
 # Default target to build images based on the MULTIARCH_IMAGES variable
 # Default platforms based on the PLATFORMS variable
+# These images are not built in a locally-consumable form (OCI tarballs only)
+# and are only intended for publication.
 multiarch-images: override IMAGES_ARGS += --platform $(PLATFORMS)
 multiarch-images: $(foreach image,$(MULTIARCH_IMAGES),package/$(image).tar)
 
