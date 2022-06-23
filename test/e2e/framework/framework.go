@@ -201,7 +201,10 @@ func (f *Framework) BeforeEach() {
 		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
 		namespaceLabels := map[string]string{
-			"e2e-framework": f.BaseName,
+			"e2e-framework":                      f.BaseName,
+			"pod-security.kubernetes.io/enforce": "privileged",
+			"pod-security.kubernetes.io/audit":   "privileged",
+			"pod-security.kubernetes.io/warn":    "privileged",
 		}
 
 		for idx, clientSet := range KubeClients {
