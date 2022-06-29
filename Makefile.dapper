@@ -1,6 +1,7 @@
 # This Makefile contains the rules required to set up our
 # Dapper-based build environment
 
+, := ,
 PROJECT ?= $(notdir $(CURDIR))
 BASE_DAPPER := Dockerfile.dapper
 USING = $(subst $(,), ,$(using))
