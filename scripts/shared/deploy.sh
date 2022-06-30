@@ -5,8 +5,6 @@
 source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
-DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
-DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'service_discovery' false "Enable multicluster service discovery (set to 'true' to enable)"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
@@ -20,14 +18,12 @@ eval set -- "${FLAGS_ARGV}"
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_service_discovery}" = "${FLAGS_TRUE}" ]] && service_discovery=true || service_discovery=false
 deploytool="${FLAGS_deploytool}"
-deploytool_broker_args="${FLAGS_deploytool_broker_args}"
-deploytool_submariner_args="${FLAGS_deploytool_submariner_args}"
 settings="${FLAGS_settings}"
 timeout="${FLAGS_timeout}"
 image_tag="${FLAGS_image_tag}"
 cable_driver="${FLAGS_cable_driver}"
 
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, settings=${settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}, service_discovery=${service_discovery}"
+echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, settings=${settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}, service_discovery=${service_discovery}"
 
 set -em
 
