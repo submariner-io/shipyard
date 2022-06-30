@@ -19,8 +19,7 @@ function setup_broker() {
              submariner-latest/submariner-k8s-broker \
              --create-namespace \
              --kube-context "${cluster}" \
-             --namespace "${BROKER_NAMESPACE}" \
-             ${deploytool_broker_args}
+             --namespace "${BROKER_NAMESPACE}"
     fi
 
     submariner_broker_url=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
@@ -64,8 +63,7 @@ function helm_install_subm() {
         --set operator.image.pullPolicy="IfNotPresent" \
         --set submariner.images.repository="localhost:5000" \
         --set submariner.images.tag="local" \
-        --set brokercrds.create="${crd_create}" \
-        ${deploytool_submariner_args}
+        --set brokercrds.create="${crd_create}"
 }
 
 function install_subm_all_clusters() {
