@@ -2,7 +2,7 @@
   
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_boolean 'debug' false "Build the binary with debug information included (or stripped)"
 DEFINE_boolean 'upx' true "Use UPX to make the binary smaller (only when --nodebug)"
 DEFINE_string 'ldflags' '' "Extra flags to send to the Go compiler"
@@ -23,17 +23,16 @@ source_file=$2
 
 set -e
 
-source ${SCRIPTS_DIR}/lib/debug_functions
+source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ## Main ##
 
-mkdir -p ${binary%/*}
+mkdir -p "${binary%/*}"
 
 echo "Building ${binary@Q} (ldflags: ${ldflags@Q})"
 if [ "$build_debug" = "false" ]; then
     ldflags="-s -w ${ldflags}"
 fi
 
-CGO_ENABLED=0 ${GO:-go} build -trimpath -ldflags "${ldflags}" -o $binary $source_file
-[[ "$build_upx" = "false" ]] || [[ "$build_debug" = "true" ]] || upx $binary
-
+CGO_ENABLED=0 ${GO:-go} build -trimpath -ldflags "${ldflags}" -o "$binary" "$source_file"
+[[ "$build_upx" = "false" ]] || [[ "$build_debug" = "true" ]] || upx "$binary"

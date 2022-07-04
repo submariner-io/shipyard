@@ -1,13 +1,16 @@
 # This Makefile contains the rules required to set up our
 # Dapper-based build environment
 
+, := ,
 PROJECT ?= $(notdir $(CURDIR))
 BASE_DAPPER := Dockerfile.dapper
+USING = $(subst $(,), ,$(using))
 LINTING_DAPPER := Dockerfile.linting
 LINTING_GOALS := gitlint shellcheck yamllint markdownlint
 NON_DAPPER_GOALS += .dapper shell targets $(LINTING_GOALS)
 export MAKEFLAGS
 export PROJECT
+export USING
 
 # Define LOCAL_BUILD to build directly on the host and not inside a Dapper container
 ifdef LOCAL_BUILD

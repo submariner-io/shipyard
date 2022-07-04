@@ -2,11 +2,9 @@
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
-DEFINE_string 'deploytool_broker_args' '' 'Any extra arguments to pass to the deploytool when deploying the broker'
-DEFINE_string 'deploytool_submariner_args' '' 'Any extra arguments to pass to the deploytool when deploying submariner'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'service_discovery' false "Enable multicluster service discovery (set to 'true' to enable)"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
@@ -20,35 +18,45 @@ eval set -- "${FLAGS_ARGV}"
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
 [[ "${FLAGS_service_discovery}" = "${FLAGS_TRUE}" ]] && service_discovery=true || service_discovery=false
 deploytool="${FLAGS_deploytool}"
-deploytool_broker_args="${FLAGS_deploytool_broker_args}"
-deploytool_submariner_args="${FLAGS_deploytool_submariner_args}"
 settings="${FLAGS_settings}"
 timeout="${FLAGS_timeout}"
 image_tag="${FLAGS_image_tag}"
 cable_driver="${FLAGS_cable_driver}"
 
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, deploytool_broker_args=${deploytool_broker_args@Q}, deploytool_submariner_args=${deploytool_submariner_args@Q}, settings=${settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}, service_discovery=${service_discovery}"
+echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, settings=${settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}, service_discovery=${service_discovery}"
 
 set -em
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
-source ${SCRIPTS_DIR}/lib/deploy_funcs
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
+source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
-[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
+# shellcheck disable=SC1090
+[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Constants ###
+# These are used in other scripts
+# shellcheck disable=SC2034
 readonly CE_IPSEC_IKEPORT=500
+# shellcheck disable=SC2034
 readonly CE_IPSEC_NATTPORT=4500
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_REPO=localhost:5000
+# shellcheck disable=SC2034
 readonly SUBM_IMAGE_TAG=${image_tag:-local}
+# shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
+# shellcheck disable=SC2034
 readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
+# shellcheck disable=SC2034
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
+# shellcheck disable=SC2034
 readonly BROKER_CLIENT_SA="submariner-k8s-broker-client"
 readonly MARKETPLACE_NAMESPACE="olm"
-readonly IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
+# shellcheck disable=SC2034
+readonly IPSEC_PSK
 
 ### Common functions ###
 
@@ -138,17 +146,18 @@ declare_kubeconfig
 bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash" ||
 bash -c "curl -Ls https://get.submariner.io | VERSION=devel DESTDIR=/go/bin bash"
 
-load_deploytool $deploytool
+load_deploytool "$deploytool"
 deploytool_prereqs
 
 run_if_defined pre_deploy
 
 run_subm_clusters prepare_cluster
 
-with_context $broker setup_broker
+with_context "$broker" setup_broker
 install_subm_all_clusters
 
 if [ "${#cluster_subm[@]}" -gt 1 ]; then
+    # shellcheck disable=2206 # the array keys don't have spaces
     cls=(${!cluster_subm[@]})
     with_context "${cls[0]}" with_retries 30 verify_gw_status
     with_context "${cls[0]}" connectivity_tests "${cls[1]}"

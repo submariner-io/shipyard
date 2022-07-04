@@ -1,6 +1,20 @@
 ---
 version: 2
 updates:
+  - package-ecosystem: github-actions
+    directory: '/'
+    schedule:
+      interval: daily
+  - package-ecosystem: github-actions
+    directory: '/'
+    target-branch: "release-0.12"
+    schedule:
+      interval: daily
+  - package-ecosystem: github-actions
+    directory: '/'
+    target-branch: "release-0.13"
+    schedule:
+      interval: daily
   - package-ecosystem: gomod
     directory: "/"
     schedule:

@@ -24,5 +24,6 @@ RUN apk add --no-cache \
 	tcpdump
 
 COPY --from=0 /usr/local/bin/net* /usr/local/bin/
+COPY scripts/nettest/* /app/
 
 CMD ["/bin/bash","-l"]

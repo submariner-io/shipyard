@@ -15,7 +15,8 @@ spec:
     spec:
       containers:
         - name: nginx-demo
-          image: quay.io/bitnami/nginx:latest
+          image: localhost:5000/nettest:local
+          command: ["/app/simpleserver"]
           ports:
             - containerPort: 8080
 ---

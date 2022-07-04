@@ -201,7 +201,10 @@ func (f *Framework) BeforeEach() {
 		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
 		namespaceLabels := map[string]string{
-			"e2e-framework": f.BaseName,
+			"e2e-framework":                      f.BaseName,
+			"pod-security.kubernetes.io/enforce": "privileged",
+			"pod-security.kubernetes.io/audit":   "privileged",
+			"pod-security.kubernetes.io/warn":    "privileged",
 		}
 
 		for idx, clientSet := range KubeClients {
@@ -421,7 +424,8 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
-	baseName string, labels map[string]string) *corev1.Namespace {
+	baseName string, labels map[string]string,
+) *corev1.Namespace {
 	ns := createTestNamespace(clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
 

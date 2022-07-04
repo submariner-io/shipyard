@@ -2,7 +2,7 @@
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'plugin' '' "Path to the plugin that has pre_cleanup and post_cleanup hook"
 
 FLAGS "$@" || exit $?
@@ -10,34 +10,36 @@ eval set -- "${FLAGS_ARGV}"
 
 set -em
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
 
 # Source plugin if the path is passed via plugin argument and the file exists
-[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source ${FLAGS_plugin}
+# shellcheck disable=SC1090
+[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
 
 ### Functions ###
 
 function delete_cluster() {
-    kind delete cluster --name=${cluster};
+    kind delete cluster --name="${cluster}"
 }
 
 function stop_local_registry {
     if registry_running; then
         echo "Stopping local KIND registry..."
-        docker stop $KIND_REGISTRY
+        docker stop "$KIND_REGISTRY"
     fi
 }
 
 
 ### Main ###
 
-clusters=($(kind get clusters))
+readarray -t clusters < <(kind get clusters)
 
 run_if_defined pre_cleanup
 
+# run_parallel expects cluster names as a single argument
 run_parallel "${clusters[*]}" delete_cluster
-[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf ${DAPPER_OUTPUT}/*
+[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT:?}"/*
 
 stop_local_registry
 docker system prune --volumes -f

@@ -2,15 +2,16 @@
 
 set -e
 
-source ${SCRIPTS_DIR}/lib/utils
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/deploy_funcs
+source "${SCRIPTS_DIR}/lib/utils"
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 function find_resources() {
     local resource_type=$1
     kubectl -n "$(find_submariner_namespace)" get "${resource_type}" -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}"
 }
 
+# shellcheck disable=SC2153 # This is not a misspelling
 settings="${SETTINGS}"
 load_settings
 declare_kubeconfig

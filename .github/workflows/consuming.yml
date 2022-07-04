@@ -7,7 +7,7 @@ on:
 
 jobs:
   e2e:
-    name: E2E
+    name: E2E Consuming
     timeout-minutes: 30
     runs-on: ubuntu-latest
     if: |
@@ -16,7 +16,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'submariner', 'submariner-operator', 'lighthouse']
+        project: ['admiral', 'lighthouse', 'subctl', 'submariner', 'submariner-operator']
         deploytool: ['operator', 'helm']
         cabledriver: ['libreswan']
         k8s_version: ['1.23']
@@ -38,13 +38,13 @@ jobs:
             k8s_version: '1.22'
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -78,16 +78,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
+        project: [
+          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
+        ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -100,8 +103,25 @@ jobs:
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
 
-      - name: Run all linters
-        run: make -C ${{ matrix.project }} lint
+      - name: Run golangci-lint
+        if: always()
+        run: make -C ${{ matrix.project }} golangci-lint
+
+      - name: Run markdownlint
+        if: always()
+        run: make -C ${{ matrix.project }} markdownlint
+
+      - name: Run packagedoc-lint
+        if: always()
+        run: make -C ${{ matrix.project }} packagedoc-lint
+
+      - name: Run shellcheck
+        if: always()
+        run: make -C ${{ matrix.project }} shellcheck
+
+      - name: Run yamllint
+        if: always()
+        run: make -C ${{ matrix.project }} yamllint
 
   unit-consuming:
     name: Unit Tests
@@ -113,16 +133,19 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
+        project: [
+          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
+        ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@a12a3943b4bdde767164f792f33f40b04645d846
+        uses: actions/checkout@2541b1294d2704b0964813337f33b291d3f8596b
         with:
           # This is replaced to stable branch by auto release process
           ref: devel

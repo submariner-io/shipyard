@@ -4,7 +4,7 @@ IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 MULTIARCH_IMAGES ?= nettest
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
-SHELLCHECK_ARGS := scripts/shared/lib/*
+SHELLCHECK_ARGS := $(shell find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
 FOCUS ?=
 SKIP ?=
 PLUGIN ?=
@@ -15,7 +15,7 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-ifneq (,$(filter ovn,$(_using)))
+ifneq (,$(filter ovn,$(USING)))
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml

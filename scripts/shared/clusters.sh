@@ -14,7 +14,7 @@ kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938
 
 ## Process command line flags ##
 
-source ${SCRIPTS_DIR}/lib/shflags
+source "${SCRIPTS_DIR}/lib/shflags"
 DEFINE_string 'k8s_version' "${DEFAULT_K8S_VERSION}" 'Version of K8s to use'
 DEFINE_string 'olm_version' 'v0.18.3' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
@@ -41,32 +41,39 @@ echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=
 
 set -em
 
-source ${SCRIPTS_DIR}/lib/debug_functions
-source ${SCRIPTS_DIR}/lib/utils
+source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/utils"
 
 ### Functions ###
 
 function generate_cluster_yaml() {
-    local pod_cidr="${cluster_CIDRs[${cluster}]}"
-    local service_cidr="${service_CIDRs[${cluster}]}"
-    local dns_domain="${cluster}.local"
-    local disable_cni="false"
+    # These are used by render_template
+    local pod_cidr service_cidr dns_domain disable_cni
+    # shellcheck disable=SC2034
+    pod_cidr="${cluster_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    service_cidr="${service_CIDRs[${cluster}]}"
+    # shellcheck disable=SC2034
+    dns_domain="${cluster}.local"
+    disable_cni="false"
+    # shellcheck disable=SC2034
     [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
 
-    render_template ${RESOURCES_DIR}/kind-cluster-config.yaml > ${RESOURCES_DIR}/${cluster}-config.yaml
+    render_template "${RESOURCES_DIR}/kind-cluster-config.yaml" > "${RESOURCES_DIR}/${cluster}-config.yaml"
 }
 
 function kind_fixup_config() {
-    local master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' ${cluster}-control-plane | head -n 1)
-    sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" $KUBECONFIG
-    sed -i -- "s/user: kind-.*/user: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/name: kind-.*/name: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/cluster: kind-.*/cluster: ${cluster}/g" $KUBECONFIG
-    sed -i -- "s/current-context: .*/current-context: ${cluster}/g" $KUBECONFIG
-    chmod a+r $KUBECONFIG
+    local master_ip
+    master_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' "${cluster}-control-plane" | head -n 1)
+    sed -i -- "s/server: .*/server: https:\/\/$master_ip:6443/g" "$KUBECONFIG"
+    sed -i -- "s/user: kind-.*/user: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/name: kind-.*/name: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/cluster: kind-.*/cluster: ${cluster}/g" "$KUBECONFIG"
+    sed -i -- "s/current-context: .*/current-context: ${cluster}/g" "$KUBECONFIG"
+    chmod a+r "$KUBECONFIG"
 }
 
 # In development environments where clusters are brought up and down
@@ -113,7 +120,7 @@ function create_kind_cluster() {
 
     if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        kind export kubeconfig --name=${cluster}
+        kind export kubeconfig --name="${cluster}"
         kind_fixup_config
         return
     fi
@@ -131,15 +138,15 @@ function create_kind_cluster() {
     fi
 
     kind version
-    cat ${RESOURCES_DIR}/${cluster}-config.yaml
-    kind create cluster $image_flag --name=${cluster} --config=${RESOURCES_DIR}/${cluster}-config.yaml
+    cat "${RESOURCES_DIR}/${cluster}-config.yaml"
+    kind create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
         kubectl cluster-info dump 1>&2
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -156,15 +163,15 @@ function deploy_weave_cni(){
     WEAVE_YAML=$(curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!')
 
     # Search the YAML for images that need to be downloaded
-    IMAGE_LIST=( $(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' - ) )
-    echo "IMAGE_LIST=${IMAGE_LIST[@]}"
+    readarray -t IMAGE_LIST < <(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' -)
+    echo "IMAGE_LIST=${IMAGE_LIST[*]}"
     for image in "${IMAGE_LIST[@]}"
     do
         IMAGE_FAILURE=false
 
         # Check if image is already present, and if not, download it.
         echo "Processing Image: $image"
-        if [ -z "`docker images -q $image`" ] ; then
+        if [ -z "$(docker images -q "$image")" ] ; then
             echo "Image $image not found, downloading..."
             if ! docker pull "$image"; then
                 echo "**** 'docker pull $image' failed. Manually run. ****"
@@ -177,7 +184,7 @@ function deploy_weave_cni(){
         if [ "${IMAGE_FAILURE}" == false ] ; then
             LCL_REG_IMAGE_NAME="${image/weaveworks/localhost:5000}"
             # Copy image to local registry if not there
-            if [ -z "$(docker images -q ${LCL_REG_IMAGE_NAME})" ] ; then
+            if [ -z "$(docker images -q "${LCL_REG_IMAGE_NAME}")" ] ; then
                 echo "Image ${LCL_REG_IMAGE_NAME} not found, tagging and pushing ..."
                 if ! docker tag "$image" "${LCL_REG_IMAGE_NAME}"; then
                     echo "'docker tag $image ${LCL_REG_IMAGE_NAME}' failed."
@@ -208,9 +215,19 @@ function deploy_weave_cni(){
 
     echo "${WEAVE_YAML}" | kubectl apply -f -
     echo "Waiting for weave-net pods to be ready..."
+    with_retries 5 ensure_weave_pods
     kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
     echo "Waiting for core-dns deployment to be ready..."
     kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
+}
+
+function ensure_weave_pods() {
+    if kubectl get pods -l name=weave-net -n kube-system | grep weave-net; then
+       return 0
+    fi
+
+    sleep 3
+    return 1
 }
 
 function deploy_ovn_cni(){
@@ -218,30 +235,28 @@ function deploy_ovn_cni(){
 }
 
 function deploy_kind_ovn(){
-    local OVN_SRC_IMAGE="quay.io/vthapar/ovn-daemonset-f:latest"
+    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
     export K8s_VERSION="${k8s_version}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
 
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
-    export REGISTRY_IP="kind-registry"
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
-    sed -i 's/^kind load/#kind load/g' $OVN_DIR/contrib/kind.sh
 
-    (  cd ${OVN_DIR}/contrib; ./kind.sh; ) &
+    ( ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"; ) &
     if ! wait $! ; then
         echo "Failed to install kind with OVN"
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
-        kind delete cluster --name=${cluster}
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -252,13 +267,28 @@ function run_local_registry() {
         echo "Local registry $KIND_REGISTRY already running."
     else
         echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
-        local volume_flag
+        declare -a volume_flags
         if [[ $registry_inmemory = true ]]; then
-            volume_flag="-v /dev/shm/${KIND_REGISTRY}:/var/lib/registry"
+            volume_dir="/var/lib/registry"
+            volume_flags+=(-v "/dev/shm/${KIND_REGISTRY}:${volume_dir}")
             selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
         fi
-        docker run -d $volume_flag -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
+        docker run -d "${volume_flags[@]}" -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
         docker network connect kind $KIND_REGISTRY || true
+
+        # If the registry is stored in memory and the local volume mount directory is empty,
+        # then try to push any images with "localhost:5000". The volume mount directory is
+        # probably empty due to a host reboot.
+        if [[ $registry_inmemory = true ]] && [[ ! "$(docker exec -e tmp_dir=${volume_dir} -it $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
+            echo "Push images to local registry: $KIND_REGISTRY"
+            readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
+            for image in "${local_image_list[@]}"
+            do
+                if ! docker push "${image}"; then
+                    echo "'docker push ${image}' failed."
+                fi
+            done
+        fi
     fi
 }
 
@@ -282,11 +312,11 @@ function deploy_prometheus() {
     # TODO Install in a separate namespace
     kubectl create ns submariner-operator
     # Bundle from prometheus-operator, namespace changed to submariner-operator
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/bundle.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml
-    kubectl apply -f ${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/bundle.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/serviceaccount.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/clusterrole.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/clusterrolebinding.yaml"
+    kubectl apply -f "${SCRIPTS_DIR}/resources/prometheus/prometheus.yaml"
 }
 
 function deploy_cluster_capabilities() {
@@ -297,26 +327,43 @@ function deploy_cluster_capabilities() {
 
 function warn_inotify() {
     if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
-        echo "Please increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
+        echo "Your inotify settings are lower than our recommendation."
+        echo "This may cause failures in large deployments, but we don't know if it caused this failure."
+        echo "You may need to increase your inotify settings (currently $(cat /proc/sys/fs/inotify/max_user_watches) and $(cat /proc/sys/fs/inotify/max_user_instances)):"
         echo sudo sysctl fs.inotify.max_user_watches=524288
         echo sudo sysctl fs.inotify.max_user_instances=512
         echo 'See https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files'
     fi
 }
 
+# If any of the clusters use OVN-K as the CNI then clone the
+# ovn-kubernetes repo from master in order to access the required
+# kind scripts, and manifest generation templates.
+function download_ovnk() {
+    if [[ ${cluster_cni[*]} != *"ovn"* ]]; then
+        return
+    fi
+
+    echo "Cloning ovn-kubernetes from source"
+    git clone https://github.com/ovn-org/ovn-kubernetes.git \
+        || { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
+}
+
 ### Main ###
 
-rm -rf ${KUBECONFIGS_DIR}
-mkdir -p ${KUBECONFIGS_DIR}
+rm -rf "${KUBECONFIGS_DIR}"
+mkdir -p "${KUBECONFIGS_DIR}"
 
 download_kind
 load_settings
+download_ovnk
 run_local_registry
 declare_cidrs
 
 # Run in subshell to check response, otherwise `set -e` is not honored
 ( run_all_clusters with_retries 3 create_kind_cluster; ) &
 if ! wait $!; then
+    echo "Failed to create kind clusters."
     warn_inotify
     exit 1
 fi
