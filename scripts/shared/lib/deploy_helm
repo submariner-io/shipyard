@@ -2,6 +2,9 @@
 # shellcheck source=scripts/shared/lib/source_only
 . "${BASH_SOURCE%/*}"/source_only
 
+# Allow overriding for using local charts from a directory
+HELM_REPO_LOCATION="${HELM_REPO_LOCATION:-submariner-latest}"
+
 ### Functions ###
 
 function deploytool_prereqs() {
@@ -16,7 +19,7 @@ function setup_broker() {
         echo "Installing submariner broker..."
         # shellcheck disable=SC2086 # Split on purpose
         helm install "${BROKER_NAMESPACE}" \
-             submariner-latest/submariner-k8s-broker \
+             "${HELM_REPO_LOCATION}"/submariner-k8s-broker \
              --create-namespace \
              --kube-context "${cluster}" \
              --namespace "${BROKER_NAMESPACE}"
@@ -39,7 +42,7 @@ function helm_install_subm() {
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
     helm --kube-context "${cluster}" install submariner-operator \
-        submariner-latest/submariner-operator \
+        "${HELM_REPO_LOCATION}"/submariner-operator \
         --create-namespace \
         --namespace "${SUBM_NS}" \
         --set ipsec.psk="${IPSEC_PSK}" \
