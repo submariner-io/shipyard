@@ -40,8 +40,7 @@ function setup_broker() {
                --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
                ${subctlrepver} \
                ${gn} \
-               ${sd} \
-               ${deploytool_broker_args}
+               ${sd}
     )
 }
 
@@ -72,7 +71,6 @@ function subctl_install_subm() {
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --natt=false \
                 --cable-driver "${cable_driver}" \
-                ${deploytool_submariner_args} \
                 ${cidr_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
 
