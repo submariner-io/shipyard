@@ -3,13 +3,27 @@ USING = $(subst $(,), ,$(using))
 _using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
-# Check Makefile.dapper freshness
-ifneq (,$(shell cmp $(SHIPYARD_DIR)/Makefile.dapper Makefile.dapper))
-$(warning [31mYour Makefile.dapper and Shipyard's are different,[0m)
+##### GLOBAL FILES STALENESS CHECK #####
+
+define warn_shipyard_file
+$(warning [31mYour $(1) and Shipyard's are different,[0m)
 $(warning [31myou might run into issues. To avoid this, ensure[0m)
-$(warning [31myour Shipyard image is up-to-date and delete the[0m)
-$(warning [31mlocal Makefile.dapper.[0m)
-endif
+$(warning [31myour Shipyard image is up-to-date and run `make clean`.[0m)
+endef
+
+define _check_shipyard_file
+$(info Checking if $(1) is up to date)
+$(if $(shell cmp $(SHIPYARD_DIR)/$(1) $(1)),$(call warn_shipyard_file,$(1),))
+endef
+
+# Only check a file if it exists in the image and locally (not all images have all files)
+check_shipyard_file=$(if $(wildcard $(SHIPYARD_DIR)/$(1)),$(if $(wildcard $(1)),$(call _check_shipyard_file,$(1)),),)
+
+$(call check_shipyard_file,Makefile.dapper)
+$(call check_shipyard_file,Dockerfile.dapper)
+$(call check_shipyard_file,Dockerfile.linting)
+
+##### END GLOBAL FILES STALENESS CHECK #####
 
 include $(SHIPYARD_DIR)/Makefile.images
 include $(SHIPYARD_DIR)/Makefile.versions
