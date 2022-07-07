@@ -3,7 +3,7 @@
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
 DEFAULT_K8S_VERSION=1.23
-declare -A kind_k8s_versions kind_kind_binaries
+declare -A kind_k8s_versions kind_binaries
 # kind-0.12 hashes
 kind_k8s_versions[1.17]=1.17.17@sha256:e477ee64df5731aa4ef4deabbafc34e8d9a686b49178f726563598344a3898d5
 kind_k8s_versions[1.18]=1.18.20@sha256:e3dca5e16116d11363e31639640042a9b1bd2c90f85717a7fc66be34089a8169
@@ -13,21 +13,8 @@ kind_k8s_versions[1.21]=1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3
 kind_k8s_versions[1.22]=1.22.7@sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166
 kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9
 # kind-0.14 hashes
-#kind_k8s_versions[1.18]=1.18.20@sha256:738cdc23ed4be6cc0b7ea277a2ebcc454c8373d7d8fb991a7fcdbd126188e6d7
-#kind_k8s_versions[1.19]=1.19.16@sha256:d9c819e8668de8d5030708e484a9fdff44d95ec4675d136ef0a0a584e587f65c
-#kind_k8s_versions[1.20]=1.20.15@sha256:6f2d011dffe182bad80b85f6c00e8ca9d86b5b8922cdf433d53575c4c5212248
-#kind_k8s_versions[1.21]=1.21.12@sha256:f316b33dd88f8196379f38feb80545ef3ed44d9197dca1bfd48bcb1583210207
-#kind_k8s_versions[1.22]=1.22.9@sha256:8135260b959dfe320206eb36b3aeda9cffcb262f4b44cda6b33f7bb73f453105
-#kind_k8s_versions[1.23]=1.23.6@sha256:b1fa224cc6c7ff32455e0b1fd9cbfd3d3bc87ecaa8fcb06961ed1afb3db0f9ae
 kind_k8s_versions[1.24]=1.24.2@sha256:a3220cefdf4f9be6681c871da35521eaaf59fadd7d509613a9e1881c5f74b587
-kind_kind_binaries[1.17]='kind'
-kind_kind_binaries[1.18]='kind'
-kind_kind_binaries[1.19]='kind'
-kind_kind_binaries[1.20]='kind'
-kind_kind_binaries[1.21]='kind'
-kind_kind_binaries[1.22]='kind'
-kind_kind_binaries[1.23]='kind'
-kind_kind_binaries[1.24]='kind-0.14'
+kind_binaries[1.24]='kind-0.14'
 
 ## Process command line flags ##
 
@@ -46,7 +33,7 @@ eval set -- "${FLAGS_ARGV}"
 k8s_version="${FLAGS_k8s_version}"
 olm_version="${FLAGS_olm_version}"
 [[ -z "${k8s_version}" ]] && k8s_version="${DEFAULT_K8S_VERSION}"
-kind="${kind_kind_binaries[$k8s_version]}"
+kind="${kind_binaries[$k8s_version]:-kind}"
 [[ -n "${kind_k8s_versions[$k8s_version]}" ]] && k8s_version="${kind_k8s_versions[$k8s_version]}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
@@ -55,7 +42,7 @@ kind="${kind_kind_binaries[$k8s_version]}"
 settings="${FLAGS_settings}"
 timeout="${FLAGS_timeout}"
 
-echo "Running with: kind=${kind}, k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, settings=${settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, settings=${settings}, timeout=${timeout}"
 
 set -em
 
@@ -136,9 +123,9 @@ function create_kind_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
     rm -f "$KUBECONFIG"
 
-    if ${kind} get clusters | grep -q "^${cluster}$"; then
+    if "${kind}" get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        ${kind} export kubeconfig --name="${cluster}"
+        "${kind}" export kubeconfig --name="${cluster}"
         kind_fixup_config
         return
     fi
@@ -155,16 +142,16 @@ function create_kind_cluster() {
         image_flag="--image=kindest/node:v${k8s_version}"
     fi
 
-    ${kind} version
+    "${kind}" version
     cat "${RESOURCES_DIR}/${cluster}-config.yaml"
-    ${kind} create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
+    "${kind}" create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
         kubectl cluster-info dump 1>&2
-        ${kind} delete cluster --name="${cluster}"
+        "${kind}" delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -267,14 +254,14 @@ function deploy_kind_ovn(){
     ( ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"; ) &
     if ! wait $! ; then
         echo "Failed to install kind with OVN"
-        ${kind} delete cluster --name="${cluster}"
+        "${kind}" delete cluster --name="${cluster}"
         return 1
     fi
 
     ( deploy_cluster_capabilities; ) &
     if ! wait $! ; then
         echo "Failed to deploy cluster capabilities, removing the cluster"
-        ${kind} delete cluster --name="${cluster}"
+        "${kind}" delete cluster --name="${cluster}"
         return 1
     fi
 }
