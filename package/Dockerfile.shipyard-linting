@@ -34,6 +34,9 @@ RUN apk add --no-cache bash findutils git grep make nodejs py3-six shellcheck up
 # Copy shared files so that downstream projects can use it
 COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
 
+# Copy the global dapper file so that we can make sure consuming projects are up to date
+COPY Dockerfile.linting ${SHIPYARD_DIR}/
+
 # Copy shared scripts into image to share with all submariner-io/* projects
 WORKDIR $SCRIPTS_DIR
 COPY scripts/shared/ .
