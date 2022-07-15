@@ -18,7 +18,7 @@ function setup_broker() {
     else
         echo "Installing submariner broker..."
         # shellcheck disable=SC2086 # Split on purpose
-        helm install --devel "${BROKER_NAMESPACE}" \
+        helm install --debug --devel "${BROKER_NAMESPACE}" \
              "${HELM_REPO_LOCATION}"/submariner-k8s-broker \
              --create-namespace \
              --kube-context "${cluster}" \
@@ -41,7 +41,7 @@ function helm_install_subm() {
 
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
-    helm --kube-context "${cluster}" install --devel submariner-operator \
+    helm --kube-context "${cluster}" install --debug --devel submariner-operator \
         "${HELM_REPO_LOCATION}"/submariner-operator \
         --create-namespace \
         --namespace "${SUBM_NS}" \
