@@ -55,19 +55,19 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
 
 ENV LINT_VERSION=v1.46.2 \
     HELM_VERSION=v3.9.0 \
-    KIND_VERSION=v0.12.0 \
+    KIND_VERSION=v0.14.0 \
     BUILDX_VERSION=v0.8.2 \
     GH_VERSION=2.5.1 \
     YQ_VERSION=4.20.2
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
-# We temporarily install kind-0.12 and kind-0.14; kind-0.12 is the default, and kind-0.14 is used for K8s 1.24, until
+# We temporarily install kind-0.12 and kind-0.14; kind-0.14 is the default, and kind-0.12 is used for K8s before 1.24, until
 # all kind images are available with containerd 1.6.5 or later
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
-    curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/v0.12.0/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
-    curl -Lo /go/bin/kind-0.14 "https://github.com/kubernetes-sigs/kind/releases/download/v0.14.0/kind-linux-${ARCH}" && chmod a+x /go/bin/kind-0.14 && \
+    curl -Lo /go/bin/kind-0.12 "https://github.com/kubernetes-sigs/kind/releases/download/v0.12.0/kind-linux-${ARCH}" && chmod a+x /go/bin/kind-0.12 && \
+    curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     GOFLAGS="" go install -v github.com/onsi/ginkgo/ginkgo@latest && \
     GOFLAGS="" go install -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \
