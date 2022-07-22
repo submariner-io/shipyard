@@ -14,7 +14,7 @@ kind_k8s_versions[1.22]=1.22.7@sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c
 kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9
 # kind-0.14 hashes
 kind_k8s_versions[1.24]=1.24.2@sha256:a3220cefdf4f9be6681c871da35521eaaf59fadd7d509613a9e1881c5f74b587
-kind_binaries[1.24]='kind-0.14'
+kind_binaries[1.24]='kind'
 
 ## Process command line flags ##
 
@@ -33,7 +33,7 @@ eval set -- "${FLAGS_ARGV}"
 k8s_version="${FLAGS_k8s_version}"
 olm_version="${FLAGS_olm_version}"
 [[ -z "${k8s_version}" ]] && k8s_version="${DEFAULT_K8S_VERSION}"
-kind="${kind_binaries[$k8s_version]:-kind}"
+kind="${kind_binaries[$k8s_version]:-kind-0.12}"
 [[ -n "${kind_k8s_versions[$k8s_version]}" ]] && k8s_version="${kind_k8s_versions[$k8s_version]}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
