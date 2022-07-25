@@ -2,14 +2,14 @@
 USING = $(subst $(,), ,$(using))
 _using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
-export PROVIDER ?= kind
 
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
 DEBUG_PRINT ?= true
 PARALLEL ?= true
+PROVIDER ?= kind
 TIMEOUT ?= 5m
-export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN SETTINGS TIMEOUT
+export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PROVIDER SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.24
@@ -103,6 +103,10 @@ endif
 
 ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
+endif
+
+ifneq (,$(filter aws-ocp,$(_using)))
+PROVIDER = aws-ocp
 endif
 
 GO ?= go

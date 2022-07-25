@@ -42,7 +42,6 @@ function deploy_cluster_capabilities() {
 
 ### Main ###
 
-rm -rf "${KUBECONFIGS_DIR}"
 mkdir -p "${KUBECONFIGS_DIR}"
 
 load_settings
@@ -55,7 +54,7 @@ provider_prepare
 ( run_all_clusters with_retries 3 provider_create_cluster; ) &
 if ! wait $!; then
     echo "Failed to create clusters using ${PROVIDER@Q}."
-    provider_failed
+    run_if_defined provider_failed
     exit 1
 fi
 

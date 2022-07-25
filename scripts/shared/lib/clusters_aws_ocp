@@ -1,0 +1,62 @@
+
+### Variables ###
+
+declare -g install_template="${OUTPUT_DIR}/aws-ocp-template"
+
+### Functions ###
+
+function provider_prepare() {
+    curl -Ls https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux.tar.gz | tar -xzf - -C /usr/local/bin/ openshift-install
+
+    if [[ -d "${install_template}" ]]; then
+        echo "Reusing existing template for AWS install."
+        echo "If you'd like to reinstall, please run 'make clean' and try again."
+        return 0
+    fi
+
+    rm -rf "${install_template}"
+    echo "Creating an initial configuration template for AWS."
+    echo "Please fill out all the necessary details."
+    echo "Note: The cluster name will be suffixed (eg with '-cluster1'), please fill out just the prefix."
+    openshift-install create install-config --dir "${install_template}"
+}
+
+function provider_create_cluster() {
+    export KUBECONFIG="${KUBECONFIGS_DIR}/aws-ocp-${cluster}"
+
+    if kubectl cluster-info > /dev/null 2>&1; then
+        echo "AWS cluster already exists, skipping its creation..."
+        return 0
+    fi
+
+    rm -f "$KUBECONFIG"
+
+    echo "Creating AWS cluster..."
+
+    local install_dir="${install_template/template/${cluster}}"
+    local install_config="${install_dir}/install-config.yaml"
+    local control_replicas compute_replicas
+    control_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'control-plane')
+    compute_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'worker')
+
+    # OCP needs at least 1 compute node to work properly
+    [[ "${compute_replicas}" != "0" ]] || compute_replicas = 1
+
+    rm -rf "${install_dir}"
+    cp -r "${install_template}" "${install_dir}"
+    yq -i ".metadata.name += \"-${cluster}\"" "${install_config}"
+    yq -i ".networking.clusterNetwork[0].cidr = \"${cluster_CIDRs[${cluster}]}\"" "${install_config}"
+    yq -i ".networking.serviceNetwork[0] = \"${service_CIDRs[${cluster}]}\"" "${install_config}"
+    yq -i ".controlPlane.replicas = ${control_replicas}" "${install_config}"
+    yq -i ".compute[0].replicas = ${compute_replicas}" "${install_config}"
+
+    if ! openshift-install create cluster --dir "${install_dir}"; then
+        echo "Failed to create AWS cluster, removing the cluster"
+        openshift-install destroy cluster --dir "${install_dir}"
+        return 1
+    fi
+
+    local kubeconfig="${install_dir}/auth/kubeconfig"
+    yq -i "(.. | select(. == \"admin\")) = \"${cluster}\"" "${kubeconfig}"
+    cp "${kubeconfig}" "${KUBECONFIG}"
+}
