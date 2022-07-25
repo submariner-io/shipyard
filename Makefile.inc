@@ -2,6 +2,7 @@
 USING = $(subst $(,), ,$(using))
 _using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
+export PROVIDER ?= kind
 
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
