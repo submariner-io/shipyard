@@ -24,7 +24,6 @@ DEFINE_string 'olm_version' 'v0.18.3' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
 DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
-DEFINE_boolean 'registry_inmemory' true "Run local registry in memory to speed up the image loading."
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
 DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 FLAGS "$@" || exit $?
@@ -38,11 +37,10 @@ kind="${kind_binaries[$k8s_version]:-kind-0.12}"
 [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
 [[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
 [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
-[[ "${FLAGS_registry_inmemory}" = "${FLAGS_TRUE}" ]] && registry_inmemory=true || registry_inmemory=false
 settings="${FLAGS_settings}"
 timeout="${FLAGS_timeout}"
 
-echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, registry_inmemory=${registry_inmemory}, settings=${settings}, timeout=${timeout}"
+echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, settings=${settings}, timeout=${timeout}"
 
 set -em
 
@@ -270,30 +268,24 @@ function run_local_registry() {
     # Run a local registry to avoid loading images manually to kind
     if registry_running; then
         echo "Local registry $KIND_REGISTRY already running."
-    else
-        echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
-        declare -a volume_flags
-        if [[ $registry_inmemory = true ]]; then
-            volume_dir="/var/lib/registry"
-            volume_flags+=(-v "/dev/shm/${KIND_REGISTRY}:${volume_dir}")
-            selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
-        fi
-        docker run -d "${volume_flags[@]}" -p 127.0.0.1:5000:5000 --restart=always --name $KIND_REGISTRY registry:2
-        docker network connect kind $KIND_REGISTRY || true
+        return 0
+    fi
 
-        # If the registry is stored in memory and the local volume mount directory is empty,
-        # then try to push any images with "localhost:5000". The volume mount directory is
-        # probably empty due to a host reboot.
-        if [[ $registry_inmemory = true ]] && [[ ! "$(docker exec -e tmp_dir=${volume_dir} -it $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
-            echo "Push images to local registry: $KIND_REGISTRY"
-            readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
-            for image in "${local_image_list[@]}"
-            do
-                if ! docker push "${image}"; then
-                    echo "'docker push ${image}' failed."
-                fi
-            done
-        fi
+    echo "Deploying local registry $KIND_REGISTRY to serve images centrally."
+    local volume_dir="/var/lib/registry"
+    local volume_flag="/dev/shm/${KIND_REGISTRY}:${volume_dir}"
+    selinuxenabled && volume_flag="${volume_flag}:z" 2>/dev/null
+    docker run -d -v "${volume_flag}" -p 127.0.0.1:5000:5000 --restart=always --name "$KIND_REGISTRY" registry:2
+    docker network connect kind "$KIND_REGISTRY" || true
+
+    # If the local volume mount directory is empty, probably due to a host reboot,
+    # then try to push any images with "localhost:5000".
+    if [[ -z "$(docker exec -e tmp_dir=${volume_dir} $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
+        echo "Push images to local registry: $KIND_REGISTRY"
+        readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
+        for image in "${local_image_list[@]}"; do
+            docker push "${image}" || echo "Failed to push ${image@Q} to registry."
+        done
     fi
 }
 
