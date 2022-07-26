@@ -126,8 +126,6 @@ deploytool_prereqs
 
 run_if_defined pre_deploy
 
-run_subm_clusters prepare_cluster
-
 with_context "$broker" setup_broker
 install_subm_all_clusters
 
