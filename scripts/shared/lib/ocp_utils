@@ -1,0 +1,5 @@
+function ensure_openshift_install() {
+    command -v openshift-install > /dev/null && return 0
+    curl -Ls https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux.tar.gz \
+        | tar -xzf - -C /usr/local/bin/ openshift-install
+}
