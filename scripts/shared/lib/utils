@@ -49,6 +49,18 @@ function with_retries() {
     exit 1
 }
 
+function sleep_on_fail() {
+    local duration=$1
+
+    if "${@:2}"; then
+        return 0
+    fi
+
+    echo "Failed to '${*:2}', sleeping for ${duration}."
+    sleep "${duration}"
+    return 1
+}
+
 # Run a command with the given cluster as the context, which will be unset once finished
 # 1st argument is the context which will be set to $cluster global variable.
 # 2nd argument is the command to execute.

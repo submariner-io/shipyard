@@ -136,14 +136,18 @@ clean-buildx:
 	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
-.PHONY: clusters deploy e2e scale upgrade-e2e deploy-latest
+.PHONY: clusters cloud-prepare deploy e2e scale upgrade-e2e deploy-latest
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
 	$(SCRIPTS_DIR)/$@.sh
 
+# [cloud-prepare] can be run on a POC/testing cloud environment to prepare it before deploying Submariner
+cloud-prepare:
+	$(SCRIPTS_DIR)/$@.sh
+
 # [deploy] deploys Submariner on KIND clusters
-deploy: clusters preload-images
+deploy: clusters cloud-prepare preload-images
 	$(SCRIPTS_DIR)/$@.sh
 
 # [e2e] executes the project's end to end testing on the deployed KIND clusters
