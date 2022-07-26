@@ -1,0 +1,20 @@
+
+### Functions ###
+
+function provider_initialize() {
+    readarray -t clusters < <(kind get clusters)
+}
+
+function provider_delete_cluster() {
+    kind delete cluster --name="${cluster}"
+}
+
+function provider_finalize {
+    if registry_running; then
+        echo "Stopping local KIND registry..."
+        docker stop "$KIND_REGISTRY"
+    fi
+
+    docker system prune --volumes -f
+    rm -f "${KUBECONFIGS_DIR}"/kind-config-*
+}
