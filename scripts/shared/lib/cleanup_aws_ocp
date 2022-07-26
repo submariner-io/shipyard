@@ -1,0 +1,17 @@
+. "${SCRIPTS_DIR}/lib/ocp_utils"
+
+### Functions ###
+
+function provider_initialize() {
+    readarray -t clusters < <(find "${OUTPUT_DIR}" -type f -name metadata.json -exec sh -c "basename \$(dirname {})" \;)
+    [[ "${#clusters[@]}" -gt 0 ]] || { echo "No AWS clusters found." && return 0; }
+    ensure_openshift_install
+}
+
+function provider_delete_cluster() {
+    openshift-install destroy cluster --dir="${OUTPUT_DIR}/${cluster}"
+}
+
+function provider_finalize() {
+    \rm -rf "${OUTPUT_DIR}"/aws-ocp-* "${KUBECONFIGS_DIR}"/aws-ocp-*
+}
