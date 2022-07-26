@@ -99,6 +99,16 @@ if [ -d "${HOME}/.docker" ]; then
     dockerargs="${dockerargs} -v ${HOME}/.docker:/root/.docker${suffix}"
 fi
 
+# Pass through ~/.aws/credentials so that the container can operate on AWS (if needed).
+if [ -r "${HOME}/.aws/credentials" ]; then
+    volume="${HOME}/.aws/credentials:/root/.aws/credentials"
+    if [ -z "${suffix}" ]; then
+        dockerargs="${dockerargs} -v ${volume}:ro"
+    else
+        dockerargs="${dockerargs} -v ${volume}${suffix},ro"
+    fi
+fi
+
 # seccomp is unconfined to avoid problems with clone3 in Fedora 35
 # See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
 # Remove "--security-opt seccomp=unconfined" once all supported container runtimes
