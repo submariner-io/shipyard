@@ -10,31 +10,16 @@ source "${SCRIPTS_DIR}/lib/debug_functions"
 # shellcheck disable=SC1090
 [[ -n "${PLUGIN}" ]] && [[ -f "${PLUGIN}" ]] && source "${PLUGIN}"
 
-### Functions ###
-
-function delete_cluster() {
-    kind delete cluster --name="${cluster}"
-}
-
-function stop_local_registry {
-    if registry_running; then
-        echo "Stopping local KIND registry..."
-        docker stop "$KIND_REGISTRY"
-    fi
-}
-
-
 ### Main ###
 
-readarray -t clusters < <(kind get clusters)
-
+load_library cleanup PROVIDER
 run_if_defined pre_cleanup
+provider_initialize
 
-# run_parallel expects cluster names as a single argument
-run_parallel "${clusters[*]}" delete_cluster
-[[ -z "${DAPPER_OUTPUT}" ]] || rm -rf "${DAPPER_OUTPUT:?}"/*
+run_all_clusters provider_delete_cluster
 
-stop_local_registry
-docker system prune --volumes -f
+# Remove any files inside the output directory, but not any directories as a provider might be using them.
+\rm -f "${OUTPUT_DIR:?}"/* 2> /dev/null || true
 
+provider_finalize
 run_if_defined post_cleanup
