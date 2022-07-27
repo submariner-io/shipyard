@@ -239,13 +239,13 @@ unit: $(VENDOR_MODULES)
 vendor/modules.txt: go.mod
 	$(GO) mod download
 	$(GO) mod vendor
-	$(GO) mod tidy
+	$(GO) mod tidy -compat=1.17
 
 %/vendor/modules.txt: %/go.mod
 	cd $(patsubst %/vendor/,%,$(dir $@)) && \
 	$(GO) mod download && \
 	$(GO) mod vendor && \
-	$(GO) mod tidy
+	$(GO) mod tidy -compat=1.17
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
