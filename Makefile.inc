@@ -21,6 +21,12 @@ export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 # Specific to `e2e`
 export FOCUS LAZY_DEPLOY SKIP TESTDIR
 
+# Specific to `reload-images`
+export RESTART ?= none
+
+# Specific to `compile.sh`
+export BUILD_DEBUG BUILD_UPX LDFLAGS
+
 ##### GLOBAL FILES STALENESS CHECK #####
 
 define warn_shipyard_file
@@ -154,7 +160,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl IMAGE_TAG=subctl using=$(using)
 
 ##### LINTING TARGETS #####
 .PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
