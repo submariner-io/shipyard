@@ -33,7 +33,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # qemu-user-static | Emulation (for multiarch builds)
 # ShellCheck       | shell script linting
 # skopeo           | container image manipulation
-# subctl *         | Submariner's deploy tool (operator)
 # upx              | binary compression
 # yamllint         | YAML linting
 # yq               | YAML processing (OCM deploy tool)
