@@ -15,9 +15,9 @@ if [[ $# != 2 ]]; then
     exit 1
 fi
 
-[[ "${FLAGS_debug}" = "${FLAGS_TRUE}" ]] && build_debug=true || build_debug=false
-[[ "${FLAGS_upx}" = "${FLAGS_TRUE}" ]] && build_upx=true || build_upx=false
-ldflags=${FLAGS_ldflags}
+[[ -n "${BUILD_DEBUG}" ]] || { [[ "${FLAGS_debug}" = "${FLAGS_TRUE}" ]] && BUILD_DEBUG=true || BUILD_DEBUG=false; }
+[[ -n "${BUILD_UPX}" ]] || { [[ "${FLAGS_upx}" = "${FLAGS_TRUE}" ]] && BUILD_UPX=true || BUILD_UPX=false; }
+[[ -n "${LDFLAGS}" ]] || LDFLAGS=${FLAGS_ldflags}
 binary=$1
 source_file=$2
 
@@ -29,10 +29,8 @@ source "${SCRIPTS_DIR}/lib/debug_functions"
 
 mkdir -p "${binary%/*}"
 
-echo "Building ${binary@Q} (ldflags: ${ldflags@Q})"
-if [ "$build_debug" = "false" ]; then
-    ldflags="-s -w ${ldflags}"
-fi
+echo "Building ${binary@Q} (LDFLAGS: ${LDFLAGS@Q})"
+[[ "$BUILD_DEBUG" == "true" ]] || LDFLAGS="-s -w ${LDFLAGS}"
 
-CGO_ENABLED=0 ${GO:-go} build -trimpath -ldflags "${ldflags}" -o "$binary" "$source_file"
-[[ "$build_upx" = "false" ]] || [[ "$build_debug" = "true" ]] || upx "$binary"
+CGO_ENABLED=0 ${GO:-go} build -trimpath -ldflags "${LDFLAGS}" -o "$binary" "$source_file"
+[[ "$BUILD_UPX" != "true" ]] || [[ "$BUILD_DEBUG" == "true" ]] || upx "$binary"
