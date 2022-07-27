@@ -11,7 +11,7 @@ spec:
   clusterID: "${cluster}"
   debug: false
   natEnabled: false
-  serviceDiscoveryEnabled: ${service_discovery}
+  serviceDiscoveryEnabled: ${LIGHTHOUSE}
   broker: "k8s"
   brokerK8sApiServer: "${BROKER_K8S_API_SERVER}"
   brokerK8sApiServerToken: "${BROKER_K8S_API_SERVER_TOKEN}"

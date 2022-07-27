@@ -3,20 +3,17 @@
 ## Process command line flags ##
 
 source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'focus' '' "Ginkgo focus for the E2E tests"
-DEFINE_string 'skip' '' "Ginkgo skip for the E2E tests"
 DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
 DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
-DEFINE_boolean 'globalnet' false "Indicates if the globalnet feature is enabled"
-FLAGS_HELP="USAGE: $0 [--focus focus] [--skip skip] [--[no]lazy_deploy] [--testdir test/e2e] cluster [cluster ...]"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
-[[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=-globalnet || globalnet=
+[[ "${GLOBALNET}" = "true" ]] && gn=-globalnet || gn=
 ginkgo_args=()
-[[ -n "${FLAGS_focus}" ]] && ginkgo_args+=("-ginkgo.focus=${FLAGS_focus}")
-[[ -n "${FLAGS_skip}" ]] && ginkgo_args+=("-ginkgo.skip=${FLAGS_skip}")
-[[ "${FLAGS_lazy_deploy}" = "${FLAGS_TRUE}" ]] && lazy_deploy=true || lazy_deploy=false
+[[ -n "${FOCUS}" ]] && ginkgo_args+=("-ginkgo.focus=${FOCUS}")
+[[ -n "${SKIP}" ]] && ginkgo_args+=("-ginkgo.skip=${SKIP}")
+[[ -n "${TESTDIR}" ]] || TESTDIR="${FLAGS_testdir}"
+[[ -n "${LAZY_DEPLOY}" ]] || { [[ "${FLAGS_lazy_deploy}" = "${FLAGS_TRUE}" ]] && LAZY_DEPLOY=true || LAZY_DEPLOY=false; }
 
 if [[ $# == 0 ]]; then
     echo "At least one cluster to test on must be specified!"
@@ -49,10 +46,10 @@ function generate_kubecontexts() {
 }
 
 function test_with_e2e_tests {
-    cd "${DAPPER_SOURCE}/${FLAGS_testdir}"
+    cd "${DAPPER_SOURCE}/${TESTDIR}"
 
     ${GO:-go} test -v -timeout 30m -args -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace\
-        -submariner-namespace $SUBM_NS "${context_clusters[@]/#/-dp-context=}" ${globalnet:+"$globalnet"} \
+        -submariner-namespace $SUBM_NS "${context_clusters[@]/#/-dp-context=}" ${gn:+"$gn"} \
         -ginkgo.reportPassed -test.timeout 15m \
         "${ginkgo_args[@]}" \
         -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" 2>&1 | \
@@ -66,9 +63,9 @@ function test_with_subctl {
 ### Main ###
 
 declare_kubeconfig
-[[ "${lazy_deploy}" = "false" ]] || deploy_env_once
+[[ "${LAZY_DEPLOY}" != "true" ]] || deploy_env_once
 
-if [ -d "${DAPPER_SOURCE}/${FLAGS_testdir}" ]; then
+if [ -d "${DAPPER_SOURCE}/${TESTDIR}" ]; then
     test_with_e2e_tests
 else
     test_with_subctl

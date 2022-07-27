@@ -37,7 +37,7 @@ function get_svc_ip() {
     local svc_name=$1
     local svc_ip
 
-    if [[ $globalnet = "true" ]]; then
+    if [[ "${GLOBALNET}" = "true" ]]; then
         svc_ip=$(with_retries 30 get_globalip "${svc_name}")
     else
         svc_ip=$(kubectl --context="$cluster" get svc -l "app=${svc_name}" | awk 'FNR == 2 {print $3}')
@@ -117,7 +117,7 @@ function deploy_resource() {
     resource_name=$(basename "$resource_file" ".yaml")
     kubectl apply -f "${resource_file}"
     echo "Waiting for ${resource_name} pods to be ready."
-    kubectl rollout status "deploy/${resource_name}" --timeout="${timeout}"
+    kubectl rollout status "deploy/${resource_name}" --timeout="${TIMEOUT}"
 }
 
 function remove_resource() {

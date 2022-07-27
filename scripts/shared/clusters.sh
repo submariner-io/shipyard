@@ -2,7 +2,6 @@
 
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
-DEFAULT_K8S_VERSION=1.23
 declare -A kind_k8s_versions kind_binaries
 # kind-0.12 hashes
 kind_k8s_versions[1.17]=1.17.17@sha256:e477ee64df5731aa4ef4deabbafc34e8d9a686b49178f726563598344a3898d5
@@ -19,28 +18,19 @@ kind_binaries[1.24]='kind'
 ## Process command line flags ##
 
 source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'k8s_version' "${DEFAULT_K8S_VERSION}" 'Version of K8s to use'
-DEFINE_string 'olm_version' 'v0.18.3' 'Version of OLM to use'
 DEFINE_boolean 'olm' false 'Deploy OLM'
-DEFINE_boolean 'prometheus' false 'Deploy Prometheus'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
-DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
-k8s_version="${FLAGS_k8s_version}"
-olm_version="${FLAGS_olm_version}"
-[[ -z "${k8s_version}" ]] && k8s_version="${DEFAULT_K8S_VERSION}"
-kind="${kind_binaries[$k8s_version]:-kind-0.12}"
-[[ -n "${kind_k8s_versions[$k8s_version]}" ]] && k8s_version="${kind_k8s_versions[$k8s_version]}"
-[[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && olm=true || olm=false
-[[ "${FLAGS_prometheus}" = "${FLAGS_TRUE}" ]] && prometheus=true || prometheus=false
-[[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
-settings="${FLAGS_settings}"
-timeout="${FLAGS_timeout}"
+kind="${kind_binaries[$K8S_VERSION]:-kind-0.12}"
+[[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
+[[ -n "${OLM}" ]] || { [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && OLM=true || OLM=false; }
+[[ -n "${GLOBALNET}" ]] || { [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && GLOBALNET=true || GLOBALNET=false; }
+[[ -n "${SETTINGS}" ]] || SETTINGS="${FLAGS_settings}"
 
-echo "Running with: k8s_version=${k8s_version}, olm_version=${olm_version}, olm=${olm}, globalnet=${globalnet}, prometheus=${prometheus}, settings=${settings}, timeout=${timeout}"
+echo "Running with: K8S_VERSION=${K8S_VERSION@Q}, OLM_VERSION=${OLM_VERSION@Q}, OLM=${OLM@Q}, GLOBALNET=${GLOBALNET@Q}, PROMETHEUS=${PROMETHEUS@Q}, SETTINGS=${SETTINGS@Q}, TIMEOUT=${TIMEOUT@Q}"
 
 set -em
 
@@ -86,17 +76,17 @@ function kind_fixup_config() {
 # Preload the KIND image. Also tag it so the `docker system prune` during
 # cleanup won't remove it.
 function download_kind() {
-    if [[ -z "${k8s_version}" ]]; then
-        echo "k8s_version not set."
+    if [[ -z "${K8S_VERSION}" ]]; then
+        echo "K8S_VERSION not set."
         return
     fi
 
     # Example: kindest/node:v1.20.7@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
-    kind_image="kindest/node:v${k8s_version}"
+    kind_image="kindest/node:v${K8S_VERSION}"
     # Example: kindest/node:v1.20.7
-    kind_image_tag="kindest/node:v$(echo ${k8s_version}|awk -F"@" '{print $1}')"
+    kind_image_tag="kindest/node:v$(echo ${K8S_VERSION}|awk -F"@" '{print $1}')"
     # Example: kindest/node:@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
-    kind_image_sha="kindest/node@$(echo ${k8s_version}|awk -F"@" '{print $2}')"
+    kind_image_sha="kindest/node@$(echo ${K8S_VERSION}|awk -F"@" '{print $2}')"
 
     # Check if image is already present, and if not, download it.
     echo "Processing Image: $kind_image_tag ($kind_image)"
@@ -136,9 +126,7 @@ function create_kind_cluster() {
 
     generate_cluster_yaml
     local image_flag=''
-    if [[ -n ${k8s_version} ]]; then
-        image_flag="--image=kindest/node:v${k8s_version}"
-    fi
+    [[ -z "${K8S_VERSION}" ]] || image_flag="--image=kindest/node:v${K8S_VERSION}"
 
     "${kind}" version
     cat "${RESOURCES_DIR}/${cluster}-config.yaml"
@@ -163,7 +151,7 @@ function deploy_cni() {
 function deploy_weave_cni(){
     echo "Applying weave network..."
 
-    WEAVE_YAML=$(curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$k8s_version&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!')
+    WEAVE_YAML=$(curl -sL "https://cloud.weave.works/k8s/net?k8s-version=v$K8S_VERSION&env.IPALLOC_RANGE=${cluster_CIDRs[${cluster}]}" | sed 's!ghcr.io/weaveworks/launcher!weaveworks!')
 
     # Search the YAML for images that need to be downloaded
     readarray -t IMAGE_LIST < <(echo "${WEAVE_YAML}" | yq e '.items[].spec.template.spec.containers[].image, .items[].spec.template.spec.initContainers[].image' -)
@@ -219,9 +207,9 @@ function deploy_weave_cni(){
     echo "${WEAVE_YAML}" | kubectl apply -f -
     echo "Waiting for weave-net pods to be ready..."
     with_retries 5 ensure_weave_pods
-    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${timeout}"
+    kubectl wait --for=condition=Ready pods -l name=weave-net -n kube-system --timeout="${TIMEOUT}"
     echo "Waiting for core-dns deployment to be ready..."
-    kubectl -n kube-system rollout status deploy/coredns --timeout="${timeout}"
+    kubectl -n kube-system rollout status deploy/coredns --timeout="${TIMEOUT}"
 }
 
 function ensure_weave_pods() {
@@ -239,7 +227,7 @@ function deploy_ovn_cni(){
 
 function deploy_kind_ovn(){
     local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
-    export K8s_VERSION="${k8s_version}"
+    export K8s_VERSION="${K8S_VERSION}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
@@ -291,17 +279,17 @@ function run_local_registry() {
 
 function deploy_olm() {
     echo "Applying OLM CRDs..."
-    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/crds.yaml" --validate=false
-    kubectl wait --for=condition=Established -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/crds.yaml"
+    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${OLM_VERSION}/crds.yaml" --validate=false
+    kubectl wait --for=condition=Established -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${OLM_VERSION}/crds.yaml"
     echo "Applying OLM resources..."
-    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${olm_version}/olm.yaml"
+    kubectl apply -f "https://github.com/operator-framework/operator-lifecycle-manager/releases/download/${OLM_VERSION}/olm.yaml"
 
     echo "Waiting for olm-operator deployment to be ready..."
-    kubectl rollout status deployment/olm-operator --namespace=olm --timeout="${timeout}"
+    kubectl rollout status deployment/olm-operator --namespace=olm --timeout="${TIMEOUT}"
     echo "Waiting for catalog-operator deployment to be ready..."
-    kubectl rollout status deployment/catalog-operator --namespace=olm --timeout="${timeout}"
+    kubectl rollout status deployment/catalog-operator --namespace=olm --timeout="${TIMEOUT}"
     echo "Waiting for packageserver deployment to be ready..."
-    kubectl rollout status deployment/packageserver --namespace=olm --timeout="${timeout}"
+    kubectl rollout status deployment/packageserver --namespace=olm --timeout="${TIMEOUT}"
 }
 
 function deploy_prometheus() {
@@ -318,8 +306,8 @@ function deploy_prometheus() {
 
 function deploy_cluster_capabilities() {
     deploy_cni
-    [[ $olm != "true" ]] || deploy_olm
-    [[ $prometheus != "true" ]] || deploy_prometheus
+    [[ "${OLM}" != "true" ]] || deploy_olm
+    [[ "${PROMETHEUS}" != "true" ]] || deploy_prometheus
 }
 
 function warn_inotify() {

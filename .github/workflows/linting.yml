@@ -40,7 +40,7 @@ jobs:
       - name: Make sure each commit in the PR is within reviewable size
         uses: ./gh-actions/commit-size
         with:
-          size: 200
+          size: 250
 
   gitlint:
     name: Commit Message(s)
