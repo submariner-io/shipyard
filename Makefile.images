@@ -4,6 +4,7 @@
 # The resulting image name will be `<abc>`.
 
 SHELL := /bin/bash
+REPO ?= quay.io/submariner
 
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
@@ -16,7 +17,7 @@ export DOCKERFILE HASHFILE OCIFILE PLATFORM
 export TAG
 
 # Force rebuild an image if it's not in docker
-force_image_rebuild = $(if $(shell docker images | grep '\<$(1)\W*latest\>'),,FORCE_IMAGE)
+force_image_rebuild = $(if $(shell docker image history $(REPO)/$(1):$(BASE_BRANCH)),,FORCE_IMAGE)
 
 # Force rebuild dynamically by calling this target
 FORCE_IMAGE: ;
