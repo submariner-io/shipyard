@@ -3,6 +3,7 @@
 set -e
 
 source "${SCRIPTS_DIR}/lib/utils"
+print_env RESTART
 source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 

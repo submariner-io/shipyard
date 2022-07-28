@@ -24,8 +24,9 @@ context_clusters=("$@")
 
 set -em -o pipefail
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env FOCUS GLOBALNET LAZY_DEPLOY SKIP TESTDIR
+source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ### Functions ###
 

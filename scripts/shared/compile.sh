@@ -23,6 +23,8 @@ source_file=$2
 
 set -e
 
+source "${SCRIPTS_DIR}/lib/utils"
+print_env BUILD_DEBUG BUILD_UPX LDFLAGS
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ## Main ##

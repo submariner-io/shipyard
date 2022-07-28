@@ -12,8 +12,9 @@ eval set -- "${FLAGS_ARGV}"
 
 set -em
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env PLUGIN
+source "${SCRIPTS_DIR}/lib/debug_functions"
 
 # Source plugin if the path is passed via plugin argument and the file exists
 # shellcheck disable=SC1090

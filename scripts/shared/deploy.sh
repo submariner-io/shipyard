@@ -18,12 +18,11 @@ eval set -- "${FLAGS_ARGV}"
 [[ -n "${DEPLOYTOOL}" ]] || DEPLOYTOOL="${FLAGS_deploytool}"
 [[ -n "${PLUGIN}" ]] || PLUGIN="${FLAGS_plugin}"
 
-echo "Running with: GLOBALNET=${GLOBALNET@Q}, DEPLOYTOOL=${DEPLOYTOOL@Q}, SETTINGS=${SETTINGS@Q}, TIMEOUT=${TIMEOUT@Q}, IMAGE_TAG=${IMAGE_TAG@Q}, CABLE_DRIVER=${CABLE_DRIVER@Q}, LIGHTHOUSE=${LIGHTHOUSE@Q}, PLUGIN=${PLUGIN@Q}"
-
 set -em
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env CABLE_DRIVER DEPLOYTOOL GLOBALNET IMAGE_TAG LIGHTHOUSE PLUGIN SETTINGS TIMEOUT
+source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
