@@ -16,6 +16,8 @@ fi
 
 set -e
 
+source "${SCRIPTS_DIR}/lib/utils"
+print_env REPO TAG
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
 function release_image() {

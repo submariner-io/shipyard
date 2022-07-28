@@ -189,3 +189,11 @@ function load_settings_from_yaml() {
         cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
 }
+
+function print_env() {
+   echo "Running with environment variables:"
+   for var; do
+       declare -n value="$var"
+       printf '%s=%q\n' "$var" "$value"
+   done
+}

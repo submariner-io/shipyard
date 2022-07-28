@@ -30,12 +30,11 @@ kind="${kind_binaries[$K8S_VERSION]:-kind-0.12}"
 [[ -n "${GLOBALNET}" ]] || { [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && GLOBALNET=true || GLOBALNET=false; }
 [[ -n "${SETTINGS}" ]] || SETTINGS="${FLAGS_settings}"
 
-echo "Running with: K8S_VERSION=${K8S_VERSION@Q}, OLM_VERSION=${OLM_VERSION@Q}, OLM=${OLM@Q}, GLOBALNET=${GLOBALNET@Q}, PROMETHEUS=${PROMETHEUS@Q}, SETTINGS=${SETTINGS@Q}, TIMEOUT=${TIMEOUT@Q}"
-
 set -em
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env GLOBALNET K8S_VERSION OLM OLM_VERSION PROMETHEUS SETTINGS TIMEOUT
+source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ### Functions ###
 

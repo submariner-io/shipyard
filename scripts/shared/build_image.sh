@@ -12,9 +12,12 @@ if [[ "${PLATFORM}" =~ , && -z "${OCIFILE}" ]]; then
     exit 1
 fi
 
+source "${SCRIPTS_DIR}/lib/utils"
+print_env DOCKERFILE HASHFILE OCIFILE PLATFORM REPO
+source "${SCRIPTS_DIR}/lib/debug_functions"
+
 ### Main ###
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 local_image="${REPO}/${1}:${DEV_VERSION}"
 cache_image="${REPO}/${1}:${CUTTING_EDGE}"
 
