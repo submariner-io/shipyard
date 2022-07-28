@@ -14,7 +14,7 @@ export REPO ?= quay.io/submariner
 export DOCKERFILE HASHFILE OCIFILE PLATFORM
 
 # Specific to `release-images`
-export TAG
+export TAG ?= $(CUTTING_EDGE)
 
 # Force rebuild an image if it's not in docker
 force_image_rebuild = $(if $(shell docker image history $(REPO)/$(1):$(BASE_BRANCH)),,FORCE_IMAGE)
