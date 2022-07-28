@@ -1,0 +1,4 @@
+All `shflags` usage has been removed from Shipyard and consuming projects.
+Users/Developers running commands with `using=` are not affected.
+Users/Developers running commands with `*_ARGS=--flag` should switch to using environment variables instead.
+For example, if you used to run `make deploy DEPLOY_ARGS='--settings ...'`, please run `make deploy SETTINGS='...'` instead.

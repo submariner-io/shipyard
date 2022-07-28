@@ -1,5 +1,7 @@
 #!/usr/bin/env bash
 
+set -em
+
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
 declare -A kind_k8s_versions kind_binaries
@@ -15,22 +17,8 @@ kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938
 kind_k8s_versions[1.24]=1.24.2@sha256:a3220cefdf4f9be6681c871da35521eaaf59fadd7d509613a9e1881c5f74b587
 kind_binaries[1.24]='kind'
 
-## Process command line flags ##
-
-source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_boolean 'olm' false 'Deploy OLM'
-DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
-DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
-FLAGS "$@" || exit $?
-eval set -- "${FLAGS_ARGV}"
-
 kind="${kind_binaries[$K8S_VERSION]:-kind-0.12}"
 [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
-[[ -n "${OLM}" ]] || { [[ "${FLAGS_olm}" = "${FLAGS_TRUE}" ]] && OLM=true || OLM=false; }
-[[ -n "${GLOBALNET}" ]] || { [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && GLOBALNET=true || GLOBALNET=false; }
-[[ -n "${SETTINGS}" ]] || SETTINGS="${FLAGS_settings}"
-
-set -em
 
 source "${SCRIPTS_DIR}/lib/utils"
 print_env GLOBALNET K8S_VERSION OLM OLM_VERSION PROMETHEUS SETTINGS TIMEOUT

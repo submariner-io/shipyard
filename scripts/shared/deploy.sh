@@ -1,23 +1,5 @@
 #!/usr/bin/env bash
 
-## Process command line flags ##
-
-source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments"
-DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
-DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
-DEFINE_boolean 'service_discovery' false "Enable multicluster service discovery (set to 'true' to enable)"
-DEFINE_string 'plugin' '' "Path to the plugin that has pre_deploy and post_deploy hook"
-
-FLAGS "$@" || exit $?
-eval set -- "${FLAGS_ARGV}"
-
-[[ -n "${SETTINGS}" ]] || SETTINGS="${FLAGS_settings}"
-[[ -n "${GLOBALNET}" ]] || { [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && GLOBALNET=true || GLOBALNET=false; }
-[[ -n "${LIGHTHOUSE}" ]] || { [[ "${FLAGS_service_discovery}" = "${FLAGS_TRUE}" ]] && LIGHTHOUSE=true || LIGHTHOUSE=false; }
-[[ -n "${DEPLOYTOOL}" ]] || DEPLOYTOOL="${FLAGS_deploytool}"
-[[ -n "${PLUGIN}" ]] || PLUGIN="${FLAGS_plugin}"
-
 set -em
 
 source "${SCRIPTS_DIR}/lib/utils"
@@ -139,7 +121,7 @@ declare_kubeconfig
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 "${SCRIPTS_DIR}/get-subctl.sh"
 
-load_deploytool "${DEPLOYTOOL}"
+load_deploytool
 deploytool_prereqs
 
 run_if_defined pre_deploy

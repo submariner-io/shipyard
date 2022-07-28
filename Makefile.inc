@@ -15,10 +15,13 @@ export K8S_VERSION OLM OLM_VERSION PROMETHEUS
 
 # Specific to `deploy`
 CABLE_DRIVER ?= libreswan
+DEPLOYTOOL ?= operator
 IMAGE_TAG ?= local
 export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 
 # Specific to `e2e`
+TESTDIR ?= test/e2e
+LAZY_DEPLOY ?= true
 export FOCUS LAZY_DEPLOY SKIP TESTDIR
 
 # Specific to `reload-images`

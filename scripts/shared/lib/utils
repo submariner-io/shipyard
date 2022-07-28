@@ -149,7 +149,6 @@ function run_if_defined() {
 }
 
 function load_settings() {
-    [[ -n "${SETTINGS}" ]] || SETTINGS="${settings}"
     if [[ -z "${SETTINGS}" ]]; then
         echo "Settings file must be specified!"
         exit 1
