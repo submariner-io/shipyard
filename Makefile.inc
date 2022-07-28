@@ -126,23 +126,11 @@ clean-buildx:
 	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
-.PHONY: clusters preload-images deploy e2e upgrade-e2e deploy-latest
+.PHONY: clusters deploy e2e upgrade-e2e deploy-latest
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
-
-preload-images: images
-	set -e;\
-	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
-	. $(SCRIPTS_DIR)/lib/debug_functions;\
-	for image in $(PRELOAD_IMAGES); do\
-		import_image quay.io/submariner/$${image};\
-	done
-
-# [reload-images] rebuilds and reload the images, optionally restarting with `restart` variable
-reload-images: preload-images
-	$(SCRIPTS_DIR)/reload_images.sh
 
 # [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images

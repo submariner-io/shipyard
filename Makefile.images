@@ -63,4 +63,17 @@ ifneq (,$(MULTIARCH_IMAGES))
 	OCIDIR='package/' $(SCRIPTS_DIR)/release_images.sh $(MULTIARCH_IMAGES) $(RELEASE_ARGS)
 endif
 
-.PHONY: images multiarch-images release-images
+# [preload-images] into the local registry for testing, based on PRELOAD_IMAGES variable
+preload-images: images
+	set -e;\
+	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
+	. $(SCRIPTS_DIR)/lib/debug_functions;\
+	for image in $(PRELOAD_IMAGES); do\
+		import_image $(REPO)/$${image};\
+	done
+
+# [reload-images] rebuilds and reloads the images, optionally restarting with `restart` variable
+reload-images: preload-images
+	$(SCRIPTS_DIR)/reload_images.sh
+
+.PHONY: images multiarch-images preload-images release-images reload-images
