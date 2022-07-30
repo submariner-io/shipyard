@@ -17,14 +17,12 @@ source "${SCRIPTS_DIR}/lib/deploy_funcs"
 readonly CE_IPSEC_IKEPORT=500
 # shellcheck disable=SC2034
 readonly CE_IPSEC_NATTPORT=4500
-# shellcheck disable=SC2034
-readonly SUBM_IMAGE_REPO=localhost:5000
-# shellcheck disable=SC2034
-readonly SUBM_IMAGE_TAG="${IMAGE_TAG}"
+SUBM_IMAGE_REPO=localhost:5000
+SUBM_IMAGE_TAG="${IMAGE_TAG}"
 # shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
 # shellcheck disable=SC2034
-readonly SUBM_INDEX_IMG=localhost:5000/submariner-operator-index:local
+readonly SUBM_INDEX_IMG="${SUBM_IMAGE_REPO}/submariner-operator-index:${SUBM_IMAGE_TAG}"
 # shellcheck disable=SC2034
 readonly BROKER_NAMESPACE="submariner-k8s-broker"
 # shellcheck disable=SC2034
@@ -139,3 +137,7 @@ else
 fi
 
 run_if_defined post_deploy
+
+# Print installed versions for manual validation of CI
+subctl show versions
+print_clusters_message
