@@ -61,11 +61,11 @@ function helm_install_subm() {
         --set serviceAccounts.lighthouseAgent.create="${LIGHTHOUSE}" \
         --set serviceAccounts.lighthouseCoreDns.create="${LIGHTHOUSE}" \
         --set submariner.natEnabled="false" \
-        --set operator.image.repository="localhost:5000/submariner-operator" \
-        --set operator.image.tag="local" \
+        --set operator.image.repository="${SUBM_IMAGE_REPO}/submariner-operator" \
+        --set operator.image.tag="${SUBM_IMAGE_TAG}" \
         --set operator.image.pullPolicy="IfNotPresent" \
-        --set submariner.images.repository="localhost:5000" \
-        --set submariner.images.tag="local" \
+        --set submariner.images.repository="${SUBM_IMAGE_REPO}" \
+        --set submariner.images.tag="${SUBM_IMAGE_TAG}" \
         --set brokercrds.create="${crd_create}"
 }
 

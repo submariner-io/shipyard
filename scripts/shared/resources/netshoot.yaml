@@ -15,9 +15,9 @@ spec:
     spec:
       containers:
         - name: netshoot
-          image: localhost:5000/nettest:local
+          image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
           imagePullPolicy: IfNotPresent
           command:
             - sleep
-            - "3600"
+            - 1h
       restartPolicy: Always

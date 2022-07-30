@@ -37,7 +37,7 @@ function setup_broker() {
     (
         cd "${OUTPUT_DIR}" && \
         "${SUBCTL}" deploy-broker \
-               --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+               --kubecontext "${cluster}" \
                ${subctlrepver} \
                ${gn} \
                ${sd}
@@ -63,7 +63,7 @@ function subctl_install_subm() {
     fi
 
     # shellcheck disable=SC2086 # Split on purpose
-    "${SUBCTL}" join --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster" \
+    "${SUBCTL}" join --kubecontext "${cluster}" \
                 --clusterid "${cluster}" \
                 ${subctlrepver} \
                 --nattport "${CE_IPSEC_NATTPORT}" \
@@ -72,9 +72,6 @@ function subctl_install_subm() {
                 --cable-driver "${CABLE_DRIVER}" \
                 ${cidr_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
-
-    # Print installed versions for manual validation of CI
-    "${SUBCTL}" show versions --kubeconfig "${KUBECONFIGS_DIR}/kind-config-$cluster"
 }
 
 function install_subm_all_clusters() {

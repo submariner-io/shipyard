@@ -107,6 +107,11 @@ endif
 
 ifneq (,$(filter aws-ocp,$(_using)))
 PROVIDER = aws-ocp
+IMAGE_TAG = subctl
+endif
+
+ifeq ($(PROVIDER),kind)
+deploy: preload-images
 endif
 
 GO ?= go
@@ -147,7 +152,7 @@ cloud-prepare:
 	$(SCRIPTS_DIR)/$@.sh
 
 # [deploy] deploys Submariner on KIND clusters
-deploy: clusters cloud-prepare preload-images
+deploy: clusters cloud-prepare
 	$(SCRIPTS_DIR)/$@.sh
 
 # [e2e] executes the project's end to end testing on the deployed KIND clusters
