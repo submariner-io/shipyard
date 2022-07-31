@@ -125,17 +125,6 @@ function remove_resource() {
     kubectl delete -f "$resource_file"
 }
 
-function load_deploytool() {
-    local deploy_lib=${SCRIPTS_DIR}/lib/deploy_${DEPLOYTOOL}
-    if [[ ! -f $deploy_lib ]]; then
-        echo "Unknown deploy method: ${DEPLOYTOOL}"
-        exit 1
-    fi
-
-    echo "Will deploy submariner using ${DEPLOYTOOL}"
-    . "$deploy_lib"
-}
-
 function find_submariner_namespace() {
     local namespace
     namespace="$(kubectl get pods --all-namespaces | awk '/submariner/{ print $1 }' | grep -v broker | head -n 1)"
