@@ -121,7 +121,7 @@ declare_kubeconfig
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 "${SCRIPTS_DIR}/get-subctl.sh"
 
-load_deploytool
+load_library deploy DEPLOYTOOL
 deploytool_prereqs
 
 run_if_defined pre_deploy

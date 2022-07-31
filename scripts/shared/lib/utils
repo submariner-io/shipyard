@@ -222,3 +222,20 @@ function print_env() {
        printf '%s=%q\n' "$var" "$value"
    done
 }
+
+# Load a library to provide a pluggable command.
+# 1st parameter is the command e.g. `clusters`, `deploy`, etc
+# 2nd parameter is the name of the variable that determines the library variant
+function load_library() {
+    local cmnd="$1"
+    local lib_var="$2"
+    declare -n library="${lib_var}"
+
+    [[ -n "${library}" ]] || { echo "No ${lib_var} specified, please specify a ${lib_var}."; exit 1; }
+
+    local lib_file="${SCRIPTS_DIR}/lib/${cmnd}_${library//-/_}"
+    [[ -f "$lib_file" ]] || { echo "Unknown ${lib_var} ${library@Q}"; exit 1; }
+
+    echo "Will use ${library@Q} for ${cmnd}"
+    . "$lib_file"
+}
