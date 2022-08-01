@@ -9,7 +9,7 @@ function provider_initialize() {
 }
 
 function provider_delete_cluster() {
-    openshift-install destroy cluster --dir="${OUTPUT_DIR}/${cluster}"
+    "${OCP_INSTALLER}" destroy cluster --dir="${OUTPUT_DIR}/${cluster}"
 }
 
 function provider_finalize() {
