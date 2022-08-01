@@ -1,0 +1,9 @@
+Support was added in shipyard to easily create test clusters using OCP on top of AWS.
+This allows developers and users to easily stand up a test/PoC environment with Submariner using AWS+OCP.
+The deployed environment will use the latest published Submariner images, it's currently not possible to use locally built images.
+
+The following commands are supported:
+* `make clusters using=aws-ocp`
+* `make deploy using=aws-ocp`
+* `make e2e using=aws-ocp`
+* `make cleanup using=aws-ocp`
