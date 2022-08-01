@@ -102,10 +102,14 @@ function registry_running() {
 function add_cluster_cidrs() {
     local val=$1
     local idx=$2
-    [[ $globalnet != "true" ]] || val="0"
+
+    if [[ "${GLOBALNET}" == "true" ]]; then
+        val="0"
+        global_CIDRs[$idx]="242.254.${1}.0/24"
+    fi
+
     cluster_CIDRs[$idx]="10.${val}.0.0/16"
     service_CIDRs[$idx]="100.${val}.0.0/16"
-    [[ $globalnet != "true" ]] || global_CIDRs[$idx]="242.254.${1}.0/24"
 }
 
 function declare_cidrs() {
@@ -145,7 +149,8 @@ function run_if_defined() {
 }
 
 function load_settings() {
-    if [[ -z "${settings}" ]]; then
+    [[ -n "${SETTINGS}" ]] || SETTINGS="${settings}"
+    if [[ -z "${SETTINGS}" ]]; then
         echo "Settings file must be specified!"
         exit 1
     fi
@@ -163,7 +168,7 @@ EOM
 
 function _yq() {
     local output
-    output=$(yq e "$*" "${settings}")
+    output=$(yq e "$*" "${SETTINGS}")
     [[ "${output}" == "null" ]] || echo "${output}"
 }
 
@@ -183,4 +188,12 @@ function load_settings_from_yaml() {
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
         cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
+}
+
+function print_env() {
+   echo "Running with environment variables:"
+   for var; do
+       declare -n value="$var"
+       printf '%s=%q\n' "$var" "$value"
+   done
 }

@@ -21,7 +21,8 @@ else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
-override E2E_ARGS += --nolazy_deploy cluster1
+export LAZY_DEPLOY = false
+override E2E_ARGS += cluster1
 
 include Makefile.inc
 
@@ -45,7 +46,8 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit upgrade-e2e: images
+clean-clusters cleanup clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit upgrade-e2e: package/.image.shipyard-dapper-base
+deploy deploy-latest e2e upgrade-e2e: package/.image.nettest
 
 .DEFAULT_GOAL := lint
 # Shipyard-specific ends

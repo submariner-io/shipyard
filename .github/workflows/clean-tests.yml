@@ -15,7 +15,7 @@ jobs:
 
       - name: Deploy clusters
         env:
-          CLUSTERS_ARGS: --timeout 1m
+          TIMEOUT: 1m
         run: make clusters
 
       - name: Clean up clusters

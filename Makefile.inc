@@ -3,6 +3,30 @@ USING = $(subst $(,), ,$(using))
 _using = ${USING}
 PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
+### Tunable variables for affecting make commands ###
+# Affecting multiple commands
+TIMEOUT ?= 5m
+export GLOBALNET PLUGIN SETTINGS TIMEOUT
+
+# Specific to `clusters`
+K8S_VERSION ?= 1.23
+OLM_VERSION ?= v0.18.3
+export K8S_VERSION OLM OLM_VERSION PROMETHEUS
+
+# Specific to `deploy`
+CABLE_DRIVER ?= libreswan
+IMAGE_TAG ?= local
+export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
+
+# Specific to `e2e`
+export FOCUS LAZY_DEPLOY SKIP TESTDIR
+
+# Specific to `reload-images`
+export RESTART ?= none
+
+# Specific to `compile.sh`
+export BUILD_DEBUG BUILD_UPX LDFLAGS
+
 ##### GLOBAL FILES STALENESS CHECK #####
 
 define warn_shipyard_file
@@ -31,72 +55,48 @@ include $(SHIPYARD_DIR)/Makefile.versions
 # Process extra flags from the `using=a,b,c` optional flag
 
 ifneq (,$(filter libreswan,$(_using)))
-override DEPLOY_ARGS += --cable_driver libreswan
+CABLE_DRIVER = libreswan
 else ifneq (,$(filter strongswan,$(_using)))
 $(error strongSwan is no longer supported)
 else ifneq (,$(filter wireguard,$(_using)))
 # Wireguard requires kernel module install on the host
-override DEPLOY_ARGS += --cable_driver wireguard
+CABLE_DRIVER = wireguard
 else ifneq (,$(filter vxlan,$(_using)))
-override DEPLOY_ARGS += --cable_driver vxlan
+CABLE_DRIVER = vxlan
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))
-override DEPLOY_ARGS += --service_discovery
+LIGHTHOUSE = true
 endif
 
 ifneq (,$(filter globalnet,$(_using)))
-override CLUSTERS_ARGS += --globalnet
-override DEPLOY_ARGS += --globalnet
-override E2E_ARGS += --globalnet
+GLOBALNET = true
 PRELOAD_IMAGES += submariner-globalnet
 endif
 
 ifneq (,$(filter helm,$(_using)))
-override DEPLOY_ARGS += --deploytool helm
+DEPLOYTOOL = helm
 endif
 
 ifneq (,$(filter bundle,$(_using)))
-override CLUSTERS_ARGS += --olm
-override DEPLOY_ARGS += --deploytool bundle
+OLM = true
+DEPLOYTOOL = bundle
 PRELOAD_IMAGES += submariner-operator-index
 endif
 
 ifneq (,$(filter ocm,$(_using)))
-override CLUSTERS_ARGS += --olm
-override DEPLOY_ARGS += --service_discovery --deploytool ocm
+OLM = true
+DEPLOYTOOL = ocm
+LIGHTHOUSE = true
 PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
-override CLUSTERS_ARGS += --prometheus
+PROMETHEUS = true
 endif
 
 ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
-endif
-
-ifdef FOCUS
-override E2E_ARGS += --focus "$(FOCUS)"
-endif
-
-ifdef SKIP
-override E2E_ARGS += --skip "$(SKIP)"
-endif
-
-ifdef E2E_TESTDIR
-override E2E_ARGS += --testdir "$(E2E_TESTDIR)"
-endif
-
-ifdef PLUGIN
-override DEPLOY_ARGS += --plugin $(PLUGIN)
-override CLEANUP_ARGS += --plugin $(PLUGIN)
-endif
-
-ifdef SETTINGS
-export SETTINGS
-override CLUSTERS_ARGS += --settings $(SETTINGS)
-override DEPLOY_ARGS += --settings $(SETTINGS)
 endif
 
 GO ?= go
@@ -126,23 +126,11 @@ clean-buildx:
 	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
-.PHONY: clusters preload-images deploy e2e upgrade-e2e deploy-latest
+.PHONY: clusters deploy e2e upgrade-e2e deploy-latest
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
 	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
-
-preload-images: images
-	set -e;\
-	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
-	. $(SCRIPTS_DIR)/lib/debug_functions;\
-	for image in $(PRELOAD_IMAGES); do\
-		import_image quay.io/submariner/$${image};\
-	done
-
-# [reload-images] rebuilds and reload the images, optionally restarting with `restart` variable
-reload-images: preload-images
-	$(SCRIPTS_DIR)/reload_images.sh
 
 # [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images
@@ -160,7 +148,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl DEPLOY_ARGS="$(DEPLOY_ARGS) --image_tag=subctl" using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl IMAGE_TAG=subctl using=$(using)
 
 ##### LINTING TARGETS #####
 .PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint

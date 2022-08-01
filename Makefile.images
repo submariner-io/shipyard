@@ -4,9 +4,20 @@
 # The resulting image name will be `<abc>`.
 
 SHELL := /bin/bash
+REPO ?= quay.io/submariner
+
+### Tunable variables for affecting make commands ###
+# Affecting multiple commands
+export REPO ?= quay.io/submariner
+
+# Specific to `images`
+export DOCKERFILE HASHFILE OCIFILE PLATFORM
+
+# Specific to `release-images`
+export TAG
 
 # Force rebuild an image if it's not in docker
-force_image_rebuild = $(if $(shell docker images | grep '\<$(1)\W*latest\>'),,FORCE_IMAGE)
+force_image_rebuild = $(if $(shell docker image history $(REPO)/$(1):$(BASE_BRANCH)),,FORCE_IMAGE)
 
 # Force rebuild dynamically by calling this target
 FORCE_IMAGE: ;
@@ -21,13 +32,12 @@ docker_deps = $(shell files=($(1) $$(awk '/COPY/ && substr($$2, 1, 7) != "--from
 # An empty file is used for make to figure out if dependencies changed or not
 .SECONDEXPANSION:
 package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuild,$$*)
-	$(SCRIPTS_DIR)/build_image.sh -i $(lastword $(subst ., ,$@)) -f $< -h $@ $(IMAGES_ARGS)
+	DOCKERFILE="$<" HASHFILE="$@" $(SCRIPTS_DIR)/build_image.sh $*
 
 # Build an OCI tarball from a Dockerfile
 .SECONDEXPANSION:
 package/%.tar: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuid,$$*)
-	image=$(firstword $(subst ., ,$(@F))) && \
-	$(SCRIPTS_DIR)/build_image.sh -i $$image -f $< --oci $@ -h package/.image.$$image $(IMAGES_ARGS)
+	DOCKERFILE="$<" OCIFILE="$@" HASHFILE="package/.image.$*" $(SCRIPTS_DIR)/build_image.sh $*
 
 # [images] builds all the container images for the project
 # Default target to build images based on IMAGES variable
@@ -41,7 +51,7 @@ images: $(foreach image,$(IMAGES),package/.image.$(image))
 # Default platforms based on the PLATFORMS variable
 # These images are not built in a locally-consumable form (OCI tarballs only)
 # and are only intended for publication.
-multiarch-images: override IMAGES_ARGS += --platform $(PLATFORMS)
+multiarch-images: export PLATFORM=$(PLATFORMS)
 multiarch-images: $(foreach image,$(MULTIARCH_IMAGES),package/$(image).tar)
 
 # [release-images] uploads the project's images to a public repository
@@ -50,7 +60,20 @@ ifneq (,$(filter-out $(MULTIARCH_IMAGES),$(IMAGES)))
 	$(SCRIPTS_DIR)/release_images.sh $(filter-out $(MULTIARCH_IMAGES),$(IMAGES)) $(RELEASE_ARGS)
 endif
 ifneq (,$(MULTIARCH_IMAGES))
-	$(SCRIPTS_DIR)/release_images.sh --oci package/ $(MULTIARCH_IMAGES) $(RELEASE_ARGS)
+	OCIDIR='package/' $(SCRIPTS_DIR)/release_images.sh $(MULTIARCH_IMAGES) $(RELEASE_ARGS)
 endif
 
-.PHONY: images multiarch-images release-images
+# [preload-images] into the local registry for testing, based on PRELOAD_IMAGES variable
+preload-images: images
+	set -e;\
+	. $(SCRIPTS_DIR)/lib/deploy_funcs;\
+	. $(SCRIPTS_DIR)/lib/debug_functions;\
+	for image in $(PRELOAD_IMAGES); do\
+		import_image $(REPO)/$${image};\
+	done
+
+# [reload-images] rebuilds and reloads the images, optionally restarting with `restart` variable
+reload-images: preload-images
+	$(SCRIPTS_DIR)/reload_images.sh
+
+.PHONY: images multiarch-images preload-images release-images reload-images

@@ -1,68 +1,28 @@
 #!/bin/bash
 
-## Process command line flags ##
+set -e
 
-source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'tag' "${DEV_VERSION}" "Tag to set for the local image"
-DEFINE_string 'repo' 'quay.io/submariner' "Quay.io repo to use for the image"
-DEFINE_string 'image' '' "Image name to build" 'i'
-DEFINE_string 'dockerfile' '' "Dockerfile to build from" 'f'
-DEFINE_string 'buildargs' '' "Build arguments to pass to 'docker build'"
-DEFINE_boolean 'cache' true "Use cached layers from latest image"
-DEFINE_string 'platform' '' 'Platforms to target'
-DEFINE_string 'hash' '' "File to write the hash to" 'h'
-DEFINE_string 'oci' '' 'File to write an OCI tarball to instead of an image in the local registry'
-FLAGS "$@" || exit $?
-eval set -- "${FLAGS_ARGV}"
+### Variables ###
 
-tag="${FLAGS_tag}"
-repo="${FLAGS_repo}"
-image="${FLAGS_image}"
-dockerfile="${FLAGS_dockerfile}"
-buildargs="${FLAGS_buildargs}"
-platform="${FLAGS_platform}"
-hashfile="${FLAGS_hash}"
-ocifile="${FLAGS_oci}"
-[[ "${FLAGS_cache}" = "${FLAGS_TRUE}" ]] && cache=true || cache=false
-
-[[ -n "${image}" ]] || { echo "The image to build must be specified!"; exit 1; }
-[[ -n "${dockerfile}" ]] || { echo "The dockerfile to build from must be specified!"; exit 1; }
-[[ -n "${hashfile}" ]] || { echo "The file to write the hash to must be specified!"; exit 1; }
-if [[ "${platform}" =~ , && -z "${ocifile}" ]]; then
-    echo Multi-arch builds require OCI output, please specify --oci
+[[ $# == 1 ]] || { echo "Exactly one image to build must be specified!"; exit 1; }
+[[ -n "${DOCKERFILE}" ]] || { echo "The DOCKERFILE to build from must be specified!"; exit 1; }
+[[ -n "${HASHFILE}" ]] || { echo "The HASHFILE to write the hash to must be specified!"; exit 1; }
+if [[ "${PLATFORM}" =~ , && -z "${OCIFILE}" ]]; then
+    echo Multi-arch builds require OCI output, please set OCIFILE
     exit 1
 fi
 
+source "${SCRIPTS_DIR}/lib/utils"
+print_env DOCKERFILE HASHFILE OCIFILE PLATFORM REPO
 source "${SCRIPTS_DIR}/lib/debug_functions"
-set -e
 
-local_image=${repo}/${image}:${tag}
-cache_image=${repo}/${image}:${CUTTING_EDGE}
+### Main ###
 
-# When using cache pull latest image from the repo, so that its layers may be reused.
-declare -a cache_flags
-if [[ "$cache" = true ]]; then
-    cache_flags+=(--cache-from "${cache_image}")
-    if [[ -z "$(docker image ls -q "${cache_image}")" ]]; then
-        docker pull "${cache_image}" || :
-    fi
-    # The shellcheck linting tool recommends piping to a while read loop, but that doesn't work for us
-    # because the while loop ends up in a subshell
-    # shellcheck disable=SC2013
-    for parent in $(awk '/FROM/ {
-                             for (i = 2; i <= NF; i++) {
-                                 if ($i == "AS") next;
-                                 if (!($i ~ /^--platform/ || $i ~ /scratch/))
-                                     print gensub("\\${BASE_BRANCH}", ENVIRON["BASE_BRANCH"], "g", $i)
-                             }
-                         }' "${dockerfile}"); do
-        cache_flags+=(--cache-from "${parent}")
-        docker pull "${parent}" || :
-    done
-fi
+local_image="${REPO}/${1}:${DEV_VERSION}"
+cache_image="${REPO}/${1}:${CUTTING_EDGE}"
 
 output_flag=--load
-[[ -z "${ocifile}" ]] || output_flag="--output=type=oci,dest=${ocifile}"
+[[ -z "${OCIFILE}" ]] || output_flag="--output=type=oci,dest=${OCIFILE}"
 
 # Default to linux/amd64 (for CI); platforms match Go OS/arch
 if command -v "${GO:-go}" >/dev/null; then
@@ -71,21 +31,20 @@ else
     echo Unable to determine default container image platform, assuming linux/amd64
     default_platform=linux/amd64
 fi
-[[ -n "$platform" ]] || platform="$default_platform"
+[[ -n "$PLATFORM" ]] || PLATFORM="$default_platform"
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
 buildargs_flags=(--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg "BASE_BRANCH=${BASE_BRANCH}")
-[[ -z "${buildargs}" ]] || buildargs_flags+=(--build-arg "${buildargs}")
-if [[ "${platform}" != "${default_platform}" ]] && docker buildx version > /dev/null 2>&1; then
+if [[ "${PLATFORM}" != "${default_platform}" ]] && docker buildx version > /dev/null 2>&1; then
     docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
-    docker buildx build "${output_flag}" -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" --platform "${platform}" "${buildargs_flags[@]}" .
+    docker buildx build "${output_flag}" -t "${local_image}" -f "${DOCKERFILE}" --iidfile "${HASHFILE}" --platform "${PLATFORM}" "${buildargs_flags[@]}" .
 else
     # Fall back to plain BuildKit
-    if [[ "${platform}" != "${default_platform}" ]]; then
+    if [[ "${PLATFORM}" != "${default_platform}" ]]; then
         echo "WARNING: buildx isn't available, cross-arch builds won't work as expected"
     fi
-    DOCKER_BUILDKIT=1 docker build -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" "${buildargs_flags[@]}" .
+    DOCKER_BUILDKIT=1 docker build -t "${local_image}" -f "${DOCKERFILE}" --iidfile "${HASHFILE}" "${buildargs_flags[@]}" .
 fi
 
 # We can only tag the image in non-OCI mode
-[[ -n "${ocifile}" ]] || docker tag "${local_image}" "${cache_image}"
+[[ -n "${OCIFILE}" ]] || docker tag "${local_image}" "${cache_image}"

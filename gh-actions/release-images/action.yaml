@@ -8,9 +8,6 @@ inputs:
   password:
     description: 'Password for the registry'
     required: true
-  image_args:
-    description: 'Additional image building arguments'
-    required: false
 runs:
   using: "composite"
   steps:
@@ -21,8 +18,6 @@ runs:
     - name: Build new images
       # This needs to be kept separate so that the release stage runs using the new Shipyard base image
       shell: bash
-      env:
-        IMAGES_ARGS: --nocache ${{ inputs.image_args }}
       run: |
         echo "::group::Build new images"
         make images multiarch-images
