@@ -53,8 +53,8 @@ function setup_broker() {
 
   # Enable the service-discovery component if defined
   local components="connectivity"
-  components+=$([[ ${service_discovery} == "true" ]] && echo ", service-discovery" || echo "")
-  components+=$([[ ${globalnet} == "true" ]] && echo ", globalnet" || echo "")
+  components+=$([[ "${LIGHTHOUSE}" == "true" ]] && echo ", service-discovery" || echo "")
+  components+=$([[ "${GLOBALNET}" == "true" ]] && echo ", globalnet" || echo "")
 
   ### Create the Broker instance
   render_template "${RESOURCES_DIR}"/bundle/broker.yaml | kubectl apply -f -

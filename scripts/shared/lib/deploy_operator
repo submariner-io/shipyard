@@ -18,8 +18,8 @@ function deploytool_prereqs() {
 function setup_broker() {
     local gn
     local sd
-    [[ $globalnet != true ]] || gn="--globalnet"
-    if [[ $service_discovery == true ]]; then
+    [[ "${GLOBALNET}" != true ]] || gn="--globalnet"
+    if [[ "${LIGHTHOUSE}" == true ]]; then
         sd="--components service-discovery,connectivity"
     else
         sd="--components connectivity"
@@ -70,7 +70,7 @@ function subctl_install_subm() {
                 --ikeport "${CE_IPSEC_IKEPORT}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --natt=false \
-                --cable-driver "${cable_driver}" \
+                --cable-driver "${CABLE_DRIVER}" \
                 ${cidr_args} \
                 "${OUTPUT_DIR}"/broker-info.subm
 

@@ -15,7 +15,7 @@ jobs:
 
       - name: Deploy clusters
         env:
-          CLUSTERS_ARGS: --timeout 1m
+          TIMEOUT: 1m
         run: make clusters
 
       - name: Post mortem
@@ -67,8 +67,7 @@ jobs:
 
       - name: Deploy clusters and Submariner
         env:
-          CLUSTERS_ARGS: --timeout 1m
-          DEPLOY_ARGS: --timeout 2m
+          TIMEOUT: 1m
         run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }} ${{ matrix.ovn }}"
 
       - name: Post mortem

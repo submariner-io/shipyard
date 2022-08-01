@@ -7,33 +7,27 @@ DEFINE_string 'settings' '' "Settings YAML file to customize cluster deployments
 DEFINE_string 'deploytool' 'operator' 'Tool to use for deploying (operator/helm/bundle/ocm)'
 DEFINE_boolean 'globalnet' false "Deploy with operlapping CIDRs (set to 'true' to enable)"
 DEFINE_boolean 'service_discovery' false "Enable multicluster service discovery (set to 'true' to enable)"
-DEFINE_string 'timeout' '5m' "Timeout flag to pass to kubectl when waiting (e.g. 30s)"
-DEFINE_string 'image_tag' 'local' "Tag to use for the images"
-DEFINE_string 'cable_driver' 'libreswan' "Tunneling method for connections between clusters (libreswan, wireguard requires kernel module on host)"
 DEFINE_string 'plugin' '' "Path to the plugin that has pre_deploy and post_deploy hook"
 
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
-[[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && globalnet=true || globalnet=false
-[[ "${FLAGS_service_discovery}" = "${FLAGS_TRUE}" ]] && service_discovery=true || service_discovery=false
-deploytool="${FLAGS_deploytool}"
-settings="${FLAGS_settings}"
-timeout="${FLAGS_timeout}"
-image_tag="${FLAGS_image_tag}"
-cable_driver="${FLAGS_cable_driver}"
-
-echo "Running with: globalnet=${globalnet@Q}, deploytool=${deploytool@Q}, settings=${settings@Q}, timeout=${timeout}, image_tag=${image_tag}, cable_driver=${cable_driver}, service_discovery=${service_discovery}"
+[[ -n "${SETTINGS}" ]] || SETTINGS="${FLAGS_settings}"
+[[ -n "${GLOBALNET}" ]] || { [[ "${FLAGS_globalnet}" = "${FLAGS_TRUE}" ]] && GLOBALNET=true || GLOBALNET=false; }
+[[ -n "${LIGHTHOUSE}" ]] || { [[ "${FLAGS_service_discovery}" = "${FLAGS_TRUE}" ]] && LIGHTHOUSE=true || LIGHTHOUSE=false; }
+[[ -n "${DEPLOYTOOL}" ]] || DEPLOYTOOL="${FLAGS_deploytool}"
+[[ -n "${PLUGIN}" ]] || PLUGIN="${FLAGS_plugin}"
 
 set -em
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env CABLE_DRIVER DEPLOYTOOL GLOBALNET IMAGE_TAG LIGHTHOUSE PLUGIN SETTINGS TIMEOUT
+source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 # Source plugin if the path is passed via plugin argument and the file exists
 # shellcheck disable=SC1090
-[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
+[[ -n "${PLUGIN}" ]] && [[ -f "${PLUGIN}" ]] && source "${PLUGIN}"
 
 ### Constants ###
 # These are used in other scripts
@@ -44,7 +38,7 @@ readonly CE_IPSEC_NATTPORT=4500
 # shellcheck disable=SC2034
 readonly SUBM_IMAGE_REPO=localhost:5000
 # shellcheck disable=SC2034
-readonly SUBM_IMAGE_TAG=${image_tag:-local}
+readonly SUBM_IMAGE_TAG="${IMAGE_TAG}"
 # shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
 # shellcheck disable=SC2034
@@ -146,7 +140,7 @@ declare_kubeconfig
 bash -c "curl -Ls https://get.submariner.io | VERSION=${CUTTING_EDGE} DESTDIR=/go/bin bash" ||
 bash -c "curl -Ls https://get.submariner.io | VERSION=devel DESTDIR=/go/bin bash"
 
-load_deploytool "$deploytool"
+load_deploytool "${DEPLOYTOOL}"
 deploytool_prereqs
 
 run_if_defined pre_deploy

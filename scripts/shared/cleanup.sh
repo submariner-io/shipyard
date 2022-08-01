@@ -8,14 +8,17 @@ DEFINE_string 'plugin' '' "Path to the plugin that has pre_cleanup and post_clea
 FLAGS "$@" || exit $?
 eval set -- "${FLAGS_ARGV}"
 
+[[ -n "${PLUGIN}" ]] || PLUGIN="${FLAGS_plugin}"
+
 set -em
 
-source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/utils"
+print_env PLUGIN
+source "${SCRIPTS_DIR}/lib/debug_functions"
 
 # Source plugin if the path is passed via plugin argument and the file exists
 # shellcheck disable=SC1090
-[[ -n "${FLAGS_plugin}" ]] && [[ -f "${FLAGS_plugin}" ]] && source "${FLAGS_plugin}"
+[[ -n "${PLUGIN}" ]] && [[ -f "${PLUGIN}" ]] && source "${PLUGIN}"
 
 ### Functions ###
 

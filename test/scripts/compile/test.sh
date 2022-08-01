@@ -13,19 +13,19 @@ function validate_ldflags() {
 
 cd $(dirname $0)
 binary=bin/test/hello
-${SCRIPTS_DIR}/compile.sh $binary hello.go --noupx
+BUILD_UPX=false ${SCRIPTS_DIR}/compile.sh $binary hello.go
 validate_ldflags "hello nobody"
 
-${SCRIPTS_DIR}/compile.sh --ldflags "-X main.MYVAR=somebody" $binary hello.go --noupx
+BUILD_UPX=false LDFLAGS="-X main.MYVAR=somebody" ${SCRIPTS_DIR}/compile.sh $binary hello.go
 validate_ldflags "hello somebody"
 
-${SCRIPTS_DIR}/compile.sh $binary hello.go --debug
+BUILD_DEBUG=true ${SCRIPTS_DIR}/compile.sh $binary hello.go
 if ! file $binary | grep "not stripped" > /dev/null; then
     echo "Debug information got stripped, even when requested!"
     exit 1
 fi
 
-${SCRIPTS_DIR}/compile.sh $binary hello.go --upx
+BUILD_UPX=true ${SCRIPTS_DIR}/compile.sh $binary hello.go
 if upx $binary > /dev/null 2>&1; then
     echo "Binary wasn't UPX'd although requested"
     exit 1

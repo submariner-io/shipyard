@@ -75,7 +75,7 @@ runs:
       shell: bash
       working-directory: ${{ inputs.working-directory }}
       env:
-        CLUSTERS_ARGS: --k8s_version="${{ inputs.k8s_version }}"
+        K8S_VERSION: "${{ inputs.k8s_version }}"
         FOCUS: "${{ inputs.focus }}"
         SKIP: "${{ inputs.skip }}"
         PLUGIN: "${{ inputs.plugin }}"

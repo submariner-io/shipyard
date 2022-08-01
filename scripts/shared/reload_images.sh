@@ -3,6 +3,7 @@
 set -e
 
 source "${SCRIPTS_DIR}/lib/utils"
+print_env RESTART
 source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
@@ -11,13 +12,10 @@ function find_resources() {
     kubectl -n "$(find_submariner_namespace)" get "${resource_type}" -o jsonpath="{range .items[*]}{.metadata.name}{'\n'}"
 }
 
-# shellcheck disable=SC2153 # This is not a misspelling
-settings="${SETTINGS}"
 load_settings
 declare_kubeconfig
-[[ -n "${restart}" ]] || restart=none
 
-case "${restart}" in
+case "${RESTART}" in
     none)
         ;;
     all)

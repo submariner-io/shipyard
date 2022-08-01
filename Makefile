@@ -21,7 +21,8 @@ else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
-override E2E_ARGS += --nolazy_deploy cluster1
+export LAZY_DEPLOY = false
+override E2E_ARGS += cluster1
 
 include Makefile.inc
 
