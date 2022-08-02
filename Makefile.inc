@@ -25,7 +25,8 @@ export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 # Specific to `e2e`
 TESTDIR ?= test/e2e
 LAZY_DEPLOY ?= true
-export FOCUS LAZY_DEPLOY SKIP TESTDIR
+SUBCTL_VERIFICATIONS ?= connectivity
+export FOCUS LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TESTDIR
 
 # Specific to `reload-images`
 export RESTART ?= none
@@ -105,9 +106,18 @@ ifneq (,$(filter ovn,$(_using)))
 PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
+# Force running E2E with `subctl verify`
+ifneq (,$(filter subctl-verify,$(_using)))
+TESTDIR = non-existent-dir
+endif
+
 ifneq (,$(filter aws-ocp,$(_using)))
 PROVIDER = aws-ocp
 IMAGE_TAG = subctl
+endif
+
+ifeq ($(LIGHTHOUSE),true)
+SUBCTL_VERIFICATIONS = service-discovery
 endif
 
 ifeq ($(PROVIDER),kind)

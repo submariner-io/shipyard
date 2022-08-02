@@ -8,7 +8,7 @@ ginkgo_args=()
 [[ -n "${SKIP}" ]] && ginkgo_args+=("-ginkgo.skip=${SKIP}")
 
 source "${SCRIPTS_DIR}/lib/utils"
-print_env FOCUS GLOBALNET LAZY_DEPLOY SKIP TESTDIR
+print_env FOCUS GLOBALNET LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TESTDIR
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ### Functions ###
@@ -41,7 +41,7 @@ function test_with_e2e_tests {
 }
 
 function test_with_subctl {
-    subctl verify --only connectivity --kubecontexts "$(generate_kubecontexts)"
+    subctl verify --only "${SUBCTL_VERIFICATIONS}" --kubecontexts "$(generate_kubecontexts)"
 }
 
 function count_nodes() {

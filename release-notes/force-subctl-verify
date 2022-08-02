@@ -1,0 +1,4 @@
+Support was added to force running `subctl verify` when testing end-to-end, ignoring any local tests.
+To use this feature, run `make e2e using=subctl-verify`.
+Verifications can be now specified using the `SUBCTL_VERIFICATIONS` flag, instead of relying on the default behavior.
+e.g.: `make e2e using=subctl-verify SUBCTL_VERIFICATIONS=connectivity,service-discovery`.
