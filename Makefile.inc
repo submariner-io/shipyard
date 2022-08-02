@@ -110,9 +110,9 @@ export GO
 # [clean] cleans everything (running clusters, generated files ...)
 clean: clean-clusters clean-generated clean-buildx
 
-# [clean-generated] removes files we generated
+# [clean-generated] removes files we generated, by removing all files and directories ignored by git
 clean-generated:
-	git clean -X -f
+	git clean -X -f -d
 
 # [clean-clusters] removes running clusters
 clean-clusters:
