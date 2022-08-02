@@ -110,9 +110,9 @@ export GO
 # [clean] cleans everything (running clusters, generated files ...)
 clean: clean-clusters clean-generated clean-buildx
 
-# [clean-generated] removes files we generated
+# [clean-generated] removes files we generated, by removing all files and directories ignored by git
 clean-generated:
-	git clean -X -f
+	git clean -X -f -d
 
 # [clean-clusters] removes running clusters
 clean-clusters:
@@ -147,8 +147,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # This uses make deploy, but forcefully ignores images so that images
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
-	curl -L get.submariner.io | VERSION=latest bash
-	$(MAKE) -o images -o preload-images deploy SUBCTL=~/.local/bin/subctl IMAGE_TAG=subctl using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl using=$(using)
 
 ##### LINTING TARGETS #####
 .PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
