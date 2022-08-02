@@ -36,6 +36,11 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # yq                 | YAML processing (OCM deploy tool)
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
+# Removals and UPX are done after all installations, since image layers are diffs.
+# We remove:
+# - DNF cache
+# - Any unnecessary packages and executables
+# - Precompiled packages in go (see https://github.com/golang/go/issues/47257)
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils upx jq gitlint python3-setuptools \
@@ -46,6 +51,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
+    find /usr/lib/golang -name '*.a' -newercc /proc -delete && \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
