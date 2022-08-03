@@ -82,6 +82,9 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     go clean -cache -modcache
 
+# Link get-subctl script so it can be easily run inside a shell
+RUN ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
+
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
 

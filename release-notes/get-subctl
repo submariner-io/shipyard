@@ -1,0 +1,2 @@
+Added a centralized script for getting `subctl`. It now impersonates `subctl` so that users who run `make shell` will have it downloaded the first time they try to use it.
+To influence the version being installed, the `SUBCTL_VERSION` variable can be set.
