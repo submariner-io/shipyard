@@ -1,22 +1,19 @@
 #!/usr/bin/env bash
   
 set -e
+source "${SCRIPTS_DIR}/lib/utils"
 
 [[ -n "${BUILD_UPX}" ]] || BUILD_UPX=true
 
 ## Process command line arguments ##
 
-if [[ $# != 2 ]]; then
-    echo "The binary and source must be sepcified!"
-    exit 1
-fi
+[[ $# -eq 2 ]] || exit_error "The binary and source must be specified!"
 
 binary=$1
 source_file=$2
 
 set -e
 
-source "${SCRIPTS_DIR}/lib/utils"
 print_env BUILD_DEBUG BUILD_UPX LDFLAGS
 source "${SCRIPTS_DIR}/lib/debug_functions"
 

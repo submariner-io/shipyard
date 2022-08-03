@@ -16,9 +16,9 @@ BROKER_K8S_CA=""
 ### Functions ###
 
 function deploytool_prereqs() {
-  [[ -z "${SUBM_NS}" ]] && (echo "[ERROR] Required environment variables SUBM_NS not loaded"; exit 3)
-  [[ -z "${SUBM_CS}" ]] && (echo "[ERROR] Required environment variables SUBM_CS not loaded"; exit 3)
-  [[ -z "${SUBM_INDEX_IMG}" ]] && (echo "[ERROR] Required environment variables SUBM_INDEX_IMG not loaded"; exit 3)
+  expect_env SUBM_NS
+  expect_env SUBM_CS
+  expect_env SUBM_INDEX_IMG
 
   # Create new namespace
   run_subm_clusters "create_namespace ${SUBM_NS}"
@@ -37,8 +37,7 @@ function setup_broker() {
   local brokerClientSecret
 
   if ! (timeout 5m bash -c "until kubectl --context=${cluster} get crds brokers.submariner.io > /dev/null 2>&1; do sleep 10; done"); then
-      echo "[ERROR] Broker CRD was not found."
-      exit 1
+      exit_error "Broker CRD was not found."
   fi
 
   # Create the broker Namespace & RBAC
@@ -61,8 +60,7 @@ function setup_broker() {
 
   echo "[INFO] Wait for the broker readiness..."
   if ! (timeout 5m bash -c "until kubectl --context=${cluster} get brokers.submariner.io submariner-broker -n ${SUBM_NS} > /dev/null 2>&1; do sleep 10; done"); then
-      echo "[ERROR] Broker is not ready."
-      exit 1
+      exit_error "Broker is not ready."
   fi
 
   brokerClientSecret=$(kubectl -n "${BROKER_NAMESPACE}" get secrets -o json | jq -r -c '[.items[] | select(.metadata.annotations."kubernetes.io/service-account.name"=="'"${BROKER_CLIENT_SA}"'") | select(.data.token != null) | select(.data."ca.crt" != null)] | .[0]')
@@ -87,8 +85,7 @@ function install_subm() {
   fi
 
   if ! (timeout 5m bash -c "until kubectl --context=${cluster} get crds submariners.submariner.io > /dev/null 2>&1; do sleep 10; done"); then
-      echo "[ERROR] Submariner CRD was not found."
-      exit 1
+      exit_error "Submariner CRD was not found."
   fi
 
   # Create the Submariner instance

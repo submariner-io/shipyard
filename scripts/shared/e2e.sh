@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
 set -em -o pipefail
+source "${SCRIPTS_DIR}/lib/utils"
 
 [[ "${GLOBALNET}" = "true" ]] && gn=-globalnet || gn=
 ginkgo_args=()
 [[ -n "${FOCUS}" ]] && ginkgo_args+=("-ginkgo.focus=${FOCUS}")
 [[ -n "${SKIP}" ]] && ginkgo_args+=("-ginkgo.skip=${SKIP}")
 
-source "${SCRIPTS_DIR}/lib/utils"
 print_env FOCUS GLOBALNET LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TESTDIR
 source "${SCRIPTS_DIR}/lib/debug_functions"
 

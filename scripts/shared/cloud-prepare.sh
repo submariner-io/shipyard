@@ -45,8 +45,5 @@ declare_kubeconfig
 
 # Run in subshell to check response, otherwise `set -e` is not honored
 ( run_all_clusters cloud_prepare; ) &
-if ! wait $!; then
-    echo "Failed to prepare cloud"
-    exit 1
-fi
+wait $! || exit_error "Failed to prepare cloud"
 

@@ -1,13 +1,10 @@
 #!/usr/bin/env bash
 
 set -e
-
-if [[ $# == 0 ]]; then
-    echo "At least one image to release must be specified!"
-    exit 1
-fi
-
 source "${SCRIPTS_DIR}/lib/utils"
+
+[[ $# -gt 0 ]] || exit_error "At least one image to release must be specified!"
+
 print_env REPO TAG
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
