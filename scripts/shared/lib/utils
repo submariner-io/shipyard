@@ -23,6 +23,20 @@ function kubectl() {
     fi
 }
 
+# Exit after printing an error message
+function exit_error() {
+    >&2 printf "ERROR: %s\n" "$*"
+    exit 1
+}
+
+# Fail if the ENV variable is empty (with an optional message)
+function expect_env() {
+    declare -n value="$1"
+    local err="Expected env variable ${1@Q} can't be empty"
+    [[ -z "${*:2}" ]] || err+=" (${*:2})"
+    [[ -n "${value}" ]] || exit_error "$err"
+}
+
 # Render a template file
 function render_template() {
     eval "echo \"$(cat "$1")\""
@@ -45,8 +59,7 @@ function with_retries() {
         ((iteration++))
     done
 
-    echo "Max attempts reached, failed to run '${*:2}'!"
-    exit 1
+    exit_error "Max attempts reached, failed to run '${*:2}'!"
 }
 
 function sleep_on_fail() {
@@ -180,10 +193,7 @@ function run_if_defined() {
 }
 
 function load_settings() {
-    if [[ -z "${SETTINGS}" ]]; then
-        echo "Settings file must be specified!"
-        exit 1
-    fi
+    expect_env SETTINGS "Deployment settings file"
 
     load_settings_from_yaml
     cat << EOM
@@ -243,10 +253,10 @@ function load_library() {
     local lib_var="$2"
     declare -n library="${lib_var}"
 
-    [[ -n "${library}" ]] || { echo "No ${lib_var} specified, please specify a ${lib_var}."; exit 1; }
+    [[ -n "${library}" ]] || exit_error "No ${lib_var} specified, please specify a ${lib_var}."
 
     local lib_file="${SCRIPTS_DIR}/lib/${cmnd}_${library//-/_}"
-    [[ -f "$lib_file" ]] || { echo "Unknown ${lib_var} ${library@Q}"; exit 1; }
+    [[ -f "$lib_file" ]] || exit_error "Unknown ${lib_var} ${library@Q}"
 
     echo "Will use ${library@Q} for ${cmnd}"
     . "$lib_file"

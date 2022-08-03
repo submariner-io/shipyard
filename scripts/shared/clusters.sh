@@ -53,9 +53,8 @@ provider_prepare
 # Run in subshell to check response, otherwise `set -e` is not honored
 ( run_all_clusters with_retries 3 provider_create_cluster; ) &
 if ! wait $!; then
-    echo "Failed to create clusters using ${PROVIDER@Q}."
     run_if_defined provider_failed
-    exit 1
+    exit_error "Failed to create clusters using ${PROVIDER@Q}."
 fi
 
 declare_kubeconfig

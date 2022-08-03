@@ -27,8 +27,5 @@ echo "$post_mortem"
 
 for cluster in "${clusters[@]}"; do
     img=$(image_name)
-    if [[ ! $post_mortem =~ $(image_name) ]]; then
-        echo "Post mortem failed, didn't find failure for ${cluster}"
-        exit 1
-    fi
+    [[ $post_mortem =~ $(image_name) ]] || exit_error "Post mortem failed, didn't find failure for ${cluster}"
 done

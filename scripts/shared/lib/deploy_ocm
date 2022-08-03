@@ -12,12 +12,9 @@ readonly HUB="cluster1"
 ### Functions ###
 
 function deploytool_prereqs() {
-  # shellcheck disable=SC2153 # this variable is defined elsewhere
-  [[ -z "${SUBM_NS}" ]] && (echo "[ERROR] Required environment variables SUBM_NS not loaded"; exit 3)
-  # shellcheck disable=SC2153 # this variable is defined elsewhere
-  [[ -z "${SUBM_CS}" ]] && (echo "[ERROR] Required environment variables SUBM_CS not loaded"; exit 3)
-  # shellcheck disable=SC2153 # this variable is defined elsewhere
-  [[ -z "${SUBM_INDEX_IMG}" ]] && (echo "[ERROR] Required environment variables SUBM_INDEX_IMG not loaded"; exit 3)
+  expect_env SUBM_NS
+  expect_env SUBM_CS
+  expect_env SUBM_INDEX_IMG
 
   # Create new namespace
   with_context "${HUB}" "create_namespace ${OCM_NS}"
@@ -105,8 +102,7 @@ function create_managed_clusters() {
       echo "[INFO](${cluster}) Accept the managed cluster ${mc} and approve its Certificate Signing Request (CSR)..."
       # Wait for the managed cluster resource
       if ! with_retries 120 kubectl get managedclusters.cluster.open-cluster-management.io "${mc}"; then
-        echo "[ERROR] Unable to find the managed cluster ${mc}."
-        exit 1
+        exit_error "Unable to find the managed cluster ${mc}."
       fi
       # Accept the managed cluster
       kubectl patch managedclusters.cluster.open-cluster-management.io "${mc}" \
@@ -116,7 +112,7 @@ function create_managed_clusters() {
       kubectl certificate approve "${csr_name}"
       # Wait for the managed cluster readiness
       kubectl wait --for condition=ManagedClusterJoined --timeout=5m managedclusters.cluster.open-cluster-management.io "${mc}" \
-      || (echo "[ERROR](${cluster}) The managed cluster ${mc} is not ready."; exit 1)
+      || exit_error "[ERROR](${cluster}) The managed cluster ${mc} is not ready."
       # Add the managed cluster to the submariner clusterset
       kubectl label managedclusters.cluster.open-cluster-management.io "${mc}" \
       "cluster.open-cluster-management.io/clusterset=submariner" --overwrite

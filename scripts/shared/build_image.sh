@@ -1,14 +1,11 @@
 #!/bin/bash
 
 set -e
-
-[[ $# == 3 ]] || { echo "You must specify exactly 3 arguments: The image name, the Dockerfile and a hash file to write to"; exit 1; }
-if [[ "${PLATFORM}" =~ , && -z "${OCIFILE}" ]]; then
-    echo Multi-arch builds require OCI output, please set OCIFILE
-    exit 1
-fi
-
 source "${SCRIPTS_DIR}/lib/utils"
+
+[[ $# == 3 ]] || exit_error 'You must specify exactly 3 arguments: The image name, the Dockerfile and a hash file to write to'
+[[ "${PLATFORM}" =~ , && -z "${OCIFILE}" ]] && exit_error 'Multi-arch builds require OCI output, please set OCIFILE'
+
 print_env OCIFILE PLATFORM REPO
 source "${SCRIPTS_DIR}/lib/debug_functions"
 

@@ -61,8 +61,7 @@ function create_catalog_source() {
 
   # Wait for the CatalogSource readiness
   if ! with_retries 60 kubectl get catalogsource -n "${MARKETPLACE_NAMESPACE}" "${cs}" -o jsonpath='{.status.connectionState.lastObservedState}'; then
-    echo "[ERROR](${cluster}) CatalogSource ${cs} is not ready."
-    exit 1
+    exit_error "[ERROR](${cluster}) CatalogSource ${cs} is not ready."
   fi
 
   echo "[INFO](${cluster}) Catalog source ${cs} created"
@@ -101,7 +100,7 @@ function install_bundle() {
 
   # Manual Approve
   echo "[INFO](${cluster}) Approve the InstallPlan..."
-  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${ns}" subs/"${sub}" || (echo "[ERROR](${cluster}) InstallPlan not found."; exit 1)
+  kubectl wait --for condition=InstallPlanPending --timeout=5m -n "${ns}" subs/"${sub}" || exit_error "[ERROR](${cluster}) InstallPlan not found."
   installPlan=$(kubectl get subscriptions.operators.coreos.com "${sub}" -n "${ns}" -o jsonpath='{.status.installPlanRef.name}')
   if [ -n "${installPlan}" ]; then
     kubectl patch installplan -n "${ns}" "${installPlan}" -p '{"spec":{"approved":true}}' --type merge

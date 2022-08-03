@@ -43,11 +43,7 @@ function get_svc_ip() {
         svc_ip=$(kubectl --context="$cluster" get svc -l "app=${svc_name}" | awk 'FNR == 2 {print $3}')
     fi
 
-    if [[ -z "$svc_ip" ]]; then
-        echo "Failed to get ${svc_name} IP"
-        exit 1
-    fi
-
+    [[ -n "$svc_ip" ]] || exit_error "Failed to get ${svc_name} IP"
     echo "$svc_ip"
 }
 
@@ -129,10 +125,7 @@ function remove_resource() {
 function find_submariner_namespace() {
     local namespace
     namespace="$(kubectl get pods --all-namespaces | awk '/submariner/{ print $1 }' | grep -v broker | head -n 1)"
-    if [[ "${namespace}" == "" ]]; then
-        echo "Could not find a submariner deployment namespace" >&2
-        exit 1
-    fi
+    [[ -n "${namespace}" ]] || exit_error "Could not find a Submariner deployment namespace"
     echo "${namespace}"
 }
 

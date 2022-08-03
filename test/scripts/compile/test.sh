@@ -1,18 +1,12 @@
 #!/usr/bin/env bash
 
 set -e
-
-function fail() {
-    echo "$@"
-    exit 1
-}
+source "${SCRIPTS_DIR}"/lib/utils
 
 function validate_ldflags() {
     expected=$1
     actual=$($binary)
-    if [[ "$expected" != "$actual" ]]; then
-        fail "Expected ${expected@Q}, but got ${actual@Q}"
-    fi
+    [[ "$expected" == "$actual" ]] || exit_error "Expected ${expected@Q}, but got ${actual@Q}"
 }
 
 function test_compile_arch() {
@@ -20,7 +14,7 @@ function test_compile_arch() {
     local arch=$2
     ${SCRIPTS_DIR}/compile.sh $binary hello.go
     if ! file $binary | grep -q $arch; then
-        fail "Shoul'dve compiled ${arch@Q} but got $(file $binary)."
+        exit_error "Should have compiled ${arch@Q} but got $(file $binary)."
     fi
 }
 
@@ -34,14 +28,10 @@ LDFLAGS="-X main.MYVAR=somebody" ${SCRIPTS_DIR}/compile.sh $binary hello.go
 validate_ldflags "hello somebody"
 
 BUILD_DEBUG=true ${SCRIPTS_DIR}/compile.sh $binary hello.go
-if ! file $binary | grep "not stripped" > /dev/null; then
-    fail "Debug information got stripped, even when requested!"
-fi
+file $binary | grep "not stripped" > /dev/null || exit_error "Debug information got stripped, even when requested!"
 
 BUILD_UPX=true ${SCRIPTS_DIR}/compile.sh $binary hello.go
-if upx $binary > /dev/null 2>&1; then
-    fail "Binary wasn't UPX'd although requested"
-fi
+upx $binary > /dev/null 2>&1 && exit_error "Binary wasn't UPX'd although requested"
 
 test_compile_arch bin/linux/arm/v7/hello ARM
 
