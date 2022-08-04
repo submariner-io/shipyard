@@ -2,25 +2,26 @@
 
 set -e
 
-### Variables ###
-
-[[ -n "${USE_CACHE}" ]] || USE_CACHE='true'
-[[ $# == 1 ]] || { echo "Exactly one image to build must be specified!"; exit 1; }
-[[ -n "${DOCKERFILE}" ]] || { echo "The DOCKERFILE to build from must be specified!"; exit 1; }
-[[ -n "${HASHFILE}" ]] || { echo "The HASHFILE to write the hash to must be specified!"; exit 1; }
+[[ $# == 3 ]] || { echo "You must specify exactly 3 arguments: The image name, the Dockerfile and a hash file to write to"; exit 1; }
 if [[ "${PLATFORM}" =~ , && -z "${OCIFILE}" ]]; then
     echo Multi-arch builds require OCI output, please set OCIFILE
     exit 1
 fi
 
 source "${SCRIPTS_DIR}/lib/utils"
-print_env DOCKERFILE HASHFILE OCIFILE PLATFORM REPO
+print_env OCIFILE PLATFORM REPO
 source "${SCRIPTS_DIR}/lib/debug_functions"
+
+### Arguments ###
+
+image="$1"
+dockerfile="$2"
+hashfile="$3"
 
 ### Main ###
 
-local_image="${REPO}/${1}:${DEV_VERSION}"
-cache_image="${REPO}/${1}:${CUTTING_EDGE}"
+local_image="${REPO}/${image}:${DEV_VERSION}"
+cache_image="${REPO}/${image}:${CUTTING_EDGE}"
 
 # When using cache pull latest image from the repo, so that its layers may be reused.
 declare -a cache_flags
@@ -38,7 +39,7 @@ if [[ "${USE_CACHE}" = true ]]; then
                                  if (!($i ~ /^--platform/ || $i ~ /scratch/))
                                      print gensub("\\${BASE_BRANCH}", ENVIRON["BASE_BRANCH"], "g", $i)
                              }
-                         }' "${DOCKERFILE}"); do
+                         }' "${dockerfile}"); do
         cache_flags+=(--cache-from "${parent}")
         docker pull "${parent}" || :
     done
@@ -60,13 +61,13 @@ fi
 buildargs_flags=(--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg "BASE_BRANCH=${BASE_BRANCH}")
 if [[ "${PLATFORM}" != "${default_platform}" ]] && docker buildx version > /dev/null 2>&1; then
     docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
-    docker buildx build "${output_flag}" -t "${local_image}" "${cache_flags[@]}" -f "${DOCKERFILE}" --iidfile "${HASHFILE}" --platform "${PLATFORM}" "${buildargs_flags[@]}" .
+    docker buildx build "${output_flag}" -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" --platform "${PLATFORM}" "${buildargs_flags[@]}" .
 else
     # Fall back to plain BuildKit
     if [[ "${PLATFORM}" != "${default_platform}" ]]; then
         echo "WARNING: buildx isn't available, cross-arch builds won't work as expected"
     fi
-    DOCKER_BUILDKIT=1 docker build -t "${local_image}" "${cache_flags[@]}" -f "${DOCKERFILE}" --iidfile "${HASHFILE}" "${buildargs_flags[@]}" .
+    DOCKER_BUILDKIT=1 docker build -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" "${buildargs_flags[@]}" .
 fi
 
 # We can only tag the image in non-OCI mode
