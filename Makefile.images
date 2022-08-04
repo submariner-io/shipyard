@@ -10,8 +10,11 @@ REPO ?= quay.io/submariner
 # Affecting multiple commands
 export REPO ?= quay.io/submariner
 
+# Specific to `build_images.sh`
+export USE_CACHE ?= true
+
 # Specific to `images`
-export DOCKERFILE HASHFILE OCIFILE PLATFORM
+export OCIFILE PLATFORM
 
 # Specific to `release-images`
 export TAG ?= $(CUTTING_EDGE)
@@ -32,12 +35,12 @@ docker_deps = $(shell files=($(1) $$(awk '/COPY/ && substr($$2, 1, 7) != "--from
 # An empty file is used for make to figure out if dependencies changed or not
 .SECONDEXPANSION:
 package/.image.%: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuild,$$*)
-	DOCKERFILE="$<" HASHFILE="$@" $(SCRIPTS_DIR)/build_image.sh $*
+	$(SCRIPTS_DIR)/build_image.sh $* $< $@
 
 # Build an OCI tarball from a Dockerfile
 .SECONDEXPANSION:
 package/%.tar: $$(call docker_deps,package/Dockerfile.$$*) $$(call force_image_rebuid,$$*)
-	DOCKERFILE="$<" OCIFILE="$@" HASHFILE="package/.image.$*" $(SCRIPTS_DIR)/build_image.sh $*
+	OCIFILE="$@" $(SCRIPTS_DIR)/build_image.sh $* $< package/.image.$*
 
 # [images] builds all the container images for the project
 # Default target to build images based on IMAGES variable
