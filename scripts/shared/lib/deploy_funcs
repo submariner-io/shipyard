@@ -126,14 +126,13 @@ function remove_resource() {
 }
 
 function load_deploytool() {
-    local deploytool=$1
-    local deploy_lib=${SCRIPTS_DIR}/lib/deploy_${deploytool}
+    local deploy_lib=${SCRIPTS_DIR}/lib/deploy_${DEPLOYTOOL}
     if [[ ! -f $deploy_lib ]]; then
-        echo "Unknown deploy method: ${deploytool}"
+        echo "Unknown deploy method: ${DEPLOYTOOL}"
         exit 1
     fi
 
-    echo "Will deploy submariner using ${deploytool}"
+    echo "Will deploy submariner using ${DEPLOYTOOL}"
     . "$deploy_lib"
 }
 

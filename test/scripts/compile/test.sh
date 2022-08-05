@@ -18,7 +18,7 @@ function validate_ldflags() {
 function test_compile_arch() {
     local binary=$1
     local arch=$2
-    ${SCRIPTS_DIR}/compile.sh $binary hello.go --noupx
+    ${SCRIPTS_DIR}/compile.sh $binary hello.go
     if ! file $binary | grep -q $arch; then
         fail "Shoul'dve compiled ${arch@Q} but got $(file $binary)."
     fi
@@ -26,10 +26,11 @@ function test_compile_arch() {
 
 cd $(dirname $0)
 binary=bin/linux/amd64/hello
-BUILD_UPX=false ${SCRIPTS_DIR}/compile.sh $binary hello.go
+export BUILD_UPX=false
+${SCRIPTS_DIR}/compile.sh $binary hello.go
 validate_ldflags "hello nobody"
 
-BUILD_UPX=false LDFLAGS="-X main.MYVAR=somebody" ${SCRIPTS_DIR}/compile.sh $binary hello.go
+LDFLAGS="-X main.MYVAR=somebody" ${SCRIPTS_DIR}/compile.sh $binary hello.go
 validate_ldflags "hello somebody"
 
 BUILD_DEBUG=true ${SCRIPTS_DIR}/compile.sh $binary hello.go

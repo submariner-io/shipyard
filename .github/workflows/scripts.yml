@@ -46,12 +46,14 @@ jobs:
         deploytool: ['operator', 'helm']
         lighthouse: ['']
         ovn: ['']
+        prometheus: ['']
         include:
           - ovn: ovn
           - deploytool: operator
             lighthouse: lighthouse
           - deploytool: helm
             lighthouse: lighthouse
+          - prometheus: prometheus
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ matrix.ovn != '' }}
@@ -68,7 +70,9 @@ jobs:
       - name: Deploy clusters and Submariner
         env:
           TIMEOUT: 1m
-        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.lighthouse }} ${{ matrix.ovn }}"
+        run: make deploy using="${{ matrix.globalnet }} \
+          ${{ matrix.deploytool }} ${{ matrix.lighthouse }} \
+          ${{ matrix.ovn }} ${{ matrix.prometheus }}"
 
       - name: Post mortem
         if: failure()

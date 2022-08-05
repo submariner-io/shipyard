@@ -33,7 +33,10 @@ function post_analyze() {
     kubectl version || true
 
     print_section "* Overview of all resources in $cluster *"
-    kubectl api-resources --verbs=list -o name | xargs -n 1 kubectl get --show-kind -o wide --ignore-not-found
+    for resource in $(kubectl api-resources --verbs=list -o name); do
+        print_section "** Resource: $resource"
+        kubectl get --all-namespaces --show-kind -o wide --ignore-not-found "$resource"
+    done
 
     print_section "* Details of pods with statuses other than Running in $cluster *"
     for pod in $(kubectl get pods -A | tail -n +2 | grep -v Running | sed 's/  */;/g'); do

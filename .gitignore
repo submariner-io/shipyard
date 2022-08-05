@@ -1,6 +1,5 @@
 /vendor
 .idea
-.shflags
 /bin
 /package/.image.*
 output
