@@ -5,8 +5,9 @@ PRELOAD_IMAGES ?= submariner-gateway submariner-operator submariner-route-agent
 
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
+DEBUG ?= true
 TIMEOUT ?= 5m
-export GLOBALNET PLUGIN SETTINGS TIMEOUT
+export DEBUG GLOBALNET PLUGIN SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.23

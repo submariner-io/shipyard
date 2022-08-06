@@ -4,6 +4,8 @@ name: Shared Scripts
 on:
   pull_request:
 
+env:
+  DEBUG: true
 jobs:
   clusters:
     name: Clusters
