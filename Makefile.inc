@@ -143,7 +143,7 @@ deploy: clusters preload-images
 # [e2e] executes the project's end to end testing on the deployed KIND clusters
 # Will call `deploy` if it detects no submariner running on a cluster
 e2e:
-	$(SCRIPTS_DIR)/e2e.sh $(E2E_ARGS)
+	$(SCRIPTS_DIR)/e2e.sh
 
 upgrade-e2e: deploy-latest deploy e2e
 
