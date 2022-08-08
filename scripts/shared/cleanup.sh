@@ -1,15 +1,5 @@
 #!/usr/bin/env bash
 
-## Process command line flags ##
-
-source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'plugin' '' "Path to the plugin that has pre_cleanup and post_cleanup hook"
-
-FLAGS "$@" || exit $?
-eval set -- "${FLAGS_ARGV}"
-
-[[ -n "${PLUGIN}" ]] || PLUGIN="${FLAGS_plugin}"
-
 set -em
 
 source "${SCRIPTS_DIR}/lib/utils"

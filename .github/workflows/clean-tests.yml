@@ -4,6 +4,8 @@ name: Clean Target Verification
 on:
   pull_request:
 
+env:
+  DEBUG: true
 jobs:
   clean-clusters:
     name: Cluster Clean-up

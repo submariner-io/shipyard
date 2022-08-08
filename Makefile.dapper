@@ -39,11 +39,15 @@ RUN_IN_DAPPER = ./.dapper $(DAPPER_ARGS) $(SELINUX_CONTEXT) --
 
 endif
 
+ifeq (true,$(DEBUG))
+MAKE_DEBUG_FLAG = --debug=b
+endif
+
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
 $(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
 	-docker network create -d bridge kind
-	+$(RUN_IN_DAPPER) make --debug=b $@
+	+$(RUN_IN_DAPPER) make $(MAKE_DEBUG_FLAG) $@
 
 # The original dockerfiles will live in Shipyard and be downloaded by consuming projects.
 $(BASE_DAPPER) $(LINTING_DAPPER):

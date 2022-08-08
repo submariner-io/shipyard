@@ -11,6 +11,8 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - shell: bash
+      run: echo "DEBUG=true" >> $GITHUB_ENV
     - name: Set up QEMU (to support building on non-native architectures)
       uses: docker/setup-qemu-action@27d0a4f181a40b142cce983c5393082c365d1480
     - name: Set up buildx
@@ -29,5 +31,5 @@ runs:
       env:
         QUAY_USERNAME: ${{ inputs.username }}
         QUAY_PASSWORD: ${{ inputs.password }}
-      # Pass RELEASE_ARGS on the call, since GITHUB_REF set in the `env` directive doesn't get properly expanded
-      run: make release-images RELEASE_ARGS="--tag '${GITHUB_REF##*/}'"
+      # Pass GITHUB_REF on the call, since when it's set in the `env` directive it doesn't get properly expanded
+      run: make release-images TAG="${GITHUB_REF##*/}"

@@ -1,19 +1,11 @@
 #!/usr/bin/env bash
 
-## Process command line flags ##
-
-source "${SCRIPTS_DIR}/lib/shflags"
-DEFINE_string 'testdir' 'test/e2e' "Directory under to be used for E2E testing"
-DEFINE_boolean 'lazy_deploy' true "Deploy the environment lazily (If false, don't do anything)"
-FLAGS "$@" || exit $?
-eval set -- "${FLAGS_ARGV}"
+set -em -o pipefail
 
 [[ "${GLOBALNET}" = "true" ]] && gn=-globalnet || gn=
 ginkgo_args=()
 [[ -n "${FOCUS}" ]] && ginkgo_args+=("-ginkgo.focus=${FOCUS}")
 [[ -n "${SKIP}" ]] && ginkgo_args+=("-ginkgo.skip=${SKIP}")
-[[ -n "${TESTDIR}" ]] || TESTDIR="${FLAGS_testdir}"
-[[ -n "${LAZY_DEPLOY}" ]] || { [[ "${FLAGS_lazy_deploy}" = "${FLAGS_TRUE}" ]] && LAZY_DEPLOY=true || LAZY_DEPLOY=false; }
 
 if [[ $# == 0 ]]; then
     echo "At least one cluster to test on must be specified!"
@@ -21,8 +13,6 @@ if [[ $# == 0 ]]; then
 fi
 
 context_clusters=("$@")
-
-set -em -o pipefail
 
 source "${SCRIPTS_DIR}/lib/utils"
 print_env FOCUS GLOBALNET LAZY_DEPLOY SKIP TESTDIR
