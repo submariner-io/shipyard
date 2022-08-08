@@ -60,10 +60,10 @@ multiarch-images: $(foreach image,$(MULTIARCH_IMAGES),package/$(image).tar)
 # [release-images] uploads the project's images to a public repository
 release-images:
 ifneq (,$(filter-out $(MULTIARCH_IMAGES),$(IMAGES)))
-	$(SCRIPTS_DIR)/release_images.sh $(filter-out $(MULTIARCH_IMAGES),$(IMAGES)) $(RELEASE_ARGS)
+	$(SCRIPTS_DIR)/release_images.sh $(filter-out $(MULTIARCH_IMAGES),$(IMAGES))
 endif
 ifneq (,$(MULTIARCH_IMAGES))
-	OCIDIR='package/' $(SCRIPTS_DIR)/release_images.sh $(MULTIARCH_IMAGES) $(RELEASE_ARGS)
+	OCIDIR='package/' $(SCRIPTS_DIR)/release_images.sh $(MULTIARCH_IMAGES)
 endif
 
 # [preload-images] into the local registry for testing, based on PRELOAD_IMAGES variable
