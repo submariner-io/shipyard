@@ -120,7 +120,7 @@ clean-generated:
 
 # [clean-clusters] removes running clusters
 clean-clusters:
-	$(SCRIPTS_DIR)/cleanup.sh $(CLEANUP_ARGS)
+	$(SCRIPTS_DIR)/cleanup.sh
 cleanup: clean-clusters
 
 # [clean-buildx] removes the buildx builder, if any
@@ -134,11 +134,11 @@ clean-buildx:
 
 # [clusters] creates KIND clusters that can then be used to deploy Submariner
 clusters:
-	$(SCRIPTS_DIR)/clusters.sh $(CLUSTERS_ARGS)
+	$(SCRIPTS_DIR)/$@.sh
 
 # [deploy] deploys Submariner on KIND clusters
 deploy: clusters preload-images
-	$(SCRIPTS_DIR)/deploy.sh $(DEPLOY_ARGS)
+	$(SCRIPTS_DIR)/$@.sh
 
 # [e2e] executes the project's end to end testing on the deployed KIND clusters
 # Will call `deploy` if it detects no submariner running on a cluster
