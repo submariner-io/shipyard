@@ -5,7 +5,7 @@ runs:
   using: "composite"
   steps:
     - shell: bash
-      run: echo "DEBUG=true" >> $GITHUB_ENV
+      run: echo "DEBUG_PRINT=true" >> $GITHUB_ENV
     - shell: bash
       run: |
         echo "::group::Reclaiming free space"

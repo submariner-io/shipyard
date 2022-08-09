@@ -5,7 +5,7 @@ on:
   pull_request:
 
 env:
-  DEBUG: true
+  DEBUG_PRINT: true
 jobs:
   clean-clusters:
     name: Cluster Clean-up

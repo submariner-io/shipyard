@@ -19,6 +19,6 @@ function trap_commands() {
 
 ### Main ###
 
-[[ "${DEBUG}" == 'true' ]] || return 0
+[[ "${DEBUG_PRINT}" == 'true' ]] || return 0
 set -T
 trap_commands

@@ -39,7 +39,7 @@ RUN_IN_DAPPER = ./.dapper $(DAPPER_ARGS) $(SELINUX_CONTEXT) --
 
 endif
 
-ifeq (true,$(DEBUG))
+ifeq (true,$(DEBUG_PRINT))
 MAKE_DEBUG_FLAG = --debug=b
 endif
 
