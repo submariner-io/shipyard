@@ -105,9 +105,10 @@ type Framework struct {
 var (
 	beforeSuiteFuncs []func()
 
-	RestConfigs []*rest.Config
-	KubeClients []*kubeclientset.Clientset
-	DynClients  []dynamic.Interface
+	RestConfigs           []*rest.Config
+	KubeClients           []*kubeclientset.Clientset
+	DynClients            []dynamic.Interface
+	ClustersGatewaysState map[int][]string
 )
 
 // NewBareFramework creates a test framework, without ginkgo dependencies.
@@ -183,6 +184,7 @@ func BeforeSuite() {
 	}
 
 	fetchClusterIDs()
+	GatherClustersGatewaysState()
 
 	err := mcsv1a1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
@@ -561,4 +563,27 @@ func NestedString(obj map[string]interface{}, fields ...string) string {
 	Expect(err).To(Succeed())
 
 	return str
+}
+
+// GatherClustersGatewaysState will gather the state of the gateway nodes across
+// all clusters and store them within the globally available ClusterGatewaysState var
+// The function is required by the redundancy tests.
+func GatherClustersGatewaysState() {
+	By("Gather GW nodes details across clusters")
+
+	clustersState := make(map[int][]string)
+
+	for cluster := range TestContext.ClusterIDs {
+		activeGatewayNodes := findNodesByGatewayLabel(cluster, true)
+
+		for gw := range activeGatewayNodes {
+			clusterIndex := cluster
+			gatewayName := activeGatewayNodes[gw].Name
+
+			clustersState[clusterIndex] = append(clustersState[clusterIndex], gatewayName)
+		}
+	}
+
+	ClustersGatewaysState = clustersState
+	By(fmt.Sprintf("The state of the GW nodes across clusters - %v", ClustersGatewaysState))
 }

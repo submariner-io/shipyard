@@ -211,3 +211,20 @@ func gatewayNames(gateways []unstructured.Unstructured) []string {
 
 	return names
 }
+
+// RestoreClustersGatewaysState sets the state of the gateway nodes in all clusters
+// to it's initial state from ClustersGatewaysState global var
+// The initial state gathered by the GatherClustersGatewaysState function.
+func (f *Framework) RestoreClustersGatewaysState() {
+	By("Restore the GW nodes to the initial state")
+
+	if len(ClustersGatewaysState) == 0 {
+		By("Skip gateways restore as no previous state is available")
+	}
+
+	for cluster := range ClustersGatewaysState {
+		for _, gnode := range ClustersGatewaysState[cluster] {
+			f.SetGatewayLabelOnNode(ClusterIndex(cluster), gnode, true)
+		}
+	}
+}
