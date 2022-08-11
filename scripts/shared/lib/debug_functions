@@ -9,7 +9,7 @@ NO_COLOR=$(echo -e '\e[0m')
 
 function trap_commands() {
     # Function to print each bash command before it is executed
-    trap 'cmd="$BASH_COMMAND" &&
+    trap '[[ "${DEBUG_PRINT}" == true ]] && cmd="$BASH_COMMAND" &&
           ! [[ "$cmd" =~ ^(echo|read|\[|while|for|local) ]] &&
           { [[ ! "$cmd" =~ \$\( ]] || cmd="${cmd@Q}"; } &&
           ctxt="${cluster:+[${cluster}]}" &&
@@ -19,6 +19,5 @@ function trap_commands() {
 
 ### Main ###
 
-[[ "${DEBUG_PRINT}" == 'true' ]] || return 0
 set -T
 trap_commands
