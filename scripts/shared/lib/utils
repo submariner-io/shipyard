@@ -100,12 +100,12 @@ function run_consecutive() {
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
-    local cmnd=$2
+    local cluster
     declare -A pids
-    for cluster in $(eval echo "$1"); do
+    for cluster in $1; do
         (
            set -o pipefail
-           $cmnd "${@:3}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
+           "${@:2}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
         ) &
         pids["${cluster}"]=$!
     done
@@ -126,7 +126,7 @@ function run_all_clusters() {
 
 # Run the given command (with any arguments) in parallel on the clusters that install submariner.
 function run_subm_clusters() {
-    declare -a subm_clusters
+    local cluster subm_clusters=()
     for cluster in "${clusters[@]}"; do
         [[ "${cluster_subm[${cluster}]}" != "true" ]] || subm_clusters+=( "${cluster}" )
     done
@@ -159,8 +159,8 @@ function add_cluster_cidrs() {
 function declare_cidrs() {
     # shellcheck disable=SC2034 # these variables are used elsewhere
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
+    local cluster i=1
 
-    i=1
     for cluster in "${clusters[@]}"; do
         add_cluster_cidrs "$i" "$cluster"
         i=$(("$i"+1))
@@ -213,6 +213,7 @@ function _yq() {
 }
 
 function load_settings_from_yaml() {
+    local cluster
     declare -ga clusters
     declare -gA cluster_cni cluster_nodes cluster_subm
 
