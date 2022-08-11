@@ -39,6 +39,7 @@ function expect_env() {
 
 # Render a template file
 function render_template() {
+    local DEBUG_PRINT=false
     eval "echo \"$(cat "$1")\""
 }
 
@@ -157,6 +158,7 @@ function add_cluster_cidrs() {
 }
 
 function declare_cidrs() {
+    local DEBUG_PRINT=false
     # shellcheck disable=SC2034 # these variables are used elsewhere
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
     local cluster i=1
@@ -172,6 +174,7 @@ function declare_kubeconfig() {
 }
 
 function print_clusters_message() {
+    local DEBUG_PRINT=false
     cat << EOM
 Your virtual cluster(s) are deployed and working properly and can be accessed with:
 
@@ -193,6 +196,7 @@ function run_if_defined() {
 }
 
 function load_settings() {
+    local DEBUG_PRINT=false
     expect_env SETTINGS "Deployment settings file"
     declare -ga clusters
     declare -gA cluster_cni cluster_nodes cluster_subm
@@ -235,11 +239,12 @@ function _yq() {
 }
 
 function print_env() {
-   echo "Running with environment variables:"
-   for var; do
-       declare -n value="$var"
-       printf '%s=%q\n' "$var" "$value"
-   done
+    local DEBUG_PRINT=false
+    echo "Running with environment variables:"
+    for var; do
+        declare -n value="$var"
+        printf '%s=%q\n' "$var" "$value"
+    done
 }
 
 # Load a library to provide a pluggable command.
