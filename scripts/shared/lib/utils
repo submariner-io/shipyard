@@ -194,26 +194,6 @@ function run_if_defined() {
 
 function load_settings() {
     expect_env SETTINGS "Deployment settings file"
-
-    load_settings_from_yaml
-    cat << EOM
-Cluster settings::
-  broker - ${broker@Q}
-  clusters - ${clusters[*]@Q}
-  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
-  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
-  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
-EOM
-}
-
-function _yq() {
-    local output
-    output=$(yq e "$*" "${SETTINGS}")
-    [[ "${output}" == "null" ]] || echo "${output}"
-}
-
-function load_settings_from_yaml() {
-    local cluster
     declare -ga clusters
     declare -gA cluster_cni cluster_nodes cluster_subm
 
@@ -230,12 +210,28 @@ function load_settings_from_yaml() {
     fi
 
     # Determine per cluster settings, default to global if not defined
+    local cluster
     for cluster in "${clusters[@]}"; do
         cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
         cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
+
+    cat << EOM
+Cluster settings::
+  broker - ${broker@Q}
+  clusters - ${clusters[*]@Q}
+  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+}
+
+function _yq() {
+    local output
+    output=$(yq e "$*" "${SETTINGS}")
+    [[ "${output}" == "null" ]] || echo "${output}"
 }
 
 function print_env() {
