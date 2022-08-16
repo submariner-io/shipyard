@@ -113,7 +113,7 @@ function run_parallel() {
         (
            set -o pipefail
            DEBUG_PRINT=${ORIG_DEBUG_PRINT}
-           "${@:2}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
+           "${@:2}" |& sed "/cl=${cluster}/!s/^/[${cluster}] /"
         ) &
         pids["${cluster}"]=$!
     done
