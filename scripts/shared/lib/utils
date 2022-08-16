@@ -10,6 +10,7 @@ readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
 readonly SUBM_NS=submariner-operator
+readonly ORIG_DEBUG_PRINT=$DEBUG_PRINT
 
 ### Functions ###
 
@@ -49,11 +50,15 @@ function render_template() {
 # 3rd argument and so forth get passed to the command.
 # The current iteration is made available in the iteration variable.
 function with_retries() {
+    local DEBUG_PRINT=false
     local retries=$1
     local cmnd=$2
 
     iteration=1; while ((iteration <= retries)); do
-        ( $cmnd "${@:3}"; ) &
+        (
+            DEBUG_PRINT=${ORIG_DEBUG_PRINT}
+            $cmnd "${@:3}"
+        ) &
         if wait $!; then
             return 0
         fi
@@ -101,11 +106,13 @@ function run_consecutive() {
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
+    local DEBUG_PRINT=false
     local cluster
     declare -A pids
     for cluster in $1; do
         (
            set -o pipefail
+           DEBUG_PRINT=${ORIG_DEBUG_PRINT}
            "${@:2}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
         ) &
         pids["${cluster}"]=$!
@@ -127,6 +134,7 @@ function run_all_clusters() {
 
 # Run the given command (with any arguments) in parallel on the clusters that install submariner.
 function run_subm_clusters() {
+    local DEBUG_PRINT=false
     local cluster subm_clusters=()
     for cluster in "${clusters[@]}"; do
         [[ "${cluster_subm[${cluster}]}" != "true" ]] || subm_clusters+=( "${cluster}" )
