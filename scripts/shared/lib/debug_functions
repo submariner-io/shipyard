@@ -19,7 +19,7 @@ function trap_commands() {
           ! [[ "$cmd" =~ ^(echo|read|\[|while|for|local|printf) ]] &&
           { [[ "$cmd" =~ =\$?\( ]] && cmd="${cmd@Q}" || cmd=$(eval echo "$cmd"); } &&
           [[ -n "$cmd" && "${cmd%% *}" != "$cur_func" ]] &&
-          ctxt="[$(date +%R:%S.%3N)] [${PWD##*/}]${cluster:+ [${cluster}]}" &&
+          ctxt="[$(date +%R:%S.%3N)] [dir=${PWD##*/}${cluster:+; cl=${cluster}}${cur_func:+; fn=${cur_func}}]" &&
           echo "${CYAN_COLOR}${ctxt}\$ ${cmd}${NO_COLOR}" >&2; true' DEBUG
 }
 
