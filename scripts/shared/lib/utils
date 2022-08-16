@@ -55,6 +55,7 @@ function with_retries() {
     local cmnd=$2
 
     iteration=1; while ((iteration <= retries)); do
+        >&2 echo "Attempt ${iteration}/${retries} to run '${*:2}'"
         (
             DEBUG_PRINT=${ORIG_DEBUG_PRINT}
             $cmnd "${@:3}"
