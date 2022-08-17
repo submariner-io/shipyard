@@ -29,7 +29,7 @@ function setup_broker() {
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
     subctlrepver=
-    if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
+    if [[ "${SUBM_IMAGE_TAG}" != "subctl" && "${PRELOAD_IMAGES}" =~ submariner-operator ]]; then
         subctlrepver="--repository ${SUBM_IMAGE_REPO} --version ${SUBM_IMAGE_TAG}"
     fi
 
@@ -52,9 +52,11 @@ function subctl_install_subm() {
 
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
-    subctlrepver=
+    declare -a image_overrides
     if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
-        subctlrepver="--repository ${SUBM_IMAGE_REPO} --version ${SUBM_IMAGE_TAG}"
+        for image in ${PRELOAD_IMAGES}; do
+            image_overrides+=(--image-override "${image}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+        done
     fi
 
     PASS_CIDR_ARGS=${PASS_CIDR_ARGS:-false}
@@ -65,7 +67,7 @@ function subctl_install_subm() {
     # shellcheck disable=SC2086 # Split on purpose
     "${SUBCTL}" join --kubecontext "${cluster}" \
                 --clusterid "${cluster}" \
-                ${subctlrepver} \
+                "${image_overrides[@]}" \
                 --nattport "${CE_IPSEC_NATTPORT}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --natt=false \
