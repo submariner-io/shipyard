@@ -9,7 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PROVIDER SETTINGS TIMEOUT
+export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.24
@@ -74,11 +74,12 @@ endif
 
 ifneq (,$(filter lighthouse,$(_using)))
 LIGHTHOUSE = true
+override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns
 endif
 
 ifneq (,$(filter globalnet,$(_using)))
 GLOBALNET = true
-PRELOAD_IMAGES += submariner-globalnet
+override PRELOAD_IMAGES += submariner-globalnet
 endif
 
 ifneq (,$(filter helm,$(_using)))
@@ -88,14 +89,14 @@ endif
 ifneq (,$(filter bundle,$(_using)))
 OLM = true
 DEPLOYTOOL = bundle
-PRELOAD_IMAGES += submariner-operator-index
+override PRELOAD_IMAGES += submariner-operator-index
 endif
 
 ifneq (,$(filter ocm,$(_using)))
 OLM = true
 DEPLOYTOOL = ocm
 LIGHTHOUSE = true
-PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns submariner-operator-index
+override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
@@ -103,7 +104,7 @@ PROMETHEUS = true
 endif
 
 ifneq (,$(filter ovn,$(_using)))
-PRELOAD_IMAGES += submariner-networkplugin-syncer
+override PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
 # Force running E2E with `subctl verify`
