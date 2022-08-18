@@ -21,7 +21,7 @@ kind="${kind_binaries[$K8S_VERSION]:-kind-0.12}"
 [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
 
 source "${SCRIPTS_DIR}/lib/utils"
-print_env GLOBALNET K8S_VERSION OLM OLM_VERSION PROMETHEUS SETTINGS TIMEOUT
+print_env GLOBALNET K8S_VERSION OLM OLM_VERSION PARALLEL PROMETHEUS SETTINGS TIMEOUT
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ### Functions ###
