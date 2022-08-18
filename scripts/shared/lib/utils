@@ -59,6 +59,17 @@ function with_context() {
     $cmnd "${@:3}"
 }
 
+# Run cluster commands consecutively, failing on the first one to fail.
+# 1st argument is the cluster names for which to run.
+# 2nd argument is the command to execute, which will have the $cluster variable set.
+# 3rd argument and so forth get passed to the command.
+function run_consecutive() {
+    local cluster
+    for cluster in $1; do
+       "${@:2}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
+    done
+}
+
 # Run cluster commands in parallel.
 # 1st argument is the cluster names for which to run.
 # 2nd argument is the command to execute, which will have the $cluster variable set.
@@ -81,7 +92,11 @@ function run_parallel() {
 
 # Run the given command (with any arguments) in parallel on all the clusters.
 function run_all_clusters() {
-    run_parallel "${clusters[*]}" "$@"
+    if [[ "${PARALLEL}" == "true" ]]; then
+        run_parallel "${clusters[*]}" "$@"
+    else
+        run_consecutive "${clusters[*]}" "$@"
+    fi
 }
 
 # Run the given command (with any arguments) in parallel on the clusters that install submariner.
@@ -91,7 +106,11 @@ function run_subm_clusters() {
         [[ "${cluster_subm[${cluster}]}" != "true" ]] || subm_clusters+=( "${cluster}" )
     done
 
-    run_parallel "${subm_clusters[*]}" "$@"
+    if [[ "${PARALLEL}" == "true" ]]; then
+        run_parallel "${subm_clusters[*]}" "$@"
+    else
+        run_consecutive "${subm_clusters[*]}" "$@"
+    fi
 }
 
 function registry_running() {
@@ -175,10 +194,17 @@ function load_settings_from_yaml() {
     declare -ga clusters
     declare -gA cluster_cni cluster_nodes cluster_subm
 
-    readarray -t clusters < <(_yq ".clusters | keys | .[]")
+    local cluster_count
+    cluster_count=$(_yq ".cluster-count")
+    if [[ -n "${cluster_count}" ]]; then
+        readarray -t clusters < <(seq 1 "${cluster_count}" | sed 's/^/cluster/')
+        broker="${clusters[0]}"
+    else
+        readarray -t clusters < <(_yq ".clusters | keys | .[]")
 
-    # Determine broker, default to first declared cluster
-    broker=$(_yq ".clusters[] | select(. | has(\"broker\")) | path | .[-1] // \"${clusters[0]}\"")
+        # Determine broker, default to first declared cluster
+        broker=$(_yq ".clusters[] | select(. | has(\"broker\")) | path | .[-1] // \"${clusters[0]}\"")
+    fi
 
     # Determine per cluster settings, default to global if not defined
     for cluster in "${clusters[@]}"; do

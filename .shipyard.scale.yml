@@ -1,0 +1,4 @@
+---
+submariner: true
+nodes: control-plane
+cluster-count: 10
