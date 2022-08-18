@@ -23,6 +23,8 @@ endif
 
 export LAZY_DEPLOY = false
 
+scale: SETTINGS = $(DAPPER_SOURCE)/.shipyard.scale.yml
+
 include Makefile.inc
 
 # Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
@@ -45,7 +47,7 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clean-clusters cleanup clusters deploy deploy-latest e2e golangci-lint post-mortem print-version unit upgrade-e2e: package/.image.shipyard-dapper-base
+clean-clusters cleanup clusters deploy deploy-latest e2e golangci-lint post-mortem print-version scale unit upgrade-e2e: package/.image.shipyard-dapper-base
 deploy deploy-latest e2e upgrade-e2e: package/.image.nettest
 
 .DEFAULT_GOAL := lint
@@ -55,6 +57,24 @@ include Makefile.dapper
 
 # Make sure linting goals have up-to-date linting image
 $(LINTING_GOALS): package/.image.shipyard-linting
+
+scale: scale-prereqs
+scale-prereqs:
+	@echo "We need to change some system parameters in order to continue, these may have a lasting effect on your system."
+	@read -p "Do you wish to continue [y/N]?" response; \
+	[[ "$${response,,}" =~ ^(yes|y)$$ ]] || exit 1
+	# Increase general limits interfering with running multiple KIND clusters
+	sudo sysctl -w fs.inotify.max_user_watches=1073741824
+	sudo sysctl -w fs.inotify.max_user_instances=524288
+	sudo sysctl -w kernel.pty.max=524288
+	# Lower swappiness to avoid swapping unnecessarily, which would hurt the performance
+	sudo sysctl -w vm.swappiness=5
+	# Increase GC thresholds for IPv4 stack, otherwise we'll hit ARP table overflows
+	sudo sysctl -w net.ipv4.neigh.default.gc_thresh1=2048
+	sudo sysctl -w net.ipv4.neigh.default.gc_thresh2=4096
+	sudo sysctl -w net.ipv4.neigh.default.gc_thresh3=8192
+	# Increase open files limit. TODO: Find a way to make this change transient and not persistent
+	echo "*	-	nofile	100000000" | sudo tee /etc/security/limits.d/shipyard.scale.conf
 
 script-test: .dapper images
 	-docker network create -d bridge kind
