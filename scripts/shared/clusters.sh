@@ -317,8 +317,20 @@ function download_ovnk() {
     fi
 
     echo "Cloning ovn-kubernetes from source"
-    git clone https://github.com/ovn-org/ovn-kubernetes.git \
-        || { git -C ovn-kubernetes fetch && git -C ovn-kubernetes reset --hard origin/master; }
+    mkdir -p ovn-kubernetes
+    # We only need the contrib directory, use a sparse checkout
+    cd ovn-kubernetes
+    git init
+    git config core.sparseCheckout true
+    echo contrib/ > .git/info/sparse-checkout
+    echo dist/ >> .git/info/sparse-checkout
+    if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git
+    then
+        git pull origin master
+    else
+        git fetch && git reset --hard origin/master
+    fi
+    cd ..
 }
 
 ### Main ###
