@@ -4,6 +4,8 @@ name: Multi-arch Builds
 on:
   pull_request:
 
+permissions: {}
+
 env:
   DEBUG_PRINT: true
 jobs:
