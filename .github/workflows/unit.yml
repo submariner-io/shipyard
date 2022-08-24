@@ -4,6 +4,8 @@ name: Unit Test Validation
 on:
   pull_request:
 
+permissions: {}
+
 jobs:
   check-unit-tests-fail:
     name: 'Check that unit test failures are detected'

@@ -4,6 +4,8 @@ name: Shared Scripts
 on:
   pull_request:
 
+permissions: {}
+
 env:
   DEBUG_PRINT: true
 jobs:
