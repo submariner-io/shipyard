@@ -7,14 +7,20 @@ NO_COLOR=$(echo -e '\e[0m')
 
 ### Functions ###
 
+# Function to print each bash command before it is executed.
+# Only outputs when $DEBUG_PRINT is set, to control printing precisely.
+# Skips common command (printing, control structures, etc).
+# Skips parsing `$()` as it causes the internal command to be executed twice.
+# Skips parsing `=(` as it causes an error for eval.
+# Skips printing function name twice (caveat - if we ever do a recursion, we won't see it).
 function trap_commands() {
-    # Function to print each bash command before it is executed
-    trap '[[ "${DEBUG_PRINT}" == true ]] && cmd="$BASH_COMMAND" &&
-          ! [[ "$cmd" =~ ^(echo|read|\[|while|for|local) ]] &&
-          { [[ ! "$cmd" =~ \$\( ]] || cmd="${cmd@Q}"; } &&
-          ctxt="${cluster:+[${cluster}]}" &&
-          cmd=`eval echo "[$(date +%R:%S.%3N)] [${PWD##*/}]\$ $ctxt $cmd" 2>/dev/null` &&
-          echo "${CYAN_COLOR}$cmd${NO_COLOR}" >&2; true' DEBUG
+    trap '[[ "${DEBUG_PRINT}" == true ]] &&
+          declare -g cmd="$BASH_COMMAND" cur_func="${FUNCNAME[0]}" &&
+          ! [[ "$cmd" =~ ^(echo|read|\[|while|for|local|printf) ]] &&
+          { [[ "$cmd" =~ =\$?\( ]] && cmd="${cmd@Q}" || cmd=$(eval echo "$cmd"); } &&
+          [[ -n "$cmd" && "${cmd%% *}" != "$cur_func" ]] &&
+          ctxt="[$(date +%R:%S.%3N)] [dir=${PWD##*/}${cluster:+; cl=${cluster}}${cur_func:+; fn=${cur_func}}]" &&
+          echo "${CYAN_COLOR}${ctxt}\$ ${cmd}${NO_COLOR}" >&2; true' DEBUG
 }
 
 ### Main ###

@@ -10,6 +10,7 @@ readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
 readonly SUBM_NS=submariner-operator
+readonly ORIG_DEBUG_PRINT=$DEBUG_PRINT
 
 ### Functions ###
 
@@ -39,6 +40,7 @@ function expect_env() {
 
 # Render a template file
 function render_template() {
+    local DEBUG_PRINT=false
     eval "echo \"$(cat "$1")\""
 }
 
@@ -48,11 +50,16 @@ function render_template() {
 # 3rd argument and so forth get passed to the command.
 # The current iteration is made available in the iteration variable.
 function with_retries() {
+    local DEBUG_PRINT=false
     local retries=$1
     local cmnd=$2
 
     iteration=1; while ((iteration <= retries)); do
-        ( $cmnd "${@:3}"; ) &
+        >&2 echo "Attempt ${iteration}/${retries} to run '${*:2}'"
+        (
+            DEBUG_PRINT=${ORIG_DEBUG_PRINT}
+            $cmnd "${@:3}"
+        ) &
         if wait $!; then
             return 0
         fi
@@ -100,12 +107,14 @@ function run_consecutive() {
 # 2nd argument is the command to execute, which will have the $cluster variable set.
 # 3rd argument and so forth get passed to the command.
 function run_parallel() {
-    local cmnd=$2
+    local DEBUG_PRINT=false
+    local cluster
     declare -A pids
-    for cluster in $(eval echo "$1"); do
+    for cluster in $1; do
         (
            set -o pipefail
-           $cmnd "${@:3}" |& sed "/\[${cluster}]/!s/^/[${cluster}] /"
+           DEBUG_PRINT=${ORIG_DEBUG_PRINT}
+           "${@:2}" |& sed "/cl=${cluster}/!s/^/[${cluster}] /"
         ) &
         pids["${cluster}"]=$!
     done
@@ -126,7 +135,8 @@ function run_all_clusters() {
 
 # Run the given command (with any arguments) in parallel on the clusters that install submariner.
 function run_subm_clusters() {
-    declare -a subm_clusters
+    local DEBUG_PRINT=false
+    local cluster subm_clusters=()
     for cluster in "${clusters[@]}"; do
         [[ "${cluster_subm[${cluster}]}" != "true" ]] || subm_clusters+=( "${cluster}" )
     done
@@ -157,10 +167,11 @@ function add_cluster_cidrs() {
 }
 
 function declare_cidrs() {
+    local DEBUG_PRINT=false
     # shellcheck disable=SC2034 # these variables are used elsewhere
     declare -gA cluster_CIDRs service_CIDRs global_CIDRs
+    local cluster i=1
 
-    i=1
     for cluster in "${clusters[@]}"; do
         add_cluster_cidrs "$i" "$cluster"
         i=$(("$i"+1))
@@ -172,6 +183,7 @@ function declare_kubeconfig() {
 }
 
 function print_clusters_message() {
+    local DEBUG_PRINT=false
     cat << EOM
 Your virtual cluster(s) are deployed and working properly and can be accessed with:
 
@@ -193,26 +205,8 @@ function run_if_defined() {
 }
 
 function load_settings() {
+    local DEBUG_PRINT=false
     expect_env SETTINGS "Deployment settings file"
-
-    load_settings_from_yaml
-    cat << EOM
-Cluster settings::
-  broker - ${broker@Q}
-  clusters - ${clusters[*]@Q}
-  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
-  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
-  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
-EOM
-}
-
-function _yq() {
-    local output
-    output=$(yq e "$*" "${SETTINGS}")
-    [[ "${output}" == "null" ]] || echo "${output}"
-}
-
-function load_settings_from_yaml() {
     declare -ga clusters
     declare -gA cluster_cni cluster_nodes cluster_subm
 
@@ -229,20 +223,37 @@ function load_settings_from_yaml() {
     fi
 
     # Determine per cluster settings, default to global if not defined
+    local cluster
     for cluster in "${clusters[@]}"; do
         cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
         cluster_subm["${cluster}"]=$(_yq ".submariner")
     done
+
+    cat << EOM
+Cluster settings::
+  broker - ${broker@Q}
+  clusters - ${clusters[*]@Q}
+  cni - $(typeset -p cluster_cni | cut -f 2- -d=)
+  nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
+  install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+EOM
+}
+
+function _yq() {
+    local output
+    output=$(yq e "$*" "${SETTINGS}")
+    [[ "${output}" == "null" ]] || echo "${output}"
 }
 
 function print_env() {
-   echo "Running with environment variables:"
-   for var; do
-       declare -n value="$var"
-       printf '%s=%q\n' "$var" "$value"
-   done
+    local DEBUG_PRINT=false
+    echo "Running with environment variables:"
+    for var; do
+        declare -n value="$var"
+        printf '%s=%q\n' "$var" "$value"
+    done
 }
 
 # Load a library to provide a pluggable command.
