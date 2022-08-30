@@ -162,8 +162,8 @@ function add_cluster_cidrs() {
         global_CIDRs[$idx]="242.254.${1}.0/24"
     fi
 
-    cluster_CIDRs[$idx]="10.$((val+128)).0.0/16"
-    service_CIDRs[$idx]="100.$((val+64)).0.0/16"
+    cluster_CIDRs[$idx]="10.$((val+129)).0.0/16"
+    service_CIDRs[$idx]="100.$((val+65)).0.0/16"
 }
 
 function declare_cidrs() {
