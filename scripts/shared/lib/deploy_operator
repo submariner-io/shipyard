@@ -8,6 +8,13 @@
 # Some projects rely on the default subctl being determined by the PATH
 readonly SUBCTL=${SUBCTL:-subctl}
 
+### Variables ###
+
+declare -gA component_by_image
+component_by_image['submariner-route-agent']=submariner-routeagent
+component_by_image['lighthouse-agent']=submariner-lighthouse-agent
+component_by_image['lighthouse-coredns']=submariner-lighthouse-coredns
+
 ### Functions ###
 
 function deploytool_prereqs() {
@@ -55,7 +62,9 @@ function subctl_install_subm() {
     declare -a image_overrides
     if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
         for image in ${PRELOAD_IMAGES}; do
-            image_overrides+=(--image-override "${image}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+            local image_key="${image}"
+            [[ -n "${component_by_image[$image]}" ]] && image_key="${component_by_image[$image]}"
+            image_overrides+=(--image-override "${image_key}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
         done
     fi
 
