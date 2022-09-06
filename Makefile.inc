@@ -73,12 +73,10 @@ endif
 
 ifneq (,$(filter lighthouse,$(_using)))
 LIGHTHOUSE = true
-override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns
 endif
 
 ifneq (,$(filter globalnet,$(_using)))
 GLOBALNET = true
-override PRELOAD_IMAGES += submariner-globalnet
 endif
 
 ifneq (,$(filter helm,$(_using)))
@@ -88,22 +86,16 @@ endif
 ifneq (,$(filter bundle,$(_using)))
 OLM = true
 DEPLOYTOOL = bundle
-override PRELOAD_IMAGES += submariner-operator-index
 endif
 
 ifneq (,$(filter ocm,$(_using)))
 OLM = true
 DEPLOYTOOL = ocm
 LIGHTHOUSE = true
-override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns submariner-operator-index
 endif
 
 ifneq (,$(filter prometheus,$(_using)))
 PROMETHEUS = true
-endif
-
-ifneq (,$(filter ovn,$(_using)))
-override PRELOAD_IMAGES += submariner-networkplugin-syncer
 endif
 
 # Force running E2E with `subctl verify`
