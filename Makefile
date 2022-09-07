@@ -2,6 +2,7 @@ BASE_BRANCH ?= devel
 OCM_BASE_BRANCH ?= main
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 MULTIARCH_IMAGES ?= nettest
+EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
 SHELLCHECK_ARGS := $(shell find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
@@ -26,6 +27,9 @@ export LAZY_DEPLOY = false
 scale: SETTINGS = $(DAPPER_SOURCE)/.shipyard.scale.yml
 
 include Makefile.inc
+
+# In Shipyard we don't need to preload the dapper images, so override the default behavior.
+override PRELOAD_IMAGES=nettest $(EXTRA_PRELOAD_IMAGES)
 
 # Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;

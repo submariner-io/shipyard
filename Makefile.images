@@ -16,6 +16,14 @@ export USE_CACHE ?= true
 # Specific to `images`
 export OCIFILE PLATFORM
 
+# Specific to `preload-images`
+export PRELOAD_IMAGES
+
+# Automatically preload any images that the project builds, on top of any (if there were) requested by the caller
+ifdef IMAGES
+override PRELOAD_IMAGES += $(IMAGES)
+endif
+
 # Specific to `release-images`
 export TAG ?= $(CUTTING_EDGE)
 
