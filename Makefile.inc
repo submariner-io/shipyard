@@ -30,6 +30,9 @@ export FOCUS LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TESTDIR
 # Specific to `reload-images`
 export RESTART ?= none
 
+# Specific to `shellcheck`
+export SHELLCHECK_ARGS += $(shell [[ ! -d scripts ]] || find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
+
 # Specific to `compile.sh`
 export BUILD_DEBUG BUILD_UPX LDFLAGS
 
