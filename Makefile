@@ -4,7 +4,6 @@ IMAGES ?= shipyard-dapper-base shipyard-linting nettest
 MULTIARCH_IMAGES ?= nettest
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
-SHELLCHECK_ARGS := $(shell find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
 FOCUS ?=
 SKIP ?=
 PLUGIN ?=
