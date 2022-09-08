@@ -1,7 +1,9 @@
+# shellcheck shell=bash
 
 ### Functions ###
 
 function provider_initialize() {
+    # shellcheck disable=SC2034
     readarray -t clusters < <(kind get clusters)
 }
 
