@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 declare -gr OCP_INSTALLER="${HOME}/.local/bin/openshift-install"
 declare -gA k8s_ocp_version
 k8s_ocp_version[1.20]=latest-4.7
