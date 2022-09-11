@@ -1,4 +1,5 @@
 , := ,
+EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 USING = $(subst $(,), ,$(using))
 _using = ${USING}
 
@@ -8,7 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export DEBUG_PRINT GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
+export AIR_GAPPED DEBUG_PRINT GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.25
@@ -116,12 +117,32 @@ ifneq (,$(filter load-balancer,$(_using)))
 LOAD_BALANCER = true
 endif
 
+ifneq (,$(filter air-gap,$(_using)))
+AIR_GAPPED = true
+endif
+
 ifeq ($(LIGHTHOUSE),true)
 SUBCTL_VERIFICATIONS = service-discovery
 endif
 
 ifeq ($(PROVIDER),kind)
 deploy: preload-images
+endif
+
+# Preload any images needed by air-gapped environment
+ifeq ($(AIR_GAPPED),true)
+override PRELOAD_IMAGES = $(EXTRA_PRELOAD_IMAGES) nettest \
+	$(foreach image,gateway operator route-agent,submariner-$(image))
+
+ifeq ($(GLOBALNET),true)
+override PRELOAD_IMAGES += submariner-globalnet
+endif
+ifneq (,$(shell grep -w ovn $(SETTINGS)))
+override PRELOAD_IMAGES += submariner-networkplugin-syncer
+endif
+ifeq ($(LIGHTHOUSE),true)
+override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns
+endif
 endif
 
 GO ?= go

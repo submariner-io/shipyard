@@ -50,6 +50,13 @@ jobs:
         deploytool: ['operator', 'helm']
         extra-toggles: ['']
         include:
+          - extra-toggles: air-gap
+          - extra-toggles: air-gap
+            globalnet: globalnet
+          - extra-toggles: air-gap
+            lighthouse: lighthouse
+          - extra-toggles: air-gap
+            ovn: ovn
           - extra-toggles: ovn
           - deploytool: operator
             extra-toggles: lighthouse

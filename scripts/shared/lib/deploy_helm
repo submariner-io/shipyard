@@ -53,6 +53,12 @@ function helm_install_subm() {
 
     [[ "$LOAD_BALANCER" = true ]] && extra_flags+=(--set submariner.loadBalancerEnabled='true')
 
+    # Set repo/ver combo for air gapped environment, to make sure all Submariner images are only taken from local repo.
+    if [[ "$AIR_GAPPED" = true ]]; then
+        extra_flags+=(--set submariner.images.repository="${SUBM_IMAGE_REPO}" \
+            --set submariner.images.tag="${SUBM_IMAGE_TAG}")
+    fi
+
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
     helm --kube-context "${cluster}" install --debug --devel submariner-operator \

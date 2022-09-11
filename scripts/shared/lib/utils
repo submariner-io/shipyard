@@ -41,6 +41,15 @@ function expect_env() {
 # Render a template file
 function render_template() {
     local DEBUG_PRINT=false
+
+    # For upgrade testing, use the original image from upstream
+    if [[ "${SUBM_IMAGE_TAG}" == 'subctl' ]]; then
+        local SUBM_IMAGE_TAG="${BASE_BRANCH}"
+        # This is used in the resource template YAML
+        # shellcheck disable=SC2034
+        local SUBM_IMAGE_REPO="${REPO}"
+    fi
+
     eval "echo \"$(cat "$1")\""
 }
 

@@ -29,7 +29,14 @@ function check_gateway_exists() {
 
 function prepare_kind() {
     read -r -a nodes <<< "${cluster_nodes[$cluster]}"
-    kubectl label node "${cluster}-${nodes[-1]}" "${GATEWAY_LABEL}" --overwrite
+    local node=${cluster}-${nodes[-1]}
+    kubectl label node "$node" "$GATEWAY_LABEL" --overwrite
+
+    if [[ "$AIR_GAPPED" = true ]]; then
+        local pub_ip
+        pub_ip=$(kubectl get nodes "$node" -o jsonpath="{.status.addresses[0].address}")
+        kubectl annotate node "$node" gateway.submariner.io/public-ip=ipv4:"$pub_ip"
+    fi
 }
 
 function prepare_aws_ocp() {
