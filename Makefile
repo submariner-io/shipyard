@@ -28,7 +28,9 @@ scale: SETTINGS = $(DAPPER_SOURCE)/.shipyard.scale.yml
 include Makefile.inc
 
 # In Shipyard we don't need to preload the dapper images, so override the default behavior.
+ifneq ($(AIR_GAPPED),true)
 override PRELOAD_IMAGES=nettest $(EXTRA_PRELOAD_IMAGES)
+endif
 
 # Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
 package/.image.nettest package/.image.shipyard-dapper-base: ;
