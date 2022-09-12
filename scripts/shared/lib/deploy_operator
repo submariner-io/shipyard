@@ -27,35 +27,31 @@ function deploytool_prereqs() {
 }
 
 function setup_broker() {
-    local gn
-    local sd
-    [[ "${GLOBALNET}" != true ]] || gn="--globalnet"
+    local extra_flags=()
+    [[ "${GLOBALNET}" = true ]] && extra_flags+=(--globalnet)
     if [[ "${LIGHTHOUSE}" == true ]]; then
-        sd="--components service-discovery,connectivity"
+        extra_flags+=(--components 'service-discovery,connectivity')
     else
-        sd="--components connectivity"
+        extra_flags+=(--components connectivity)
     fi
     echo "Installing broker..."
 
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
-    subctlrepver=
     if [[ "${SUBM_IMAGE_TAG}" != "subctl" && "${PRELOAD_IMAGES}" =~ submariner-operator ]]; then
-        subctlrepver="--repository ${SUBM_IMAGE_REPO} --version ${SUBM_IMAGE_TAG}"
+        extra_flags+=(--repository "${SUBM_IMAGE_REPO}" --version "${SUBM_IMAGE_TAG}")
     fi
 
-    # shellcheck disable=SC2086 # Split on purpose
     (
-        cd "${OUTPUT_DIR}" && \
+        cd "${OUTPUT_DIR}" &&
         "${SUBCTL}" deploy-broker \
                --kubecontext "${cluster}" \
-               ${subctlrepver} \
-               ${gn} \
-               ${sd}
+                "${extra_flags[@]}"
     )
 }
 
 function subctl_install_subm() {
+    local extra_flags=()
     if [[ ${cluster_subm[$cluster]} != "true" ]]; then
         echo "Skipping installation as requested in cluster settings"
         return
@@ -63,29 +59,25 @@ function subctl_install_subm() {
 
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
-    declare -a image_overrides
     if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
         for image in ${PRELOAD_IMAGES}; do
             local image_key="${component_by_image[$image]}"
             [[ -n "${image_key}" ]] || continue
-            image_overrides+=(--image-override "${image_key}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+            extra_flags+=(--image-override "${image_key}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
         done
     fi
 
-    PASS_CIDR_ARGS=${PASS_CIDR_ARGS:-false}
     if [ "${PASS_CIDR_ARGS}" == "true" ];then
-        cidr_args="--clustercidr ${cluster_CIDRs[${cluster}]} --servicecidr ${service_CIDRs[${cluster}]}"
+        extra_flags+=(--clustercidr "${cluster_CIDRs[${cluster}]}" --servicecidr "${service_CIDRs[${cluster}]}")
     fi
 
-    # shellcheck disable=SC2086 # Split on purpose
     "${SUBCTL}" join --kubecontext "${cluster}" \
                 --clusterid "${cluster}" \
-                "${image_overrides[@]}" \
                 --nattport "${CE_IPSEC_NATTPORT}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \
                 --natt=false \
                 --cable-driver "${CABLE_DRIVER}" \
-                ${cidr_args} \
+                "${extra_flags[@]}" \
                 "${OUTPUT_DIR}"/broker-info.subm
 }
 
