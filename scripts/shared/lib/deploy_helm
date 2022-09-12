@@ -39,16 +39,16 @@ function helm_install_subm() {
         return
     fi
 
-    declare -a images_flags
+    local extra_flags=()
     for image in ${PRELOAD_IMAGES}; do
         if [[ "${image}" = submariner-operator ]]; then
-            images_flags+=(--set operator.image.repository="${SUBM_IMAGE_REPO}/submariner-operator" \
-            --set operator.image.tag="${SUBM_IMAGE_TAG}" \
-            --set operator.image.pullPolicy="IfNotPresent")
+            extra_flags+=(--set operator.image.repository="${SUBM_IMAGE_REPO}/submariner-operator" \
+                --set operator.image.tag="${SUBM_IMAGE_TAG}" \
+                --set operator.image.pullPolicy="IfNotPresent")
             continue
         fi
 
-        images_flags+=(--set "images.${image}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+        extra_flags+=(--set "images.${image}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
     done
 
     echo "Installing Submariner..."
@@ -73,7 +73,7 @@ function helm_install_subm() {
         --set serviceAccounts.lighthouseAgent.create="${LIGHTHOUSE}" \
         --set serviceAccounts.lighthouseCoreDns.create="${LIGHTHOUSE}" \
         --set submariner.natEnabled="false" \
-        "${images_flags[@]}" \
+        "${extra_flags[@]}" \
         --set brokercrds.create="${crd_create}"
 }
 
