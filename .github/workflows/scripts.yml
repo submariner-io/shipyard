@@ -112,3 +112,16 @@ jobs:
 
       - name: Test the post_mortem.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/post_mortem/test.sh"
+
+  verify_gateways:
+    name: Verify gateways
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+
+      - name: Deploy clusters and test cloud-prepare
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
+
+      - name: Clean up deployment
+        run: make clean-clusters
