@@ -1,9 +1,10 @@
+# shellcheck shell=bash
 . "${SCRIPTS_DIR}/lib/ocp_utils"
 
 ### Functions ###
 
 function provider_initialize() {
-    readarray -t clusters < <(find "${OUTPUT_DIR}" -type f -name metadata.json -exec sh -c "basename \$(dirname {})" \;)
+    readarray -t clusters < <(find "${OUTPUT_DIR}" -type f -name metadata.json -exec sh -c 'basename $(dirname "$1")' shell {} \;)
     [[ "${#clusters[@]}" -gt 0 ]] || { echo "No AWS clusters found." && return 0; }
     ensure_openshift_install
 }

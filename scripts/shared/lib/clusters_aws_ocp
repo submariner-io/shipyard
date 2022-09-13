@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 . "${SCRIPTS_DIR}/lib/ocp_utils"
 
 ### Variables ###
@@ -41,7 +43,7 @@ function provider_create_cluster() {
     compute_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'worker')
 
     # OCP needs at least 1 compute node to work properly
-    [[ "${compute_replicas}" != "0" ]] || compute_replicas = 1
+    [[ "${compute_replicas}" != "0" ]] || compute_replicas=1
 
     rm -rf "${install_dir}"
     cp -r "${install_template}" "${install_dir}"

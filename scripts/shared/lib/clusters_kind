@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+
 ### Variables ###
 
 ## Kubernetes version mapping, as supported by kind ##
@@ -59,9 +61,9 @@ function download_kind() {
     # Example: kindest/node:v1.20.7@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
     kind_image="kindest/node:v${K8S_VERSION}"
     # Example: kindest/node:v1.20.7
-    kind_image_tag="kindest/node:v$(echo ${K8S_VERSION}|awk -F"@" '{print $1}')"
+    kind_image_tag=kindest/node:v$(echo "${K8S_VERSION}" | awk -F"@" '{print $1}')
     # Example: kindest/node:@sha256:cbeaf907fc78ac97ce7b625e4bf0de16e3ea725daf6b04f930bd14c67c671ff9
-    kind_image_sha="kindest/node@$(echo ${K8S_VERSION}|awk -F"@" '{print $2}')"
+    kind_image_sha=kindest/node@$(echo "${K8S_VERSION}" | awk -F"@" '{print $2}')
 
     # Check if image is already present, and if not, download it.
     echo "Processing Image: $kind_image_tag ($kind_image)"
@@ -236,7 +238,7 @@ function run_local_registry() {
 
     # If the local volume mount directory is empty, probably due to a host reboot,
     # then try to push any images with "localhost:5000".
-    if [[ -z "$(docker exec -e tmp_dir=${volume_dir} $KIND_REGISTRY /bin/sh -c 'ls -A ${tmp_dir} 2>/dev/null')" ]]; then
+    if [[ -z $(docker exec -e tmp_dir="${volume_dir}" "${KIND_REGISTRY}" /bin/sh -c 'ls -A "${tmp_dir}" 2>/dev/null') ]]; then
         echo "Push images to local registry: $KIND_REGISTRY"
         readarray -t local_image_list < <(docker images | awk -F' ' '/localhost:5000/ {print $1":"$2}')
         for image in "${local_image_list[@]}"; do
@@ -263,18 +265,18 @@ function download_ovnk() {
     echo "Cloning ovn-kubernetes from source"
     mkdir -p ovn-kubernetes
     # We only need the contrib directory, use a sparse checkout
-    cd ovn-kubernetes
-    git init
-    git config core.sparseCheckout true
-    echo contrib/ > .git/info/sparse-checkout
-    echo dist/ >> .git/info/sparse-checkout
-    if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git
-    then
-        git pull origin master
-    else
-        git fetch && git reset --hard origin/master
-    fi
-    cd ..
+    (
+        cd ovn-kubernetes || exit
+        git init
+        git config core.sparseCheckout true
+        echo contrib/ > .git/info/sparse-checkout
+        echo dist/ >> .git/info/sparse-checkout
+        if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git; then
+            git pull origin master
+        else
+            git fetch && git reset --hard origin/master
+        fi
+    )
 }
 
 function provider_prepare() {
