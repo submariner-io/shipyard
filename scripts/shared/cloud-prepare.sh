@@ -30,16 +30,15 @@ function check_gateway_exists() {
 function prepare_kind() {
     local gw_count="${cluster_gateways[$cluster]:-1}"
 
-    readarray -t nodes < <(kubectl get nodes --no-headers -o custom-columns=NAME:".metadata.name" | tac)
+    readarray -t nodes < <(kubectl get nodes -o yaml | yq '.items[].metadata.name' | sort -r)
 
     for node in "${nodes[@]:0:$gw_count}"; do
         kubectl label node "$node" "$GATEWAY_LABEL" --overwrite
 
-        if [[ "$AIR_GAPPED" = true ]]; then
-            local pub_ip
-            pub_ip=$(kubectl get nodes "$node" -o jsonpath="{.status.addresses[0].address}")
-            kubectl annotate node "$node" gateway.submariner.io/public-ip=ipv4:"$pub_ip"
-        fi
+        [[ "$AIR_GAPPED" = true ]] || continue
+        local pub_ip
+        pub_ip=$(kubectl get nodes "$node" -o jsonpath="{.status.addresses[0].address}")
+        kubectl annotate node "$node" gateway.submariner.io/public-ip=ipv4:"$pub_ip"
     done
 }
 

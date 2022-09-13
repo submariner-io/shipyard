@@ -1,6 +1,0 @@
----
-submariner: true
-nodes: control-plane worker
-clusters:
-  cluster1:
-    nodes: control-plane worker worker
