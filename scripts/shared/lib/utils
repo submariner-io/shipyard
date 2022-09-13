@@ -218,7 +218,7 @@ function load_settings() {
     local DEBUG_PRINT=false
     expect_env SETTINGS "Deployment settings file"
     declare -ga clusters
-    declare -gA cluster_cni cluster_nodes cluster_subm
+    declare -gA cluster_cni cluster_nodes cluster_subm cluster_gateways
 
     local cluster_count
     cluster_count=$(_yq ".cluster-count")
@@ -239,6 +239,7 @@ function load_settings() {
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
         cluster_subm["${cluster}"]=$(_yq ".submariner")
+        cluster_gateways["${cluster}"]=$(_yq ".clusters.${cluster}.gateways // .gateways")
     done
 
     cat << EOM
@@ -248,6 +249,7 @@ Cluster settings::
   cni - $(typeset -p cluster_cni | cut -f 2- -d=)
   nodes per cluster - $(typeset -p cluster_nodes | cut -f 2- -d=)
   install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
+  label cluster gateways - $(typeset -p cluster_gateways | cut -f 2- -d=)
 EOM
 }
 

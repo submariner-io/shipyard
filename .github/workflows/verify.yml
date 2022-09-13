@@ -1,0 +1,20 @@
+---
+name: Verify
+
+on:
+  pull_request:
+
+permissions: {}
+
+env:
+  DEBUG_PRINT: true
+jobs:
+  verify:
+    name: Verify gateway nodes
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
+
+      - name: Deploy and validate gateways custom topology
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/validation/test.sh"
