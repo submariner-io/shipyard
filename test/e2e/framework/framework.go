@@ -23,6 +23,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strings"
 	"time"
 
 	. "github.com/onsi/gomega"
@@ -568,4 +569,11 @@ func NestedString(obj map[string]interface{}, fields ...string) string {
 	Expect(err).To(Succeed())
 
 	return str
+}
+
+func DetectProvider(cluster ClusterIndex, nodeName string) string {
+	node, err := KubeClients[cluster].CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	return strings.Split(node.Spec.ProviderID, ":")[0]
 }

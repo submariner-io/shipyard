@@ -198,3 +198,33 @@ func (f *Framework) GatewayCleanup() {
 		}
 	}
 }
+
+// Perform a gateway failover.
+// The failover for the real environment will crash the gateway node.
+// The failover for the kind environment will set the submariner.io/gateway label to "false" on the gw node.
+func (f *Framework) DoFailover(cluster ClusterIndex, gwNode, gwPod string) {
+	provider := DetectProvider(cluster, gwNode)
+
+	if provider == "kind" {
+		f.SaveGatewayNode(cluster, gwNode)
+		f.SetGatewayLabelOnNode(cluster, gwNode, false)
+	} else {
+		cmd := []string{"sh", "-c", "echo 1 > /proc/sys/kernel/sysrq && echo b > /proc/sysrq-trigger"}
+
+		_, _, err := f.ExecWithOptions(&ExecOptions{
+			Command:       cmd,
+			Namespace:     TestContext.SubmarinerNamespace,
+			PodName:       gwPod,
+			ContainerName: SubmarinerGateway,
+			CaptureStdout: false,
+			CaptureStderr: true,
+		}, cluster)
+		if err != nil {
+			if strings.Contains(err.Error(), "unable to upgrade connection: container not found") {
+				By(fmt.Sprintf("Successfully crashed gateway node %q", gwNode))
+			} else {
+				Expect(err).NotTo(HaveOccurred())
+			}
+		}
+	}
+}
