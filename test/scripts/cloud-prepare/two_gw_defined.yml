@@ -1,0 +1,6 @@
+---
+submariner: true
+nodes: control-plane worker worker
+gateways: 2
+clusters:
+  cluster-test:
