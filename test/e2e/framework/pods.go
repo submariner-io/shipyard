@@ -21,6 +21,7 @@ package framework
 import (
 	"context"
 	"fmt"
+	"time"
 
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
@@ -61,6 +62,42 @@ func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName, namespace
 // for the pod to materialize.
 func (f *Framework) AwaitSubmarinerGatewayPod(cluster ClusterIndex) *v1.Pod {
 	return &f.AwaitPodsByAppLabel(cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, 1).Items[0]
+}
+
+// AwaitActiveGatewayPod looks for active gateway pod.
+// Returns pod object or nil.
+func (f *Framework) AwaitActiveGatewayPod(cluster ClusterIndex, checkPod func(*v1.Pod) bool) *v1.Pod {
+	for retries := 1; retries <= 30; retries++ {
+		var activePod, retPod *v1.Pod
+		gwPods := f.AwaitPodsByAppLabel(cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, -1)
+
+		for i := range gwPods.Items {
+			pod := &gwPods.Items[i]
+			if pod.Labels[gatewayStatusLabel] == gatewayStatusActive {
+				if activePod != nil {
+					Errorf("Found 2 active gateway pods: %q and %q", activePod.Name, pod.Name)
+
+					retPod = nil
+
+					break
+				}
+
+				activePod = pod
+
+				if checkPod == nil || checkPod(pod) {
+					retPod = pod
+				}
+			}
+		}
+
+		if retPod != nil {
+			return retPod
+		}
+
+		time.Sleep(5 * time.Second)
+	}
+
+	return nil
 }
 
 // DeletePod deletes the pod for the given name and namespace.
