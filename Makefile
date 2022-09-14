@@ -5,7 +5,6 @@ MULTIARCH_IMAGES ?= nettest
 EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
-SHELLCHECK_ARGS := $(shell find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
 FOCUS ?=
 SKIP ?=
 PLUGIN ?=
