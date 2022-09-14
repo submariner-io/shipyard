@@ -31,6 +31,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 )
 
+const (
+	gatewayStatusLabel  = "gateway.submariner.io/status"
+	gatewayStatusActive = "active"
+)
+
 // FindGatewayNodes finds nodes in a given cluster by matching 'submariner.io/gateway' value.
 func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
 	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
@@ -51,6 +56,19 @@ func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
 	Expect(err).NotTo(HaveOccurred())
 
 	return nodes.Items
+}
+
+// FindClusterWithMultipleGateways finds the cluster with multiple GW nodes.
+// Returns cluster index.
+func (f *Framework) FindClusterWithMultipleGateways() int {
+	for idx := range TestContext.ClusterIDs {
+		gatewayNodes := FindGatewayNodes(ClusterIndex(idx))
+		if len(gatewayNodes) >= 2 {
+			return idx
+		}
+	}
+
+	return -1
 }
 
 // SetGatewayLabelOnNode sets the 'submariner.io/gateway' value for a node to the specified value.

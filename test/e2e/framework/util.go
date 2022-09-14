@@ -63,3 +63,15 @@ func NewRequirement(key string, op selection.Operator, vals []string) labels.Req
 
 	return *r
 }
+
+// FindOtherClusterIndex looks within the environment for another cluster
+// besides the one provided and returns its index or -1 if none other is found.
+func FindOtherClusterIndex(mainCluster int) int {
+	for idx := range TestContext.ClusterIDs {
+		if idx != mainCluster {
+			return idx
+		}
+	}
+
+	return -1
+}
