@@ -68,3 +68,37 @@ func (f *Framework) SetGatewayLabelOnNode(cluster ClusterIndex, nodeName string,
 			return err
 		})
 }
+
+// FindAnyNonGatewayRouteAgentPodNodes looks for the route agent pod on any cluster node, including control plane
+// The function will be used in upstream ci environment, lack of resources where two GW nodes are used.
+func (f *Framework) FindAnyNonGatewayRouteAgentPodNodes(cluster ClusterIndex) []*v1.Node {
+	gwNodesSet := make(map[string]bool)
+	gwNodes := f.FindNodesByGatewayLabel(cluster, true)
+
+	for _, node := range gwNodes {
+		gwNodesSet[node.Name] = true
+	}
+
+	var selectedNode string
+	routeAgentPods := f.AwaitPodsByAppLabel(cluster, RouteAgent, TestContext.SubmarinerNamespace, -1)
+
+	for i := range routeAgentPods.Items {
+		if !gwNodesSet[routeAgentPods.Items[i].Spec.NodeName] {
+			selectedNode = routeAgentPods.Items[i].Spec.NodeName
+		}
+	}
+
+	searchNodes := AwaitUntil("list nodes", func() (interface{}, error) {
+		// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
+		return KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+			LabelSelector: "kubernetes.io/hostname=" + selectedNode,
+		})
+	}, NoopCheckResult).(*v1.NodeList)
+
+	nodes := []*v1.Node{}
+	for i := range searchNodes.Items {
+		nodes = append(nodes, &searchNodes.Items[i])
+	}
+
+	return nodes
+}
