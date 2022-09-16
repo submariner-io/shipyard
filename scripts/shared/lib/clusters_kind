@@ -7,15 +7,16 @@
 declare -gA kind_k8s_versions kind_binaries
 # kind-0.12 hashes
 kind_k8s_versions[1.17]=1.17.17@sha256:e477ee64df5731aa4ef4deabbafc34e8d9a686b49178f726563598344a3898d5
-kind_k8s_versions[1.18]=1.18.20@sha256:e3dca5e16116d11363e31639640042a9b1bd2c90f85717a7fc66be34089a8169
-kind_k8s_versions[1.19]=1.19.16@sha256:81f552397c1e6c1f293f967ecb1344d8857613fb978f963c30e907c32f598467
-kind_k8s_versions[1.20]=1.20.15@sha256:393bb9096c6c4d723bb17bceb0896407d7db581532d11ea2839c80b28e5d8deb
-kind_k8s_versions[1.21]=1.21.10@sha256:84709f09756ba4f863769bdcabe5edafc2ada72d3c8c44d6515fc581b66b029c
-kind_k8s_versions[1.22]=1.22.7@sha256:1dfd72d193bf7da64765fd2f2898f78663b9ba366c2aa74be1fd7498a1873166
-kind_k8s_versions[1.23]=1.23.4@sha256:0e34f0d0fd448aa2f2819cfd74e99fe5793a6e4938b328f657c8e3f81ee0dfb9
-# kind-0.14 hashes
-kind_k8s_versions[1.24]=1.24.2@sha256:a3220cefdf4f9be6681c871da35521eaaf59fadd7d509613a9e1881c5f74b587
-kind_binaries[1.24]='kind'
+kind_binaries[1.17]='kind-0.12'
+# kind-0.15 hashes
+kind_k8s_versions[1.18]=1.18.20@sha256:61c9e1698c1cb19c3b1d8151a9135b379657aee23c59bde4a8d87923fcb43a91
+kind_k8s_versions[1.19]=1.19.16@sha256:707469aac7e6805e52c3bde2a8a8050ce2b15decff60db6c5077ba9975d28b98
+kind_k8s_versions[1.20]=1.20.15@sha256:d67de8f84143adebe80a07672f370365ec7d23f93dc86866f0e29fa29ce026fe
+kind_k8s_versions[1.21]=1.21.14@sha256:f9b4d3d1112f24a7254d2ee296f177f628f9b4c1b32f0006567af11b91c1f301
+kind_k8s_versions[1.22]=1.22.13@sha256:4904eda4d6e64b402169797805b8ec01f50133960ad6c19af45173a27eadf959
+kind_k8s_versions[1.23]=1.23.10@sha256:f047448af6a656fae7bc909e2fab360c18c487ef3edc93f06d78cdfd864b2d12
+kind_k8s_versions[1.24]=1.24.4@sha256:adfaebada924a26c2c9308edd53c6e33b3d4e453782c0063dc0028bdebaddf98
+kind_k8s_versions[1.25]=1.25.0@sha256:428aaa17ec82ccde0131cb2d1ca6547d13cf5fdabcc0bbecf749baa935387cbf
 
 ### Functions ###
 
@@ -281,7 +282,7 @@ function download_ovnk() {
 
 function provider_prepare() {
     [[ -z "${K8S_VERSION}" ]] && K8S_VERSION="${DEFAULT_K8S_VERSION}"
-    kind="${kind_binaries[$K8S_VERSION]:-kind-0.12}"
+    kind="${kind_binaries[$K8S_VERSION]:-kind}"
     [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
 
     download_kind
