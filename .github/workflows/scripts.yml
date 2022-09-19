@@ -55,6 +55,7 @@ jobs:
             extra-toggles: lighthouse
           - deploytool: helm
             extra-toggles: lighthouse
+          - extra-toggles: load-balancer
           - extra-toggles: prometheus
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
