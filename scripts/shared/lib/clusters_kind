@@ -111,10 +111,15 @@ function provider_create_cluster() {
     "${kind}" create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
-    ( deploy_cni; ) &
+    delete_cluster_on_fail deploy_cni
+    [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
+}
+
+function delete_cluster_on_fail() {
+    ( "$@"; ) &
     if ! wait $! ; then
-        echo "Failed to deploy CNI, removing the cluster"
-        kubectl cluster-info dump 1>&2
+        echo "Failed to run '$*', removing the cluster"
+        kubectl cluster-info dump || echo "Can't get cluster info" 1>&2
         "${kind}" delete cluster --name="${cluster}"
         return 1
     fi
@@ -203,6 +208,34 @@ function deploy_ovn_cni(){
     echo "OVN CNI deployed."
 }
 
+function deploy_load_balancer() {
+    local kind_ip start_ip end_ip net_addr
+    kind_ip=$(docker network inspect -f '{{.IPAM.Config}}' kind | awk '/.*/ { print $2 }')
+    net_addr=$(echo "${cluster_CIDRs[$cluster]}" | cut -f2 -d'.')
+    [[ "$GLOBALNET" != true ]] || net_addr=$(echo "${global_CIDRs[$cluster]}" | cut -f3 -d'.')
+    start_ip=$(echo "$kind_ip" | cut -f1-2 -d'.')."$net_addr".100
+    end_ip=$(echo "$start_ip" | cut -f1-3 -d'.').250
+
+    kubectl apply -f "https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
+    kubectl wait --for=condition=Ready pods -l app=metallb -n metallb-system --timeout="${TIMEOUT}"
+    kubectl apply -f - <<EOF
+apiVersion: metallb.io/v1beta1
+kind: IPAddressPool
+metadata:
+  name: submariner-pool
+  namespace: metallb-system
+spec:
+  addresses:
+  - ${start_ip}-${end_ip}
+---
+apiVersion: metallb.io/v1beta1
+kind: L2Advertisement
+metadata:
+  name: submariner-l2
+  namespace: metallb-system
+EOF
+}
+
 function deploy_kind_ovn(){
     local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
     export K8s_VERSION="${K8S_VERSION}"
@@ -215,12 +248,7 @@ function deploy_kind_ovn(){
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
 
-    ( ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"; ) &
-    if ! wait $! ; then
-        echo "Failed to install kind with OVN"
-        "${kind}" delete cluster --name="${cluster}"
-        return 1
-    fi
+    delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"
 }
 
 function run_local_registry() {

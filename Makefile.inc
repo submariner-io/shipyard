@@ -8,12 +8,13 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
+export DEBUG_PRINT GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.25
+METALLB_VERSION ?= 0.13.5
 OLM_VERSION ?= v0.18.3
-export K8S_VERSION OLM OLM_VERSION PROMETHEUS
+export K8S_VERSION METALLB_VERSION OLM OLM_VERSION PROMETHEUS
 
 # Specific to `deploy`
 CABLE_DRIVER ?= libreswan
@@ -109,6 +110,10 @@ endif
 ifneq (,$(filter aws-ocp,$(_using)))
 PROVIDER = aws-ocp
 IMAGE_TAG = subctl
+endif
+
+ifneq (,$(filter load-balancer,$(_using)))
+LOAD_BALANCER = true
 endif
 
 ifeq ($(LIGHTHOUSE),true)

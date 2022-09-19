@@ -67,6 +67,7 @@ function subctl_install_subm() {
         done
     fi
 
+    [[ "$LOAD_BALANCER" = true ]] && extra_flags+=(--load-balancer)
     if [ "${PASS_CIDR_ARGS}" == "true" ];then
         extra_flags+=(--clustercidr "${cluster_CIDRs[${cluster}]}" --servicecidr "${service_CIDRs[${cluster}]}")
     fi
