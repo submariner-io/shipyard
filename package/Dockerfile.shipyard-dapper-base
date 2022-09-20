@@ -65,7 +65,7 @@ ENV LINT_VERSION=v1.47.3 \
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 # We install kind-0.12 and kind-0.15; we need to test K8s 1.17, our oldest-supported version, and kind-0.12 was the last version to
-# ship K8s 1.17 images and also work with Weave (because of containerd version 1.6.5 incompatabilty)
+# ship K8s 1.17 images
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
