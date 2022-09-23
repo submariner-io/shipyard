@@ -47,9 +47,6 @@ function post_analyze() {
         kubectl -n "$ns" logs "$name"
     done
 
-    print_section "* Kube-proxy pod logs for $cluster *"
-    print_pods_logs "kube-system" "k8s-app=kube-proxy"
-
     print_section "* Kube-controller-manager pod logs for $cluster *"
     print_pods_logs "kube-system" "component=kube-controller-manager"
 
