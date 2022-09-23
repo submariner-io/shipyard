@@ -155,26 +155,28 @@ func init() {
 func BeforeSuite() {
 	By("Creating kubernetes clients")
 
-	if len(TestContext.KubeConfig) > 0 {
-		Expect(len(TestContext.KubeConfigs)).To(BeZero(),
-			"Either KubeConfig or KubeConfigs must be specified but not both")
+	if len(RestConfigs) == 0 {
+		if len(TestContext.KubeConfig) > 0 {
+			Expect(len(TestContext.KubeConfigs)).To(BeZero(),
+				"Either KubeConfig or KubeConfigs must be specified but not both")
 
-		for _, ctx := range TestContext.KubeContexts {
-			RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, ctx))
-		}
+			for _, ctx := range TestContext.KubeContexts {
+				RestConfigs = append(RestConfigs, createRestConfig(TestContext.KubeConfig, ctx))
+			}
 
-		// if cluster IDs are not provided we assume that cluster-id == context
-		if len(TestContext.ClusterIDs) == 0 {
-			TestContext.ClusterIDs = TestContext.KubeContexts
+			// if cluster IDs are not provided we assume that cluster-id == context
+			if len(TestContext.ClusterIDs) == 0 {
+				TestContext.ClusterIDs = TestContext.KubeContexts
+			}
+		} else if len(TestContext.KubeConfigs) > 0 {
+			Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
+				"One ClusterID must be provided for each item in the KubeConfigs")
+			for _, kubeConfig := range TestContext.KubeConfigs {
+				RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
+			}
+		} else {
+			Fail("One of KubeConfig or KubeConfigs must be specified")
 		}
-	} else if len(TestContext.KubeConfigs) > 0 {
-		Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
-			"One ClusterID must be provided for each item in the KubeConfigs")
-		for _, kubeConfig := range TestContext.KubeConfigs {
-			RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
-		}
-	} else {
-		Fail("One of KubeConfig or KubeConfigs must be specified")
 	}
 
 	for _, restConfig := range RestConfigs {
