@@ -23,7 +23,6 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/onsi/ginkgo"
 	. "github.com/onsi/gomega"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -184,30 +183,18 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	}, NoopCheckResult)
 }
 
-// GatewayCleanup ensures that only the active gateway node is flagged as gateway node which could not be after a failed
-//  test which left the system on an unexpected state.
+// GatewayCleanup will be executed only on kind environment.
+// It will restore the gateway nodes to its initial state.
+// Other environments do not need any gw cleanup as MachineSet is responsible to keeping the gw nodes in active states.
 func (f *Framework) GatewayCleanup() {
 	for cluster := range DynClients {
-		passiveGateways := f.GetGatewaysWithHAStatus(ClusterIndex(cluster), "passive")
-
-		if len(passiveGateways) == 0 {
-			continue
-		}
-
-		ginkgo.By(fmt.Sprintf("Cleaning up any non-active gateways: %v", gatewayNames(passiveGateways)))
+		passiveGateways := f.FindNodesByGatewayLabel(ClusterIndex(cluster), false)
 
 		for _, nonActiveGw := range passiveGateways {
-			f.SetGatewayLabelOnNode(ClusterIndex(cluster), nonActiveGw.GetName(), false)
-			f.AwaitGatewayRemoved(ClusterIndex(cluster), nonActiveGw.GetName())
+			if strings.Contains(nonActiveGw.Spec.ProviderID, "kind") {
+				By(fmt.Sprintln("Detected passive GW in kind environment - restoring"))
+				f.SetGatewayLabelOnNode(ClusterIndex(cluster), nonActiveGw.Name, true)
+			}
 		}
 	}
-}
-
-func gatewayNames(gateways []unstructured.Unstructured) []string {
-	names := []string{}
-	for _, gw := range gateways {
-		names = append(names, gw.GetName())
-	}
-
-	return names
 }
