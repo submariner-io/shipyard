@@ -183,18 +183,18 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	}, NoopCheckResult)
 }
 
+func (f *Framework) SaveGatewayNode(cluster ClusterIndex, gwNode string) {
+	f.gatewayNodesToReset[int(cluster)] = append(f.gatewayNodesToReset[int(cluster)], gwNode)
+}
+
 // GatewayCleanup will be executed only on kind environment.
 // It will restore the gateway nodes to its initial state.
 // Other environments do not need any gw cleanup as MachineSet is responsible to keeping the gw nodes in active states.
 func (f *Framework) GatewayCleanup() {
-	for cluster := range DynClients {
-		passiveGateways := f.FindNodesByGatewayLabel(ClusterIndex(cluster), false)
-
-		for _, nonActiveGw := range passiveGateways {
-			if strings.Contains(nonActiveGw.Spec.ProviderID, "kind") {
-				By(fmt.Sprintln("Detected passive GW in kind environment - restoring"))
-				f.SetGatewayLabelOnNode(ClusterIndex(cluster), nonActiveGw.Name, true)
-			}
+	for cluster := range f.gatewayNodesToReset {
+		for _, gnode := range f.gatewayNodesToReset[cluster] {
+			By(fmt.Sprintf("Restoring gateway %q on cluster %q", gnode, TestContext.ClusterIDs[cluster]))
+			f.SetGatewayLabelOnNode(ClusterIndex(cluster), gnode, true)
 		}
 	}
 }
