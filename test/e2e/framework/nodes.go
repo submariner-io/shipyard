@@ -23,40 +23,34 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// FindNodesByGatewayLabel finds the nodes in a given cluster by matching 'submariner.io/gateway' value.
-// Nodes with the missing label will be ignored. Note the control plane node labeled as master is ignored.
-func (f *Framework) FindNodesByGatewayLabel(cluster ClusterIndex, isGateway bool) []*v1.Node {
-	return findNodesByGatewayLabel(int(cluster), isGateway)
+// FindGatewayNodes finds nodes in a given cluster by matching 'submariner.io/gateway' value.
+func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.Set{GatewayLabel: "true"}.String(),
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	return nodes.Items
 }
 
-func findNodesByGatewayLabel(cluster int, isGateway bool) []*v1.Node {
-	nodes := AwaitUntil("list nodes", func() (interface{}, error) {
-		// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
-		return KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "!node-role.kubernetes.io/master",
-		})
-	}, NoopCheckResult).(*v1.NodeList)
+// FindNonGatewayNodes finds nodes in a given cluster that doesn't match 'submariner.io/gateway' value.
+func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.NewSelector().Add(
+			NewRequirement(GatewayLabel, selection.Exists, []string{}),
+			NewRequirement(GatewayLabel, selection.NotEquals, []string{"true"})).String(),
+	})
+	Expect(err).NotTo(HaveOccurred())
 
-	expLabelValue := strconv.FormatBool(isGateway)
-	retNodes := []*v1.Node{}
-
-	for i := range nodes.Items {
-		value, exists := nodes.Items[i].Labels[GatewayLabel]
-		if !exists {
-			continue
-		}
-
-		if value == expLabelValue {
-			retNodes = append(retNodes, &nodes.Items[i])
-		}
-	}
-
-	return retNodes
+	return nodes.Items
 }
 
 // SetGatewayLabelOnNode sets the 'submariner.io/gateway' value for a node to the specified value.
