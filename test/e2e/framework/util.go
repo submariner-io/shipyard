@@ -22,8 +22,9 @@ import (
 	"strings"
 
 	. "github.com/onsi/gomega"
-	// We need GCP authentication.
-	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
+	_ "k8s.io/client-go/plugin/pkg/client/auth/gcp" // We need GCP authentication.
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 )
@@ -54,4 +55,11 @@ func ExpectNoErrorWithOffset(offset int, err error, explain ...interface{}) {
 	}
 
 	ExpectWithOffset(1+offset, err).NotTo(HaveOccurred(), explain...)
+}
+
+func NewRequirement(key string, op selection.Operator, vals []string) labels.Requirement {
+	r, err := labels.NewRequirement(key, op, vals)
+	Expect(err).To(Succeed())
+
+	return *r
 }

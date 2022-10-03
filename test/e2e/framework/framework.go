@@ -290,7 +290,7 @@ func InitNumClusterNodes() error {
 
 func fetchClusterIDs() {
 	for i := range KubeClients {
-		gatewayNodes := findNodesByGatewayLabel(i, true)
+		gatewayNodes := FindGatewayNodes(ClusterIndex(i))
 		if len(gatewayNodes) == 0 {
 			continue
 		}
