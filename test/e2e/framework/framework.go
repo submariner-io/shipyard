@@ -95,6 +95,7 @@ type Framework struct {
 	Namespace                string          // Every test has a namespace at least unless creation is skipped
 	namespacesToDelete       map[string]bool // Some tests have more than one.
 	NamespaceDeletionTimeout time.Duration
+	gatewayNodesToReset      map[int][]string // Store GW nodes for the final cleanup
 
 	// To make sure that this framework cleans up after itself, no matter what,
 	// we install a Cleanup action before each test and clear it after.  If we
@@ -113,8 +114,9 @@ var (
 // NewBareFramework creates a test framework, without ginkgo dependencies.
 func NewBareFramework(baseName string) *Framework {
 	return &Framework{
-		BaseName:           baseName,
-		namespacesToDelete: map[string]bool{},
+		BaseName:            baseName,
+		namespacesToDelete:  map[string]bool{},
+		gatewayNodesToReset: map[int][]string{},
 	}
 }
 
