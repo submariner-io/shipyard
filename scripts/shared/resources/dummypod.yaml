@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: dummypod
-          image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
+          image: "quay.io/submariner/nettest:devel"
           imagePullPolicy: IfNotPresent
           command:
             - sleep
