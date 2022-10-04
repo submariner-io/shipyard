@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dummypod
+spec:
+  selector:
+    matchLabels:
+      app: dummypod
+  template:
+    metadata:
+      labels:
+        app: dummypod
+    spec:
+      containers:
+        - name: dummypod
+          image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
+          imagePullPolicy: IfNotPresent
+          command:
+            - sleep
+            - infinity
+      restartPolicy: Always
