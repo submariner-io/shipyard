@@ -105,6 +105,16 @@ function deploy_resource() {
     kubectl rollout status "deploy/${resource_name}" --timeout="${TIMEOUT}"
 }
 
+function deploy_daemonset() {
+    local namespace=$1
+    local resource_file=$2
+    local resource_name
+    resource_name=$(basename "$resource_file" ".yaml")
+    render_template "${resource_file}" | kubectl -n "${namespace}" apply -f -
+    echo "Waiting for ${resource_name} pods to be ready."
+    kubectl -n "${namespace}" rollout status "ds/${resource_name}" --timeout="${TIMEOUT}"
+}
+
 function remove_resource() {
     local resource_file=$1
     render_template "${resource_file}" | kubectl delete -f -
