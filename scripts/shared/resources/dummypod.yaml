@@ -1,0 +1,22 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: dummypod
+spec:
+  selector:
+    matchLabels:
+      app: dummypod
+  template:
+    metadata:
+      labels:
+        app: dummypod
+    spec:
+      containers:
+        - name: dummypod
+          image: "quay.io/submariner/nettest:devel"
+          imagePullPolicy: IfNotPresent
+          command:
+            - sleep
+            - infinity
+      restartPolicy: Always
