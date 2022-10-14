@@ -174,7 +174,7 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 		np.TerminationMessage = np.Pod.Status.ContainerStatuses[0].State.Terminated.Message
 
 		if verbose {
-			Logf("Pod %q output:\n%s", np.Pod.Name, removeDupDataplaneLines(np.TerminationMessage))
+			Logf("Pod %q on node %q output:\n%s", np.Pod.Name, np.Pod.Spec.NodeName, removeDupDataplaneLines(np.TerminationMessage))
 		}
 	}
 }
