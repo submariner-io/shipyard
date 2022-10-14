@@ -174,12 +174,10 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		framework.Logf("Will send traffic from IP: %v", sourceIP)
 	}
 
-	By(fmt.Sprintf("Waiting for the connector pod %q on node %q to exit, returning what connector sent",
-		connectorPod.Pod.Name, connectorPod.Pod.Spec.NodeName))
+	By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
 	connectorPod.AwaitFinish()
 
-	By(fmt.Sprintf("Waiting for the listener pod %q on node %q to exit, returning what listener sent",
-		listenerPod.Pod.Name, listenerPod.Pod.Spec.NodeName))
+	By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
 	listenerPod.AwaitFinish()
 
 	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)
