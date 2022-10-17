@@ -36,7 +36,7 @@ package/.image.nettest package/.image.shipyard-dapper-base: ;
 # Project-specific targets go here
 deploy: package/.image.nettest
 
-e2e: $(VENDOR_MODULES) clusters
+e2e: clusters
 
 else
 

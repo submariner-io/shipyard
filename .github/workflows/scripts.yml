@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Test the compile.sh script
-        run: make vendor/modules.txt script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
   deploy:
     name: Deploy

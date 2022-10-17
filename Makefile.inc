@@ -219,11 +219,11 @@ gitlint:
 	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
 	fi
 
-# List of vendor/modules.txt files we need
+# List of vendor/modules.txt files we might encounter
 VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h/vendor/modules.txt\n")
 
 # [golangci-lint] validates Go code in the project
-golangci-lint: $(VENDOR_MODULES)
+golangci-lint:
 ifneq (,$(shell find . -name '*.go'))
 	golangci-lint version
 	golangci-lint linters
@@ -279,7 +279,7 @@ post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh
 
 # [unit] executes the Go unit tests of the project
-unit: $(VENDOR_MODULES)
+unit:
 	$(SCRIPTS_DIR)/unit_test.sh $(UNIT_TEST_ARGS)
 
 vendor/modules.txt: go.mod
