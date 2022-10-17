@@ -150,24 +150,3 @@ func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
-
-// AwaitUntilAnnotationOnService queries the service and looks for the presence of annotation.
-func (f *Framework) AwaitUntilAnnotationOnService(cluster ClusterIndex, annotation, svcName, namespace string) *corev1.Service {
-	return AwaitUntil("get"+annotation+" annotation for service "+svcName, func() (interface{}, error) {
-		service, err := KubeClients[cluster].CoreV1().Services(namespace).Get(context.TODO(), svcName, metav1.GetOptions{})
-		if apierrors.IsNotFound(err) {
-			return nil, nil
-		}
-		return service, err
-	}, func(result interface{}) (bool, string, error) {
-		if result == nil {
-			return false, "No Service found", nil
-		}
-
-		service := result.(*corev1.Service)
-		if service.GetAnnotations()[annotation] == "" {
-			return false, fmt.Sprintf("Service %q does not have annotation %q yet", svcName, annotation), nil
-		}
-		return true, "", nil
-	}).(*corev1.Service)
-}

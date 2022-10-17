@@ -28,8 +28,6 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-const globalnetGlobalIPAnnotation = "submariner.io/globalIp"
-
 type EndpointType int
 
 const (
@@ -71,27 +69,8 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring(listenerPod.Config.Data))
 
 	if p.Networking == framework.PodNetworking {
-		if p.ToEndpointType == GlobalServiceIP {
-			// When Globalnet is enabled (i.e., remoteEndpoint is a globalIP) and POD uses PodNetworking,
-			// Globalnet Controller MASQUERADEs the source-ip of the POD to the corresponding global-ip
-			// that is assigned to the POD.
-			By("Verifying the output of listener pod which must contain the globalIP of the connector POD")
-
-			podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
-			Expect(podGlobalIP).ToNot(Equal(""))
-			Expect(listenerPod.TerminationMessage).To(ContainSubstring(podGlobalIP))
-		} else if p.ToEndpointType != GlobalServiceIP {
-			By("Verifying the output of listener pod which must contain the source IP")
-			Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
-		}
-	} else if p.Networking == framework.HostNetworking {
-		// when a POD is using the HostNetwork, it does not get an IPAddress from the podCIDR
-		// but it uses the HostIP. Submariner, for such PODs, would MASQUERADE the sourceIP of
-		// the outbound traffic (destined to remoteCluster) to the corresponding CNI interface
-		// ip-address on that Host and globalIP will NOT be annotated on the POD.
-		By("Verifying that globalIP annotation does not exist on the connector POD")
-		podGlobalIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
-		Expect(podGlobalIP).To(Equal(""))
+		By("Verifying the output of listener pod which must contain the source IP")
+		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
 	}
 
 	// Return the pods in case further verification is needed
@@ -136,19 +115,12 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	remoteIP := listenerPod.Pod.Status.PodIP
 	var service *v1.Service
 
-	if p.ToEndpointType == ServiceIP || p.ToEndpointType == GlobalServiceIP {
+	if p.ToEndpointType == ServiceIP {
 		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
 			framework.TestContext.ClusterIDs[p.ToCluster]))
 
 		service = listenerPod.CreateService()
 		remoteIP = service.Spec.ClusterIP
-
-		if p.ToEndpointType == GlobalServiceIP {
-			p.Framework.CreateServiceExport(p.ToCluster, service.Name)
-			// Wait for the globalIP annotation on the service.
-			service = p.Framework.AwaitUntilAnnotationOnService(p.ToCluster, globalnetGlobalIPAnnotation, service.Name, service.Namespace)
-			remoteIP = service.GetAnnotations()[globalnetGlobalIPAnnotation]
-		}
 	}
 
 	framework.Logf("Will send traffic to IP: %v", remoteIP)
@@ -166,14 +138,6 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		Networking:         p.Networking,
 	})
 
-	if p.ToEndpointType == GlobalServiceIP && p.Networking == framework.PodNetworking {
-		// Wait for the globalIP annotation on the connectorPod.
-		connectorPod.Pod = p.Framework.AwaitUntilAnnotationOnPod(p.FromCluster, globalnetGlobalIPAnnotation, connectorPod.Pod.Name,
-			connectorPod.Pod.Namespace)
-		sourceIP := connectorPod.Pod.GetAnnotations()[globalnetGlobalIPAnnotation]
-		framework.Logf("Will send traffic from IP: %v", sourceIP)
-	}
-
 	By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
 	connectorPod.AwaitFinish()
 
@@ -181,18 +145,6 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	listenerPod.AwaitFinish()
 
 	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)
-
-	// In Globalnet deployments, when backend pods finish their execution, kubeproxy-iptables driver tries
-	// to delete the iptables-chain associated with the service (even when the service is present) as there are
-	// no active backend pods. Since the iptables-chain is also referenced by Globalnet Ingress rules, the chain
-	// cannot be deleted (kubeproxy errors out and continues to retry) until Globalnet removes the reference.
-	// Globalnet removes the reference only when the service itself is deleted. Until Globalnet is enhanced [*]
-	// to remove this dependency with iptables-chain, lets delete the service after the listener Pod is terminated.
-	// [*] https://github.com/submariner-io/submariner/issues/1166
-	if p.ToEndpointType == GlobalServiceIP {
-		p.Framework.DeleteServiceExport(p.ToCluster, service.Name)
-		p.Framework.DeleteService(p.ToCluster, service.Name)
-	}
 
 	return listenerPod, connectorPod
 }
