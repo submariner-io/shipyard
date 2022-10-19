@@ -98,7 +98,7 @@ func (d *Docker) RunCommandUntil(command ...string) (string, string) {
 			stdout, stderr, cmdErr = d.runCommand(command...)
 			if cmdErr != nil {
 				Logf("Error attempting to run %v: %v", append([]string{}, command...), cmdErr)
-				return false, nil // nolint:nilerr // Returning nil value is intentional
+				return false, nil //nolint:nilerr // Returning nil value is intentional
 			}
 			return true, nil
 		})
