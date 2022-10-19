@@ -45,7 +45,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -112,7 +112,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -177,7 +177,7 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	AwaitUntil("delete gateway", func() (interface{}, error) {
 		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return nil, err
 	}, NoopCheckResult)

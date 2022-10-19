@@ -56,7 +56,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
-ENV LINT_VERSION=v1.47.3 \
+ENV LINT_VERSION=v1.50.1 \
     HELM_VERSION=v3.9.0 \
     KIND_VERSION=v0.15.0 \
     BUILDX_VERSION=v0.8.2 \
