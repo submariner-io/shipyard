@@ -50,7 +50,8 @@ func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
 func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
 	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
 		LabelSelector: labels.NewSelector().Add(
-			NewRequirement(GatewayLabel, selection.Exists, []string{}),
+			// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
+			NewRequirement("node-role.kubernetes.io/master", selection.DoesNotExist, []string{}),
 			NewRequirement(GatewayLabel, selection.NotEquals, []string{"true"})).String(),
 	})
 	Expect(err).NotTo(HaveOccurred())
