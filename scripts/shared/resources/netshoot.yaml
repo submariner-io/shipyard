@@ -17,6 +17,11 @@ spec:
         - name: netshoot
           image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
           imagePullPolicy: IfNotPresent
+          securityContext:
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           command:
             - sleep
             - 1h
