@@ -59,7 +59,6 @@ function test_connection() {
 function connectivity_tests() {
     target_cluster="$1"
 
-    [[ "${PROVIDER}" != 'kind' ]] || import_image "${REPO}/nettest"
     deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
     with_context "$target_cluster" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
 

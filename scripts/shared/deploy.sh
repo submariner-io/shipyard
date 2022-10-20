@@ -122,6 +122,9 @@ load_settings
 declare_cidrs
 declare_kubeconfig
 
+# Always import nettest image on kind, to be able to test connectivity and other things
+[[ "${PROVIDER}" != 'kind' ]] || import_image "${REPO}/nettest"
+
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 "${SCRIPTS_DIR}/get-subctl.sh"
 
