@@ -21,7 +21,7 @@ spec:
           effect: NoSchedule
       containers:
         - name: dummypod
-          image: "quay.io/submariner/nettest:devel"
+          image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
           imagePullPolicy: IfNotPresent
           command:
             - sleep

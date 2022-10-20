@@ -58,12 +58,6 @@ function test_connection() {
 
 function connectivity_tests() {
     target_cluster="$1"
-    if [[ "${SUBM_IMAGE_TAG}" == 'subctl' ]]; then
-        local SUBM_IMAGE_TAG="${BASE_BRANCH}"
-        # This is used in the resource template YAML
-        # shellcheck disable=SC2034
-        local SUBM_IMAGE_REPO="${REPO}"
-    fi
 
     [[ "${PROVIDER}" != 'kind' ]] || import_image "${REPO}/nettest"
     deploy_resource "${RESOURCES_DIR}/netshoot.yaml"

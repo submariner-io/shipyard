@@ -38,7 +38,7 @@ function setup_broker() {
 
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
-    if [[ "${SUBM_IMAGE_TAG}" != "subctl" && "${PRELOAD_IMAGES}" =~ submariner-operator ]]; then
+    if [[ "${SUBM_IMAGE_TAG}" != "subctl" ]] && [[ "$AIR_GAPPED" = true || "${PRELOAD_IMAGES}" =~ submariner-operator ]]; then
         extra_flags+=(--repository "${SUBM_IMAGE_REPO}" --version "${SUBM_IMAGE_TAG}")
     fi
 
@@ -60,6 +60,9 @@ function subctl_install_subm() {
     # We use the "subctl" image_tag to indicate that we want to let
     # subctl use its default repository and version
     if [ "${SUBM_IMAGE_TAG}" != "subctl" ]; then
+        # Set repo/ver combo for air gapped environment, to make sure all Submariner images are only taken from local repo.
+        [[ "$AIR_GAPPED" = true ]] && extra_flags+=(--repository "${SUBM_IMAGE_REPO}" --version "${SUBM_IMAGE_TAG}")
+
         for image in ${PRELOAD_IMAGES}; do
             local image_key="${component_by_image[$image]}"
             [[ -n "${image_key}" ]] || continue

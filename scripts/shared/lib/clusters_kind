@@ -1,4 +1,5 @@
 # shellcheck shell=bash
+# shellcheck disable=SC2034 # As this is dynamically loaded, some variables appear unused
 
 ### Variables ###
 
@@ -23,14 +24,10 @@ kind_k8s_versions[1.25]=1.25.0@sha256:428aaa17ec82ccde0131cb2d1ca6547d13cf5fdabc
 function generate_cluster_yaml() {
     # These are used by render_template
     local pod_cidr service_cidr dns_domain disable_cni
-    # shellcheck disable=SC2034
     pod_cidr="${cluster_CIDRs[${cluster}]}"
-    # shellcheck disable=SC2034
     service_cidr="${service_CIDRs[${cluster}]}"
-    # shellcheck disable=SC2034
     dns_domain="${cluster}.local"
     disable_cni="false"
-    # shellcheck disable=SC2034
     [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
 
     local nodes
@@ -112,6 +109,7 @@ function provider_create_cluster() {
     kind_fixup_config
 
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
+    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
 }
 
 function delete_cluster_on_fail() {
@@ -122,6 +120,20 @@ function delete_cluster_on_fail() {
         "${kind}" delete cluster --name="${cluster}"
         return 1
     fi
+}
+
+function air_gap_iptables() {
+    local DEBUG_PRINT=false
+
+    for node in $(docker ps | grep -w "${cluster}-[-a-z0-9]*" | cut -f1 -d' '); do
+        # Allow any non-routable networks, and the globalnet one (240/4)
+        for net in 10.0.0.0/8 100.64.0.0/10 127.0.0.0/8 172.16.0.0/12 240.0.0.0/4; do
+            docker exec "$node" iptables -A OUTPUT -d "$net" -j ACCEPT
+        done
+
+        docker exec "$node" iptables -A OUTPUT -m state --state RELATED,ESTABLISHED -j ACCEPT
+        docker exec "$node" iptables -A OUTPUT -j REJECT
+    done
 }
 
 function deploy_load_balancer() {
@@ -165,6 +177,8 @@ function deploy_kind_ovn(){
     docker push "${OVN_IMAGE}"
 
     delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"
+
+    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
 }
 
 function run_local_registry() {
