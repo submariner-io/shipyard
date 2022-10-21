@@ -23,40 +23,53 @@ import (
 	"strconv"
 	"strings"
 
+	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/labels"
+	"k8s.io/apimachinery/pkg/selection"
 	"k8s.io/apimachinery/pkg/types"
 )
 
-// FindNodesByGatewayLabel finds the nodes in a given cluster by matching 'submariner.io/gateway' value.
-// Nodes with the missing label will be ignored. Note the control plane node labeled as master is ignored.
-func (f *Framework) FindNodesByGatewayLabel(cluster ClusterIndex, isGateway bool) []*v1.Node {
-	return findNodesByGatewayLabel(int(cluster), isGateway)
+const (
+	gatewayStatusLabel  = "gateway.submariner.io/status"
+	gatewayStatusActive = "active"
+)
+
+// FindGatewayNodes finds nodes in a given cluster by matching 'submariner.io/gateway' value.
+func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.Set{GatewayLabel: "true"}.String(),
+	})
+	Expect(err).NotTo(HaveOccurred())
+
+	return nodes.Items
 }
 
-func findNodesByGatewayLabel(cluster int, isGateway bool) []*v1.Node {
-	nodes := AwaitUntil("list nodes", func() (interface{}, error) {
-		// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
-		return KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
-			LabelSelector: "!node-role.kubernetes.io/master",
-		})
-	}, NoopCheckResult).(*v1.NodeList)
+// FindNonGatewayNodes finds nodes in a given cluster that doesn't match 'submariner.io/gateway' value.
+func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+		LabelSelector: labels.NewSelector().Add(
+			// Ignore the control plane node labeled as master as it doesn't allow scheduling of pods
+			NewRequirement("node-role.kubernetes.io/master", selection.DoesNotExist, []string{}),
+			NewRequirement(GatewayLabel, selection.NotEquals, []string{"true"})).String(),
+	})
+	Expect(err).NotTo(HaveOccurred())
 
-	expLabelValue := strconv.FormatBool(isGateway)
-	retNodes := []*v1.Node{}
+	return nodes.Items
+}
 
-	for i := range nodes.Items {
-		value, exists := nodes.Items[i].Labels[GatewayLabel]
-		if !exists {
-			continue
-		}
-
-		if value == expLabelValue {
-			retNodes = append(retNodes, &nodes.Items[i])
+// FindClusterWithMultipleGateways finds the cluster with multiple GW nodes.
+// Returns cluster index.
+func (f *Framework) FindClusterWithMultipleGateways() int {
+	for idx := range TestContext.ClusterIDs {
+		gatewayNodes := FindGatewayNodes(ClusterIndex(idx))
+		if len(gatewayNodes) >= 2 {
+			return idx
 		}
 	}
 
-	return retNodes
+	return -1
 }
 
 // SetGatewayLabelOnNode sets the 'submariner.io/gateway' value for a node to the specified value.
