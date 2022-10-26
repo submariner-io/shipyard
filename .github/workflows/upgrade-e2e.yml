@@ -3,7 +3,7 @@ name: Upgrade
 
 on:
   pull_request:
-    branches: [devel]
+    branches: [release-0.14]
 
 permissions: {}
 
