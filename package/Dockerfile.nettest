@@ -2,13 +2,14 @@ FROM alpine
 
 WORKDIR /app
 
-RUN apk add --update --no-cache gcc libc-dev make curl automake autoconf
+RUN apk add --update --no-cache gcc libc-dev make git automake autoconf
 
-RUN curl -L https://github.com/HewlettPackard/netperf/archive/netperf-2.7.0.tar.gz | tar xzf -
-RUN cd netperf-netperf-2.7.0 \
-    && aclocal -I src/missing/m4 && automake --add-missing --force-missing && autoconf && autoheader \
+RUN git clone --depth 1 https://github.com/HewlettPackard/netperf \
+    && git -C netperf reset --hard 3bc455b23f901dae377ca0a558e1e32aa56b31c4
+RUN cd netperf \
+    && ./autogen.sh \
     && ./configure CFLAGS=-fcommon \
-    && make && make install
+    && make -C src && make -C src install
 
 
 FROM alpine
