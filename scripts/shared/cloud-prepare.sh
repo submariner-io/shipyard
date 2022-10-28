@@ -40,7 +40,7 @@ function prepare_kind() {
 }
 
 function prepare_aws_ocp() {
-    subctl cloud prepare aws --kubecontext "${cluster}" --ocp-metadata "${OUTPUT_DIR}/aws-ocp-${cluster}/"
+    subctl cloud prepare aws --context "${cluster}" --ocp-metadata "${OUTPUT_DIR}/aws-ocp-${cluster}/"
     with_retries 60 sleep_on_fail 5s check_gateway_exists
 }
 
