@@ -23,6 +23,8 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 
 	. "github.com/onsi/gomega"
@@ -41,6 +43,7 @@ import (
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/pointer"
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
@@ -108,6 +111,8 @@ var (
 	RestConfigs []*rest.Config
 	KubeClients []*kubeclientset.Clientset
 	DynClients  []dynamic.Interface
+
+	podSecurityContext *corev1.SecurityContext
 )
 
 // NewBareFramework creates a test framework, without ginkgo dependencies.
@@ -189,6 +194,40 @@ func BeforeSuite() {
 
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
+	}
+
+	initPodSecurityContext()
+}
+
+func initPodSecurityContext() {
+	podSecurityContext = &corev1.SecurityContext{
+		AllowPrivilegeEscalation: pointer.Bool(false),
+		Capabilities: &corev1.Capabilities{
+			Drop: []corev1.Capability{
+				"ALL",
+			},
+		},
+		RunAsNonRoot: pointer.Bool(true),
+		RunAsUser:    pointer.Int64(10000), // We need to set some user ID other than 0.
+	}
+
+	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
+	Expect(err).To(Succeed())
+
+	major, err := strconv.Atoi(serverVersion.Major)
+	Expect(err).To(Succeed())
+
+	var minor int
+	if strings.HasSuffix(serverVersion.Minor, "+") {
+		minor, err = strconv.Atoi(serverVersion.Minor[0 : len(serverVersion.Minor)-1])
+	} else {
+		minor, err = strconv.Atoi(serverVersion.Minor)
+	}
+
+	Expect(err).To(Succeed())
+
+	if major > 1 || minor >= 24 {
+		podSecurityContext.SeccompProfile = &corev1.SeccompProfile{Type: corev1.SeccompProfileTypeRuntimeDefault}
 	}
 }
 
