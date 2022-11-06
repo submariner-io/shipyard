@@ -1,21 +1,30 @@
 # shellcheck shell=bash
 
+declare -gr OCP_CLIENTS_URL="https://mirror.openshift.com/pub/openshift-v4/clients"
 declare -gr OCP_INSTALLER="${HOME}/.local/bin/openshift-install"
 declare -gA k8s_ocp_version
-k8s_ocp_version[1.20]=latest-4.7
-k8s_ocp_version[1.21]=latest-4.8
-k8s_ocp_version[1.22]=latest-4.9
-k8s_ocp_version[1.23]=latest-4.10
-k8s_ocp_version[1.24]=latest-4.11
+k8s_ocp_version[1.20]=4.7
+k8s_ocp_version[1.21]=4.8
+k8s_ocp_version[1.22]=4.9
+k8s_ocp_version[1.23]=4.10
+k8s_ocp_version[1.24]=4.11
+k8s_ocp_version[1.25]=4.12
 
 function ensure_openshift_install() {
     local ocpi_version="${k8s_ocp_version[$K8S_VERSION]}"
 
     # Check if we already have the version installed, and if so skip re-downloading it
-    ! grep -qw "${ocpi_version#*-}" <("${OCP_INSTALLER}" version 2>/dev/null) || return 0
+    ! grep -qw "${ocpi_version}" <("${OCP_INSTALLER}" version 2>/dev/null) || return 0
+
+    mkdir -p "${OCP_INSTALLER%/*}"
+
+    # Try to get a GA client first, but if it's not available fall back to dev previews
+    local download_url="${OCP_CLIENTS_URL}/ocp/latest-${ocpi_version}"
+    if ! curl -o /dev/null -f -Ls "$download_url"; then
+        download_url="${OCP_CLIENTS_URL}/ocp-dev-preview/latest-${ocpi_version}"
+    fi
 
     # Download the installer when we don't have it installed, or what we have isn't the requested version
-    mkdir -p "${OCP_INSTALLER%/*}"
-    curl -Ls "https://mirror.openshift.com/pub/openshift-v4/clients/ocp/${ocpi_version}/openshift-install-linux.tar.gz" \
+    curl -Ls "${download_url}/openshift-install-linux.tar.gz" \
         | tar -xzf - -C "${OCP_INSTALLER%/*}" "${OCP_INSTALLER##*/}"
 }
