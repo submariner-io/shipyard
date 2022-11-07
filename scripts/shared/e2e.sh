@@ -41,7 +41,7 @@ function test_with_e2e_tests {
 }
 
 function test_with_subctl {
-    subctl verify --only "${SUBCTL_VERIFICATIONS}" --kubecontexts "$(generate_kubecontexts)"
+    subctl verify --only "${SUBCTL_VERIFICATIONS}" --context "${clusters[0]}" --tocontext "${clusters[1]}"
 }
 
 function count_nodes() {

@@ -21,6 +21,7 @@ package framework
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strconv"
@@ -141,7 +142,10 @@ func (np *NetworkPod) AwaitReady() {
 			if pod.Status.Phase != v1.PodPending {
 				return false, "", fmt.Errorf("unexpected pod phase %v - expected %v or %v", pod.Status.Phase, v1.PodPending, v1.PodRunning)
 			}
-			return false, fmt.Sprintf("Pod %q is still pending", pod.Name), nil
+
+			out, _ := json.MarshalIndent(&pod.Status, "", "  ")
+
+			return false, fmt.Sprintf("Pod %q is still pending: status:\n%s", pod.Name, out), nil
 		}
 
 		return true, "", nil // pod is running
@@ -271,6 +275,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 						{Name: "SEND_STRING", Value: np.Config.Data},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * np.Config.ConnectionAttempts))},
 					},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -325,6 +330,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
 					},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -371,6 +377,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * 1000))},
 					},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -405,6 +412,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					Env: []v1.EnvVar{
 						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
 					},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -446,6 +454,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 					},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -477,6 +486,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 					Image:           TestContext.NettestImageURL,
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"netserver", "-D"},
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -511,6 +521,7 @@ func (np *NetworkPod) buildCustomPod() {
 					Image:           np.Config.ImageName,
 					ImagePullPolicy: v1.PullAlways,
 					Command:         np.Config.Command,
+					SecurityContext: podSecurityContext,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},

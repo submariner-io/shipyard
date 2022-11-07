@@ -64,16 +64,6 @@ jobs:
       - name: Run golangci-lint
         run: make golangci-lint
 
-  headers:
-    name: License Headers
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@93ea575cb5d8a053eaa0ac8fa3b40d7e05a33cc8
-
-      - name: Check License Headers
-        uses: kt3k/license_checker@d12a6d90c58e30fefed09f2c4d03ba57f4c673a8
-
   markdown-link-check:
     name: Markdown Links (modified files)
     runs-on: ubuntu-latest
@@ -133,7 +123,7 @@ jobs:
         run: cat ${{ steps.scan.outputs.sarif }}
       - name: Upload Anchore scan SARIF report
         if: always()
-        uses: github/codeql-action/upload-sarif@cc7986c02bac29104a72998e67239bb5ee2ee110
+        uses: github/codeql-action/upload-sarif@ec3cf9c605b848da5f1e41e8452719eb1ccfb9a6
         with:
           sarif_file: ${{ steps.scan.outputs.sarif }}
 
