@@ -57,6 +57,7 @@ jobs:
             lighthouse: lighthouse
           - extra-toggles: air-gap
             ovn: ovn
+          - extra-toggles: aws-ocp
           - extra-toggles: ovn
           - deploytool: operator
             extra-toggles: lighthouse
