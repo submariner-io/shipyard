@@ -109,7 +109,7 @@ function provider_create_cluster() {
     kind_fixup_config
 
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
-    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
+    [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
 function delete_cluster_on_fail() {
