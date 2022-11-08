@@ -17,8 +17,6 @@ source "${SCRIPTS_DIR}/lib/deploy_funcs"
 readonly CE_IPSEC_IKEPORT=500
 # shellcheck disable=SC2034
 readonly CE_IPSEC_NATTPORT=4500
-SUBM_IMAGE_REPO=localhost:5000
-SUBM_IMAGE_TAG="${IMAGE_TAG}"
 # shellcheck disable=SC2034
 readonly SUBM_CS="submariner-catalog-source"
 # shellcheck disable=SC2034
@@ -31,18 +29,8 @@ readonly MARKETPLACE_NAMESPACE="olm"
 IPSEC_PSK="$(dd if=/dev/urandom count=64 bs=8 | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)"
 # shellcheck disable=SC2034
 readonly IPSEC_PSK
-# we use this namespace to deploy a dummypod as a daemonSet as a workaround for kindnet clusters.
-readonly KINDNET_WORKAROUND_NS="subm-kindnet-workaround"
 
 ### Common functions ###
-
-# Create a namespace
-# 1st argument is the namespace
-function create_namespace {
-  local ns=$1
-  echo "[INFO](${cluster}) Create the ${ns} namespace..."
-  kubectl create namespace "${ns}" || :
-}
 
 # Create a CatalogSource
 # 1st argument is the catalogsource name
@@ -67,11 +55,6 @@ function create_catalog_source() {
   fi
 
   echo "[INFO](${cluster}) Catalog source ${cs} created"
-}
-
-function schedule_dummy_pod_on_all_clusters() {
-    run_subm_clusters create_namespace ${KINDNET_WORKAROUND_NS}
-    run_subm_clusters deploy_daemonset ${KINDNET_WORKAROUND_NS} "${RESOURCES_DIR}"/dummypod.yaml
 }
 
 # Create an OperatorGroup
@@ -127,16 +110,6 @@ declare_kubeconfig
 
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 "${SCRIPTS_DIR}/get-subctl.sh"
-
-# This is a workaround and can be removed once we switch the CNI from kindnet to a different one.
-# In order to support health-check and hostNetwork use-cases, submariner requires an IPaddress from the podCIDR
-# for each node in the cluster. Normally, most of the CNIs create a cniInterface on the host and assign an IP
-# from the podCIDR to the interface. Submariner relies on this interface to support the aforementioned use-cases.
-# However, with kindnet CNI, it was seen that it does not create a dedicated CNI Interface on the nodes.
-# But as soon as a pod is scheduled on a node, it creates a veth-xxx interface which has an IPaddress from the
-# podCIDR. In this workaround, we are scheduling a dummy pod as a demonSet on the cluster to trigger the creation
-# of this veth-xxx interface which can be used as a cniInterface and we can continue to validate Submariner use-cases.
-schedule_dummy_pod_on_all_clusters
 
 load_library deploy DEPLOYTOOL
 deploytool_prereqs
