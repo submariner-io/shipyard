@@ -9,6 +9,7 @@ readonly KIND_REGISTRY=kind-registry
 readonly RESOURCES_DIR=${SCRIPTS_DIR}/resources
 readonly OUTPUT_DIR=${DAPPER_OUTPUT}
 readonly KUBECONFIGS_DIR=${DAPPER_OUTPUT}/kubeconfigs
+readonly OCP_TEMPLATE_DIR=${OUTPUT_DIR}/ocp-template
 readonly SUBM_NS=submariner-operator
 readonly ORIG_DEBUG_PRINT=$DEBUG_PRINT
 

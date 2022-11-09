@@ -2,26 +2,22 @@
 
 . "${SCRIPTS_DIR}/lib/ocp_utils"
 
-### Variables ###
-
-declare -g install_template="${OUTPUT_DIR}/aws-ocp-template"
-
 ### Functions ###
 
 function provider_prepare() {
     ensure_openshift_install
 
-    if [[ -d "${install_template}" ]]; then
+    if [[ -d "${OCP_TEMPLATE_DIR}" ]]; then
         echo "Reusing existing template for OCP install."
         echo "If you'd like to reinstall, please run 'make clean' and try again."
         return 0
     fi
 
-    rm -rf "${install_template}"
+    rm -rf "${OCP_TEMPLATE_DIR}"
     echo "Creating an initial configuration template for OCP."
     echo "Please fill out all the necessary details."
     echo "Note: The cluster name will be suffixed (eg with '-cluster1'), please fill out just the prefix."
-    "${OCP_INSTALLER}" create install-config --dir "${install_template}"
+    "${OCP_INSTALLER}" create install-config --dir "${OCP_TEMPLATE_DIR}"
 }
 
 function provider_create_cluster() {
@@ -36,7 +32,7 @@ function provider_create_cluster() {
 
     echo "Creating OCP cluster..."
 
-    local install_dir="${install_template/template/${cluster}}"
+    local install_dir="${OCP_TEMPLATE_DIR/template/${cluster}}"
     local install_config="${install_dir}/install-config.yaml"
     local control_replicas compute_replicas
     control_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'control-plane')
@@ -46,7 +42,7 @@ function provider_create_cluster() {
     [[ "${compute_replicas}" != "0" ]] || compute_replicas=1
 
     rm -rf "${install_dir}"
-    cp -r "${install_template}" "${install_dir}"
+    cp -r "${OCP_TEMPLATE_DIR}" "${install_dir}"
     yq -i ".metadata.name += \"-${cluster}\"" "${install_config}"
     yq -i ".networking.clusterNetwork[0].cidr = \"${cluster_CIDRs[${cluster}]}\"" "${install_config}"
     yq -i ".networking.serviceNetwork[0] = \"${service_CIDRs[${cluster}]}\"" "${install_config}"
