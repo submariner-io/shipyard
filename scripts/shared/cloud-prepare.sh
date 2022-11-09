@@ -40,7 +40,13 @@ function prepare_kind() {
 }
 
 function prepare_ocp() {
-    subctl cloud prepare aws --context "${cluster}" --ocp-metadata "${OUTPUT_DIR}/ocp-${cluster}/"
+    local platform
+    platform=$(yq '.platform | keys | join("")' "${OCP_TEMPLATE_DIR}/install-config.yaml")
+
+    # In case of OpenStack, `cloud prepare` addresses it as `rhos`.
+    [[ "$platform" != "openstack" ]] || platform=rhos
+
+    subctl cloud prepare "$platform" --context "${cluster}" --ocp-metadata "${OUTPUT_DIR}/ocp-${cluster}/"
     with_retries 60 sleep_on_fail 5s check_gateway_exists
 }
 
