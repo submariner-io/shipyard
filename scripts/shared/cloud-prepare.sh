@@ -14,7 +14,7 @@ function cloud_prepare() {
     ! check_gateway_exists || return 0
 
     case "${PROVIDER}" in
-    kind|aws-ocp)
+    kind|ocp)
         "prepare_${PROVIDER//-/_}"
         ;;
     *)
@@ -39,8 +39,8 @@ function prepare_kind() {
     fi
 }
 
-function prepare_aws_ocp() {
-    subctl cloud prepare aws --context "${cluster}" --ocp-metadata "${OUTPUT_DIR}/aws-ocp-${cluster}/"
+function prepare_ocp() {
+    subctl cloud prepare aws --context "${cluster}" --ocp-metadata "${OUTPUT_DIR}/ocp-${cluster}/"
     with_retries 60 sleep_on_fail 5s check_gateway_exists
 }
 
