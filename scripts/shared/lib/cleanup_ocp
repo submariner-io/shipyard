@@ -14,5 +14,5 @@ function provider_delete_cluster() {
 }
 
 function provider_finalize() {
-    \rm -rf "${OUTPUT_DIR}"/aws-ocp-* "${KUBECONFIGS_DIR}"/aws-ocp-*
+    \rm -rf "${OUTPUT_DIR}"/ocp-* "${KUBECONFIGS_DIR}"/ocp-*
 }
