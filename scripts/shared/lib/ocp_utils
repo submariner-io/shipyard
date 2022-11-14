@@ -3,28 +3,36 @@
 declare -gr OCP_CLIENTS_URL="https://mirror.openshift.com/pub/openshift-v4/clients"
 declare -gr OCP_INSTALLER="${HOME}/.local/bin/openshift-install"
 declare -gA k8s_ocp_version
-k8s_ocp_version[1.20]=4.7
-k8s_ocp_version[1.21]=4.8
-k8s_ocp_version[1.22]=4.9
-k8s_ocp_version[1.23]=4.10
-k8s_ocp_version[1.24]=4.11
-k8s_ocp_version[1.25]=4.12
+k8s_ocp_version[1.20]=latest-4.7
+k8s_ocp_version[1.21]=latest-4.8
+k8s_ocp_version[1.22]=latest-4.9
+k8s_ocp_version[1.23]=latest-4.10
+k8s_ocp_version[1.24]=latest-4.11
+k8s_ocp_version[1.25]=candidate-4.12
 
 function ensure_openshift_install() {
-    local ocpi_version="${k8s_ocp_version[$K8S_VERSION]}"
+    # Allow using shorthand versions, e.g. `4.10`, by mapping to the full version from our versions map
+    if [[ -n "$OCP_VERSION" ]] && grep -qw "$OCP_VERSION" <<< "${k8s_ocp_version[@]}"; then
+        OCP_VERSION=$(grep -Eow "[a-z]+-${OCP_VERSION}" <<< "${k8s_ocp_version[@]}")
+    fi
+
+    local ocpi_version="${OCP_VERSION:-${k8s_ocp_version[$K8S_VERSION]}}"
 
     # Check if we already have the version installed, and if so skip re-downloading it
-    ! grep -qw "${ocpi_version}" <("${OCP_INSTALLER}" version 2>/dev/null) || return 0
+    ! grep -qw "${ocpi_version#[a-z]*-}" <("${OCP_INSTALLER}" version 2>/dev/null) || return 0
 
     mkdir -p "${OCP_INSTALLER%/*}"
 
     # Try to get a GA client first, but if it's not available fall back to dev previews
-    local download_url="${OCP_CLIENTS_URL}/ocp/latest-${ocpi_version}"
+    local download_url="${OCP_CLIENTS_URL}/ocp/${ocpi_version}"
     if ! curl -o /dev/null -f -Ls "$download_url"; then
-        download_url="${OCP_CLIENTS_URL}/ocp-dev-preview/latest-${ocpi_version}"
+        download_url="${OCP_CLIENTS_URL}/ocp-dev-preview/${ocpi_version}"
     fi
 
+    local filename_version
+    [[ "$ocpi_version" =~ ^[a-z]+- ]] || filename_version="-${ocpi_version}"
+
     # Download the installer when we don't have it installed, or what we have isn't the requested version
-    curl -Ls "${download_url}/openshift-install-linux.tar.gz" \
+    curl -Ls "${download_url}/openshift-install-linux${filename_version}.tar.gz" \
         | tar -xzf - -C "${OCP_INSTALLER%/*}" "${OCP_INSTALLER##*/}"
 }
