@@ -110,7 +110,7 @@ function provider_create_cluster() {
 
     [[ -n "${cluster_cni[$cluster]}" ]] || delete_cluster_on_fail schedule_dummy_pod
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
-    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
+    [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
 # This is a workaround and can be removed once we switch the CNI from kindnet to a different one.
