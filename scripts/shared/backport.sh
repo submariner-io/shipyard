@@ -155,7 +155,10 @@ For details on the backport process, see the [backport requests](https://submari
 EOF
 )
 
-  gh pr create --title="Automated backport of ${numandtitle}" --body="${prtext}" --head "${GITHUB_USER}:${NEWBRANCH}" --base "${rel}" --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --label automated-backport
+  created_pr=$(gh pr create --title="Automated backport of ${numandtitle}" --body="${prtext}" --head "${GITHUB_USER}:${NEWBRANCH}" --base "${rel}" --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --label automated-backport)
+  # Add "ready-to-test" separately so that PR creation does not fail in case of missing label.
+  pr_url=$(echo $created_pr | awk -F'^http[s]?://' '{print $2}')
+  gh pr edit $pr_url --add-label "ready-to-test" || echo "Skipping adding 'ready-to-test' label"
   for pull in "${PULLS[@]}"; do
     echo "+++ Adding 'backport-handled' label to"
      gh pr edit "$pull" --repo="${MAIN_REPO_ORG}/${MAIN_REPO_NAME}" --add-label "backport-handled"
