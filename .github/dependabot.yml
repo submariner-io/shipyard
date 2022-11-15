@@ -25,13 +25,3 @@ updates:
     schedule:
       interval: daily
     open-pull-requests-limit: 10
-    ignore:
-      - dependency-name: k8s.io/api
-        versions:
-          - ">= 0.20.0"
-      - dependency-name: k8s.io/apimachinery
-        versions:
-          - ">= 0.20.0"
-      - dependency-name: k8s.io/client-go
-        versions:
-          - ">= 0.20.0"
