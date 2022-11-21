@@ -7,7 +7,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -45,7 +45,7 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -112,7 +112,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 		func() (interface{}, error) {
 			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 			return resGw, err
 		},
@@ -177,7 +177,7 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 	AwaitUntil("delete gateway", func() (interface{}, error) {
 		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return nil, err
 	}, NoopCheckResult)
