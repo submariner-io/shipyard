@@ -47,7 +47,7 @@ function setup_broker() {
         # so that the upgrade tests can run
         cd "${OUTPUT_DIR}" &&
         "${SUBCTL}" deploy-broker \
-               --kubecontext "${cluster}" \
+               --context "${cluster}" \
                 "${extra_flags[@]}"
     )
 }
@@ -79,7 +79,7 @@ function subctl_install_subm() {
 
     # The subctl invocation here has to work with the previous release
     # so that the upgrade tests can run
-    "${SUBCTL}" join --kubecontext "${cluster}" \
+    "${SUBCTL}" join --context "${cluster}" \
                 --clusterid "${cluster}" \
                 --nattport "${CE_IPSEC_NATTPORT}" \
                 --globalnet-cidr "${global_CIDRs[$cluster]}" \

@@ -51,6 +51,6 @@ declare_kubeconfig
 [[ "${PROVIDER}" == "kind" ]] || "${SCRIPTS_DIR}/get-subctl.sh"
 
 # Run in subshell to check response, otherwise `set -e` is not honored
-( run_all_clusters cloud_prepare; ) &
+( run_all_clusters with_retries 3 cloud_prepare; ) &
 wait $! || exit_error "Failed to prepare cloud"
 
