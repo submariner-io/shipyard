@@ -11,13 +11,15 @@ kind_k8s_versions[1.17]=1.17.17@sha256:e477ee64df5731aa4ef4deabbafc34e8d9a686b49
 kind_binaries[1.17]='kind-0.12'
 # kind-0.15 hashes
 kind_k8s_versions[1.18]=1.18.20@sha256:61c9e1698c1cb19c3b1d8151a9135b379657aee23c59bde4a8d87923fcb43a91
-kind_k8s_versions[1.19]=1.19.16@sha256:707469aac7e6805e52c3bde2a8a8050ce2b15decff60db6c5077ba9975d28b98
-kind_k8s_versions[1.20]=1.20.15@sha256:d67de8f84143adebe80a07672f370365ec7d23f93dc86866f0e29fa29ce026fe
-kind_k8s_versions[1.21]=1.21.14@sha256:f9b4d3d1112f24a7254d2ee296f177f628f9b4c1b32f0006567af11b91c1f301
-kind_k8s_versions[1.22]=1.22.13@sha256:4904eda4d6e64b402169797805b8ec01f50133960ad6c19af45173a27eadf959
-kind_k8s_versions[1.23]=1.23.10@sha256:f047448af6a656fae7bc909e2fab360c18c487ef3edc93f06d78cdfd864b2d12
-kind_k8s_versions[1.24]=1.24.4@sha256:adfaebada924a26c2c9308edd53c6e33b3d4e453782c0063dc0028bdebaddf98
-kind_k8s_versions[1.25]=1.25.0@sha256:428aaa17ec82ccde0131cb2d1ca6547d13cf5fdabcc0bbecf749baa935387cbf
+kind_binaries[1.18]='kind-0.15'
+# kind 0.17 hashes
+kind_k8s_versions[1.19]=1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7
+kind_k8s_versions[1.20]=1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394
+kind_k8s_versions[1.21]=1.21.14@sha256:9d9eb5fb26b4fbc0c6d95fa8c790414f9750dd583f5d7cee45d92e8c26670aa1
+kind_k8s_versions[1.22]=1.22.15@sha256:7d9708c4b0873f0fe2e171e2b1b7f45ae89482617778c1c875f1053d4cef2e41
+kind_k8s_versions[1.23]=1.23.13@sha256:ef453bb7c79f0e3caba88d2067d4196f427794086a7d0df8df4f019d5e336b61
+kind_k8s_versions[1.24]=1.24.7@sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315
+kind_k8s_versions[1.25]=1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1
 
 ### Functions ###
 
@@ -108,8 +110,27 @@ function provider_create_cluster() {
     "${kind}" create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
+    [[ -n "${cluster_cni[$cluster]}" ]] || delete_cluster_on_fail schedule_dummy_pod
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
     [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
+}
+
+# This is a workaround and can be removed once we switch the CNI from kindnet to a different one.
+# In order to support health-check and hostNetwork use-cases, submariner requires an IPaddress from the podCIDR
+# for each node in the cluster. Normally, most of the CNIs create a cniInterface on the host and assign an IP
+# from the podCIDR to the interface. Submariner relies on this interface to support the aforementioned use-cases.
+# However, with kindnet CNI, it was seen that it does not create a dedicated CNI Interface on the nodes.
+# But as soon as a pod is scheduled on a node, it creates a veth-xxx interface which has an IPaddress from the
+# podCIDR. In this workaround, we are scheduling a dummy pod as a demonSet on the cluster to trigger the creation
+# of this veth-xxx interface which can be used as a cniInterface and we can continue to validate Submariner use-cases.
+function schedule_dummy_pod() {
+    local ns="subm-kindnet-workaround"
+    source "${SCRIPTS_DIR}"/lib/deploy_funcs
+    import_image "${REPO}/nettest"
+
+    echo "Creating the ${ns} namespace..."
+    kubectl create namespace "${ns}" || :
+    deploy_resource "${RESOURCES_DIR}"/dummypod.yaml "$ns"
 }
 
 function delete_cluster_on_fail() {

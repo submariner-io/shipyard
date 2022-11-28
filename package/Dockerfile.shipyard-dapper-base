@@ -1,4 +1,4 @@
-FROM fedora:36
+FROM fedora:37
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -14,6 +14,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # Component          | Usage
 # -------------------------------------------------------------
 # curl               | download other tools
+# file               | file identification (in compile/test.sh)
 # findutils          | make unit (find unit test dirs)
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # gh                 | backport, releases
@@ -33,6 +34,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # python3-setuptools | Needed by j2cli
 # qemu-user-static   | Emulation (for multiarch builds)
 # skopeo             | container image manipulation
+# unzip              | ZIP extraction
 # upx                | binary compression
 # yq                 | YAML processing (OCM deploy tool)
 
@@ -45,7 +47,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils moreutils upx jq gitlint python3-setuptools \
-                   qemu-user-static python3-pip skopeo && \
+                   qemu-user-static python3-pip skopeo file unzip && \
     pip install j2cli[yaml] --user && \
     rpm -e --nodeps containerd python3-pip && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
@@ -56,20 +58,23 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
-ENV LINT_VERSION=v1.47.3 \
+ENV LINT_VERSION=v1.50.1 \
     HELM_VERSION=v3.9.0 \
-    KIND_VERSION=v0.15.0 \
+    KIND_VERSION=v0.17.0 \
     BUILDX_VERSION=v0.8.2 \
     GH_VERSION=2.5.1 \
     YQ_VERSION=4.20.2
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
-# We install kind-0.12 and kind-0.15; we need to test K8s 1.17, our oldest-supported version, and kind-0.12 was the last version to
-# ship K8s 1.17 images
+# We install kind-0.12, kind-0.15 and kind-${KIND_VERSION};
+# we need to test K8s 1.17, our oldest-supported version,
+# and kind-0.12 was the last version to ship K8s 1.17 images;
+# kind-0.15 was the last version to ship 1.18 images.
 RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
     i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     curl -Lo /go/bin/kind-0.12 "https://github.com/kubernetes-sigs/kind/releases/download/v0.12.0/kind-linux-${ARCH}" && chmod a+x /go/bin/kind-0.12 && \
+    curl -Lo /go/bin/kind-0.15 "https://github.com/kubernetes-sigs/kind/releases/download/v0.15.0/kind-linux-${ARCH}" && chmod a+x /go/bin/kind-0.15 && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     GOFLAGS="" go install -v github.com/onsi/ginkgo/ginkgo@latest && \
     GOFLAGS="" go install -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \

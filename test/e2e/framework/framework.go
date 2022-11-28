@@ -7,7 +7,7 @@ Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.
 You may obtain a copy of the License at
 
-    http://www.apache.org/licenses/LICENSE-2.0
+http://www.apache.org/licenses/LICENSE-2.0
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
@@ -247,10 +247,9 @@ func (f *Framework) BeforeEach() {
 		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
 		namespaceLabels := map[string]string{
-			"e2e-framework":                      f.BaseName,
-			"pod-security.kubernetes.io/enforce": "privileged",
-			"pod-security.kubernetes.io/audit":   "privileged",
-			"pod-security.kubernetes.io/warn":    "privileged",
+			"e2e-framework":                                  f.BaseName,
+			"pod-security.kubernetes.io/enforce":             "privileged",
+			"security.openshift.io/scc.podSecurityLabelSync": "false",
 		}
 
 		for idx, clientSet := range KubeClients {
@@ -284,7 +283,7 @@ func DetectGlobalnet() {
 	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
 		clusters, err := clusters.List(context.TODO(), metav1.ListOptions{})
 		if apierrors.IsNotFound(err) {
-			return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
 		return clusters, err
 	}, func(result interface{}) (bool, string, error) {
@@ -338,7 +337,7 @@ func fetchClusterIDs() {
 		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
 			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
-				return nil, nil // nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 
 			return ds, err
