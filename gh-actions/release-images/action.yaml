@@ -20,11 +20,9 @@ runs:
     - name: Build new images
       # This needs to be kept separate so that the release stage runs using the new Shipyard base image
       shell: bash
-      env:
-        USE_CACHE: false
       run: |
         echo "::group::Build new images"
-        make images multiarch-images
+        make images multiarch-images USE_CACHE=false
         echo "::endgroup::"
     - name: Release newly built images
       shell: bash
