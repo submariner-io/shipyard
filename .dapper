@@ -1,4 +1,15 @@
-#!/bin/sh
+#!/usr/bin/env bash
+
+# Pass credential file as read-only, so that the container can use it if necessary
+function pass_credentials() {
+    local credentials=$1
+    local suffix=$suffix
+    local mountpoint=${credentials/$HOME//root}
+
+    [ -r "$credentials" ] || return 0
+    [ -z "${suffix}" ] && suffix=':ro' || suffix+=',ro'
+    dockerargs+=" -v ${credentials}:${mountpoint}${suffix}"
+}
 
 file=Dockerfile.dapper
 socket=false
@@ -100,14 +111,10 @@ if [ -d "${HOME}/.docker" ]; then
 fi
 
 # Pass through ~/.aws/credentials so that the container can operate on AWS (if needed).
-if [ -r "${HOME}/.aws/credentials" ]; then
-    volume="${HOME}/.aws/credentials:/root/.aws/credentials"
-    if [ -z "${suffix}" ]; then
-        dockerargs="${dockerargs} -v ${volume}:ro"
-    else
-        dockerargs="${dockerargs} -v ${volume}${suffix},ro"
-    fi
-fi
+pass_credentials "${HOME}/.aws/credentials"
+
+# Pass through ~/.gcp/osServiceAccount.json so that the container can operate on GCP (if needed).
+pass_credentials "${HOME}/.gcp/osServiceAccount.json"
 
 # seccomp is unconfined to avoid problems with clone3 in Fedora 35
 # See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
