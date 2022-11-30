@@ -108,8 +108,8 @@ ifneq (,$(filter subctl-verify,$(_using)))
 TESTDIR = non-existent-dir
 endif
 
-ifneq (,$(filter aws-ocp,$(_using)))
-PROVIDER = aws-ocp
+ifneq (,$(filter ocp,$(_using)))
+PROVIDER = ocp
 IMAGE_TAG = subctl
 endif
 
