@@ -58,5 +58,6 @@ if ! wait $!; then
 fi
 
 declare_kubeconfig
+run_if_defined provider_succeeded
 run_all_clusters deploy_cluster_capabilities
 print_clusters_message

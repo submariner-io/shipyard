@@ -1,0 +1,64 @@
+# shellcheck shell=bash
+
+source "${SCRIPTS_DIR}/lib/clusters_ocp"
+
+### Functions ###
+
+function provider_prepare() {
+    ensure_openshift_install
+    create_ocp_template "$ACM_TEMPLATE_DIR" ACM
+}
+
+function provider_create_cluster() {
+    export KUBECONFIG="${KUBECONFIGS_DIR}/acm-${cluster}"
+
+    if kubectl cluster-info > /dev/null 2>&1; then
+        echo "ACM cluster already exists, skipping its creation..."
+        return 0
+    fi
+
+    configure_ocp_cluster "$ACM_TEMPLATE_DIR"
+    [[ "$cluster" != "$broker" ]] || adjust_hub_deploy
+    deploy_ocp_cluster "$ACM_TEMPLATE_DIR" ACM
+}
+
+function adjust_hub_deploy() {
+    local install_dir=${ACM_TEMPLATE_DIR/template/${cluster}}
+    case $(determine_ocp_platform "$install_dir") in
+    aws)
+        yq -i ".compute[0].platform.aws.type=\"m5.4xlarge\"" "${install_dir}/install-config.yaml"
+        ;;
+    gcp)
+        yq -i ".compute[0].platform.gcp.type=\"n1-standard-8\"" "${install_dir}/install-config.yaml"
+        ;;
+    esac
+}
+
+function provider_succeeded() {
+    local cluster=$broker
+    local install_dir=${template_dir/template/${cluster}}
+
+    echo "Logging in to quay.io to get a token for deploying ACM, make sure your account has the necessary permissions."
+    echo "(https://github.com/stolostron/deploy#prepare-to-deploy-open-cluster-management-instance-only-do-once)"
+    docker login quay.io
+    QUAY_TOKEN=$(jq -r '.auths |= {"quay.io"}' ~/.docker/config.json | base64 -w 0)
+    export QUAY_TOKEN
+
+    ensure_openshift_cli
+    git clone https://github.com/stolostron/deploy /tmp/acm_deploy
+    cd /tmp/acm_deploy || exit 1
+
+    local args=(--watch)
+    if [[ -n "$ACM_VERSION" ]]; then
+        echo "$ACM_VERSION" > snapshot.ver
+        args+=(--silent)
+    fi
+
+    # Make sure to set default kubeconfig context, as ACM scripts use `oc` which determines the context from these settings
+    kubectl config use-context "$broker"
+    if ! ./start.sh "${args[@]}"; then
+        echo "Failed to deploy ACM, cleaning up"
+        ./clean-clusters.sh <<< $'DESTROY\n'
+        return 1
+    fi
+}

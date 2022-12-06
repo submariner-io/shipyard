@@ -113,6 +113,11 @@ PROVIDER = ocp
 IMAGE_TAG = subctl
 endif
 
+ifneq (,$(filter acm,$(_using)))
+PROVIDER = acm
+IMAGE_TAG = subctl
+endif
+
 ifneq (,$(filter load-balancer,$(_using)))
 LOAD_BALANCER = true
 endif
