@@ -6,18 +6,25 @@
 
 function provider_prepare() {
     ensure_openshift_install
+    create_ocp_template "$OCP_TEMPLATE_DIR" OCP
+}
 
-    if [[ -d "${OCP_TEMPLATE_DIR}" ]]; then
-        echo "Reusing existing template for OCP install."
-        echo "If you'd like to reinstall, please run 'make clean' and try again."
+# Creates template for installation, which can be used for deploying platforms on top of an OCP install.
+function create_ocp_template() {
+    local directory=$1
+    local type=$2
+
+    if [[ -d "$directory" ]]; then
+        echo "Reusing existing template for ${type} install."
+        echo "If you'd like to reinstall, please run 'make clean using=${PROVIDER}' and try again."
         return 0
     fi
 
-    rm -rf "${OCP_TEMPLATE_DIR}"
-    echo "Creating an initial configuration template for OCP."
+    rm -rf "$directory"
+    echo "Creating an initial configuration template for ${type}."
     echo "Please fill out all the necessary details."
     echo "Note: The cluster name will be suffixed (eg with '-cluster1'), please fill out just the prefix."
-    "${OCP_INSTALLER}" create install-config --dir "${OCP_TEMPLATE_DIR}"
+    "$OCP_INSTALLER" create install-config --dir "$directory"
 }
 
 function provider_create_cluster() {
@@ -28,34 +35,48 @@ function provider_create_cluster() {
         return 0
     fi
 
-    rm -f "$KUBECONFIG"
+    configure_ocp_cluster "$OCP_TEMPLATE_DIR"
+    deploy_ocp_cluster "$OCP_TEMPLATE_DIR" OCP
+}
 
-    echo "Creating OCP cluster..."
-
-    local install_dir="${OCP_TEMPLATE_DIR/template/${cluster}}"
-    local install_config="${install_dir}/install-config.yaml"
+function configure_ocp_cluster() {
+    local template_dir=$1
+    local install_dir=${template_dir/template/${cluster}}
+    local install_config=${install_dir}/install-config.yaml
     local control_replicas compute_replicas
     control_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'control-plane')
     compute_replicas=$(echo "${cluster_nodes[${cluster}]}" | tr ' ' '\n' | grep -wc 'worker')
 
     # OCP needs at least 1 compute node to work properly
-    [[ "${compute_replicas}" != "0" ]] || compute_replicas=1
+    [[ "$compute_replicas" -gt 0 ]] || compute_replicas=1
 
-    rm -rf "${install_dir}"
-    cp -r "${OCP_TEMPLATE_DIR}" "${install_dir}"
-    yq -i ".metadata.name += \"-${cluster}\"" "${install_config}"
-    yq -i ".networking.clusterNetwork[0].cidr = \"${cluster_CIDRs[${cluster}]}\"" "${install_config}"
-    yq -i ".networking.serviceNetwork[0] = \"${service_CIDRs[${cluster}]}\"" "${install_config}"
-    yq -i ".controlPlane.replicas = ${control_replicas}" "${install_config}"
-    yq -i ".compute[0].replicas = ${compute_replicas}" "${install_config}"
+    rm -rf "$install_dir"
+    cp -r "$template_dir" "$install_dir"
+    yq -i ".metadata.name += \"-${cluster}\"" "$install_config"
+    yq -i ".networking.clusterNetwork[0].cidr = \"${cluster_CIDRs[${cluster}]}\"" "$install_config"
+    yq -i ".networking.serviceNetwork[0] = \"${service_CIDRs[${cluster}]}\"" "$install_config"
+    yq -i ".controlPlane.replicas = ${control_replicas}" "$install_config"
+    yq -i ".compute[0].replicas = ${compute_replicas}" "$install_config"
 
-    if ! "${OCP_INSTALLER}" create cluster --dir "${install_dir}"; then
-        echo "Failed to create OCP cluster, removing the cluster"
-        "${OCP_INSTALLER}" destroy cluster --dir "${install_dir}"
+    echo "Updated install config:"
+    yq "del(.pullSecret)" "$install_config"
+}
+
+function deploy_ocp_cluster() {
+    local template_dir=$1
+    local type=$2
+    local install_dir=${template_dir/template/${cluster}}
+
+    rm -f "$KUBECONFIG"
+    echo "Creating ${type} cluster..."
+
+    if ! "$OCP_INSTALLER" create cluster --dir "$install_dir"; then
+        echo "Failed to create ${type} cluster, removing the cluster"
+        "$OCP_INSTALLER" destroy cluster --dir "$install_dir"
         return 1
     fi
 
-    local kubeconfig="${install_dir}/auth/kubeconfig"
-    yq -i "(.. | select(. == \"admin\")) = \"${cluster}\"" "${kubeconfig}"
-    cp "${kubeconfig}" "${KUBECONFIG}"
+    local kubeconfig=${install_dir}/auth/kubeconfig
+    yq -i "(.. | select(. == \"admin\")) = \"${cluster}\"" "$kubeconfig"
+    cp "$kubeconfig" "$KUBECONFIG"
 }
