@@ -191,10 +191,12 @@ func (f *Framework) SaveGatewayNode(cluster ClusterIndex, gwNode string) {
 // It will restore the gateway nodes to its initial state.
 // Other environments do not need any gw cleanup as MachineSet is responsible to keeping the gw nodes in active states.
 func (f *Framework) GatewayCleanup() {
+	ctx := context.TODO()
+
 	for cluster := range f.gatewayNodesToReset {
 		for _, gnode := range f.gatewayNodesToReset[cluster] {
 			By(fmt.Sprintf("Restoring gateway %q on cluster %q", gnode, TestContext.ClusterIDs[cluster]))
-			f.SetGatewayLabelOnNode(ClusterIndex(cluster), gnode, true)
+			f.SetGatewayLabelOnNode(ctx, ClusterIndex(cluster), gnode, true)
 		}
 	}
 }
@@ -202,16 +204,16 @@ func (f *Framework) GatewayCleanup() {
 // Perform a gateway failover.
 // The failover for the real environment will crash the gateway node.
 // The failover for the kind environment will set the submariner.io/gateway label to "false" on the gw node.
-func (f *Framework) DoFailover(cluster ClusterIndex, gwNode, gwPod string) {
-	provider := DetectProvider(cluster, gwNode)
+func (f *Framework) DoFailover(ctx context.Context, cluster ClusterIndex, gwNode, gwPod string) {
+	provider := DetectProvider(ctx, cluster, gwNode)
 
 	if provider == "kind" {
 		f.SaveGatewayNode(cluster, gwNode)
-		f.SetGatewayLabelOnNode(cluster, gwNode, false)
+		f.SetGatewayLabelOnNode(ctx, cluster, gwNode, false)
 	} else {
 		cmd := []string{"sh", "-c", "echo 1 > /proc/sys/kernel/sysrq && echo b > /proc/sysrq-trigger"}
 
-		_, _, err := f.ExecWithOptions(&ExecOptions{
+		_, _, err := f.ExecWithOptions(ctx, &ExecOptions{
 			Command:       cmd,
 			Namespace:     TestContext.SubmarinerNamespace,
 			PodName:       gwPod,
