@@ -61,4 +61,20 @@ function provider_succeeded() {
         ./clean-clusters.sh <<< $'DESTROY\n'
         return 1
     fi
+
+    PARALLEL=false run_all_clusters add_cluster_to_acm
+}
+
+function add_cluster_to_acm() {
+    [[ "$cluster" != "$broker" ]] || return 0
+    local managed_cluster=$cluster
+    local cluster=$broker
+
+    # Make sure to set default kubeconfig context, otherwise ACM will fail to auto-import the cluster
+    kubectl config use-context "$managed_cluster"
+    kubectl create namespace "$managed_cluster"
+    kubectl apply -f - < <(yq ".metadata.name = \"${managed_cluster}\"" "$RESOURCES_DIR"/acm-managed-cluster.yml)
+    kubectl apply -f - < <(
+        o=$(cat "${KUBECONFIGS_DIR}/acm-${managed_cluster}") \
+        yq ".metadata.namespace = \"${managed_cluster}\" | .stringData.kubeconfig = strenv(o)" "$RESOURCES_DIR"/acm-auto-import-secret.yml)
 }
