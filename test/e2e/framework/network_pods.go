@@ -193,7 +193,7 @@ func (np *NetworkPod) CreateService() *v1.Service {
 }
 
 // RunCommand run the specified command in this NetworkPod.
-func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
+func (np *NetworkPod) RunCommand(ctx context.Context, cmd []string) (string, string) {
 	req := KubeClients[np.Config.Cluster].CoreV1().RESTClient().Post().
 		Resource("pods").Name(np.Pod.Name).Namespace(np.Pod.Namespace).
 		SubResource("exec").Param("container", np.Config.ContainerName)
@@ -214,7 +214,7 @@ func (np *NetworkPod) RunCommand(cmd []string) (string, string) {
 
 	var stdout, stderr bytes.Buffer
 
-	err = executor.Stream(remotecommand.StreamOptions{
+	err = executor.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  nil,
 		Stdout: &stdout,
 		Stderr: &stderr,

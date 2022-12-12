@@ -71,11 +71,11 @@ func (f *Framework) FindClusterWithMultipleGateways() int {
 }
 
 // SetGatewayLabelOnNode sets the 'submariner.io/gateway' value for a node to the specified value.
-func (f *Framework) SetGatewayLabelOnNode(cluster ClusterIndex, nodeName string, isGateway bool) {
+func (f *Framework) SetGatewayLabelOnNode(ctx context.Context, cluster ClusterIndex, nodeName string, isGateway bool) {
 	// Escape the '/' char in the label name with the special sequence "~1" so it isn't treated as part of the path
 	PatchString("/metadata/labels/"+strings.ReplaceAll(GatewayLabel, "/", "~1"), strconv.FormatBool(isGateway),
 		func(pt types.PatchType, payload []byte) error {
-			_, err := KubeClients[cluster].CoreV1().Nodes().Patch(context.TODO(), nodeName, pt, payload, metav1.PatchOptions{})
+			_, err := KubeClients[cluster].CoreV1().Nodes().Patch(ctx, nodeName, pt, payload, metav1.PatchOptions{})
 			return err
 		})
 }

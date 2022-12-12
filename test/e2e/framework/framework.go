@@ -608,8 +608,8 @@ func NestedString(obj map[string]interface{}, fields ...string) string {
 	return str
 }
 
-func DetectProvider(cluster ClusterIndex, nodeName string) string {
-	node, err := KubeClients[cluster].CoreV1().Nodes().Get(context.TODO(), nodeName, metav1.GetOptions{})
+func DetectProvider(ctx context.Context, cluster ClusterIndex, nodeName string) string {
+	node, err := KubeClients[cluster].CoreV1().Nodes().Get(ctx, nodeName, metav1.GetOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
 	return strings.Split(node.Spec.ProviderID, ":")[0]

@@ -20,6 +20,7 @@ package framework
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"net/url"
 	"strings"
@@ -49,7 +50,7 @@ type ExecOptions struct {
 // ExecWithOptions executes a command in the specified container,
 // returning stdout, stderr and error. `options` allowed for
 // additional parameters to be passed.
-func (f *Framework) ExecWithOptions(options *ExecOptions, index ClusterIndex) (string, string, error) {
+func (f *Framework) ExecWithOptions(ctx context.Context, options *ExecOptions, index ClusterIndex) (string, string, error) {
 	Logf("ExecWithOptions %+v", options)
 
 	var err error
@@ -74,7 +75,7 @@ func (f *Framework) ExecWithOptions(options *ExecOptions, index ClusterIndex) (s
 	var stdout, stderr bytes.Buffer
 
 	for attempts := 5; attempts > 0; attempts-- {
-		err = execute("POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
+		err = execute(ctx, "POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
 		if err == nil {
 			break
 		}
@@ -90,13 +91,15 @@ func (f *Framework) ExecWithOptions(options *ExecOptions, index ClusterIndex) (s
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
 }
 
-func execute(method string, reqURL *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool) error {
+func execute(ctx context.Context,
+	method string, reqURL *url.URL, config *restclient.Config, stdin io.Reader, stdout, stderr io.Writer, tty bool,
+) error {
 	exec, err := remotecommand.NewSPDYExecutor(config, method, reqURL)
 	if err != nil {
 		return err
 	}
 
-	return exec.Stream(remotecommand.StreamOptions{
+	return exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 		Stdin:  stdin,
 		Stdout: stdout,
 		Stderr: stderr,
