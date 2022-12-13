@@ -62,7 +62,7 @@ ENV LINT_VERSION=v1.50.1 \
     HELM_VERSION=v3.9.0 \
     KIND_VERSION=v0.17.0 \
     BUILDX_VERSION=v0.8.2 \
-    GH_VERSION=2.5.1 \
+    GH_VERSION=2.20.2 \
     YQ_VERSION=4.20.2
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
