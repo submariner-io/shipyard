@@ -272,8 +272,6 @@ func (f *Framework) BeforeEach() {
 }
 
 func DetectGlobalnet() {
-	TestContext.GlobalnetEnabled = false
-
 	clusters := DynClients[ClusterA].Resource(schema.GroupVersionResource{
 		Group:    "submariner.io",
 		Version:  "v1",
