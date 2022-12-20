@@ -24,7 +24,6 @@ inputs:
   skip:
     description: '-ginkgo.skip argument to pass to E2E tests'
     required: false
-    default: '\[external-dataplane\]'
   test_args:
     description: 'Extra arguments to pass to E2E tests'
     required: false
