@@ -75,7 +75,6 @@ func init() {
 	flag.UintVar(&TestContext.ConnectionAttempts, "connection-attempts", 7,
 		"The number of connection attempts when verifying communication between clusters.")
 	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 190, "The general operation timeout in seconds.")
-	flag.BoolVar(&TestContext.GlobalnetEnabled, "globalnet", false, "Indicates if the globalnet feature is enabled.")
 }
 
 func ValidateFlags(t *TestContextType) {
