@@ -23,8 +23,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/onsi/ginkgo"
-	"github.com/onsi/ginkgo/config"
+	. "github.com/onsi/ginkgo/v2"
 	"github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	"k8s.io/client-go/rest"
@@ -39,7 +38,7 @@ import (
 // This function takes two parameters: one function which runs on only the first Ginkgo node,
 // returning an opaque byte array, and then a second function which runs on all Ginkgo nodes,
 // accepting the byte array.
-var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
+var _ = SynchronizedBeforeSuite(func() []byte {
 	// Run only on Ginkgo node 1
 
 	framework.BeforeSuite()
@@ -52,7 +51,7 @@ var _ = ginkgo.SynchronizedBeforeSuite(func() []byte {
 // Here, the order of functions is reversed; first, the function which runs everywhere,
 // and then the function that only runs on the first Ginkgo node.
 
-var _ = ginkgo.SynchronizedAfterSuite(func() {
+var _ = SynchronizedAfterSuite(func() {
 	// Run on all Ginkgo nodes
 
 	// framework.Logf("Running AfterSuite actions on all node")
@@ -67,15 +66,15 @@ func init() {
 
 func RunE2ETests(t *testing.T) bool {
 	framework.SetStatusFunction(func(text string) {
-		ginkgo.By(text)
+		By(text)
 	})
 
 	framework.SetFailFunction(func(text string) {
-		ginkgo.Fail(text)
+		Fail(text)
 	})
 
 	framework.SetUserAgentFunction(func() string {
-		testDesc := ginkgo.CurrentGinkgoTestDescription()
+		testDesc := CurrentGinkgoTestDescription()
 		prefix := "ginkgo"
 		if len(testDesc.ComponentTexts) > 0 {
 			prefix = strings.Join(testDesc.ComponentTexts, " ")
@@ -84,17 +83,12 @@ func RunE2ETests(t *testing.T) bool {
 	})
 
 	framework.ValidateFlags(framework.TestContext)
-	gomega.RegisterFailHandler(ginkgo.Fail)
+	gomega.RegisterFailHandler(Fail)
 
-	// If the ginkgo default for slow test was not modified, bump it to 45 seconds
-	if config.DefaultReporterConfig.SlowSpecThreshold == 5.0 {
-		config.DefaultReporterConfig.SlowSpecThreshold = 45.0
+	suiteConfig, reporterConfig := GinkgoConfiguration()
+	if framework.TestContext.JunitReport != "" {
+		reporterConfig.JUnitReport = framework.TestContext.JunitReport
 	}
 
-	// Set junit report path and filename if required by user
-	// The default of the parameter is set to empty, so if not used
-	// creation of report will be skipped
-	config.DefaultReporterConfig.ReportFile = framework.TestContext.JunitReport
-
-	return ginkgo.RunSpecs(t, "Submariner E2E suite")
+	return RunSpecs(t, "Submariner E2E suite", suiteConfig, reporterConfig)
 }
