@@ -113,6 +113,25 @@ jobs:
       - name: Test the post_mortem.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/post_mortem/test.sh"
 
+  unit:
+    name: 'Unit Tests'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        expect: ['pass', 'fail']
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+
+      - name: Running `make unit` is expected to pass
+        if: matrix.expect == 'pass'
+        run: make unit
+
+      - name: Running `make unit` is expected to fail
+        if: matrix.expect == 'fail'
+        run: sh -c '! make unit TEST_ARGS="--fail"'
+
   verify_gateways:
     name: Verify gateways
     runs-on: ubuntu-latest
