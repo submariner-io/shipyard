@@ -1,6 +1,7 @@
 # shellcheck shell=bash
 
-declare -gr OCP_CLIENTS_URL="https://mirror.openshift.com/pub/openshift-v4/clients"
+declare -gr OCP_TOOLS_URL="https://mirror.openshift.com/pub/openshift-v4/clients"
+declare -gr OCP_CLIENT="${HOME}/.local/bin/oc"
 declare -gr OCP_INSTALLER="${HOME}/.local/bin/openshift-install"
 declare -gA k8s_ocp_version
 k8s_ocp_version[1.20]=latest-4.7
@@ -10,29 +11,46 @@ k8s_ocp_version[1.23]=latest-4.10
 k8s_ocp_version[1.24]=latest-4.11
 k8s_ocp_version[1.25]=candidate-4.12
 
+function determine_ocp_platform() {
+    local directory=$1
+    yq '.platform | keys | join("")' "${directory}/install-config.yaml"
+}
+
+function ensure_openshift_cli() {
+    ensure_openshift_tool "$OCP_CLIENT" openshift-client
+}
+
 function ensure_openshift_install() {
+    ensure_openshift_tool "$OCP_INSTALLER" openshift-install
+}
+
+# Downloads the OCP tool when we don't have it installed, or what we have isn't the requested version
+function ensure_openshift_tool() {
+    local target_binary=$1
+    local download_file=$2
+    local requested_version=$OCP_VERSION
+
     # Allow using shorthand versions, e.g. `4.10`, by mapping to the full version from our versions map
-    if [[ -n "$OCP_VERSION" ]] && grep -qw "$OCP_VERSION" <<< "${k8s_ocp_version[@]}"; then
-        OCP_VERSION=$(grep -Eow "[a-z]+-${OCP_VERSION}" <<< "${k8s_ocp_version[@]}")
+    if [[ -n "$requested_version" ]] && grep -qw "$requested_version" <<< "${k8s_ocp_version[@]}"; then
+        requested_version=$(grep -Eow "[a-z]+-${requested_version}" <<< "${k8s_ocp_version[@]}")
     fi
 
-    local ocpi_version="${OCP_VERSION:-${k8s_ocp_version[$K8S_VERSION]}}"
+    local tool_version="${requested_version:-${k8s_ocp_version[$K8S_VERSION]}}"
 
     # Check if we already have the version installed, and if so skip re-downloading it
-    ! grep -qw "${ocpi_version#[a-z]*-}" <("${OCP_INSTALLER}" version 2>/dev/null) || return 0
+    ! grep -qw "${tool_version#[a-z]*-}" <("$target_binary" version 2>/dev/null) || return 0
 
-    mkdir -p "${OCP_INSTALLER%/*}"
+    mkdir -p "${target_binary%/*}"
 
-    # Try to get a GA client first, but if it's not available fall back to dev previews
-    local download_url="${OCP_CLIENTS_URL}/ocp/${ocpi_version}"
+    # Try to get a GA tool first, but if it's not available fall back to dev previews
+    local download_url="${OCP_TOOLS_URL}/ocp/${tool_version}"
     if ! curl -o /dev/null -f -Ls "$download_url"; then
-        download_url="${OCP_CLIENTS_URL}/ocp-dev-preview/${ocpi_version}"
+        download_url="${OCP_TOOLS_URL}/ocp-dev-preview/${tool_version}"
     fi
 
     local filename_version
-    [[ "$ocpi_version" =~ ^[a-z]+- ]] || filename_version="-${ocpi_version}"
+    [[ "$tool_version" =~ ^[a-z]+- ]] || filename_version="-${tool_version}"
 
-    # Download the installer when we don't have it installed, or what we have isn't the requested version
-    curl -Ls "${download_url}/openshift-install-linux${filename_version}.tar.gz" \
-        | tar -xzf - -C "${OCP_INSTALLER%/*}" "${OCP_INSTALLER##*/}"
+    curl -Ls "${download_url}/${download_file}-linux${filename_version}.tar.gz" \
+        | tar -xzf - -C "${target_binary%/*}" "${target_binary##*/}"
 }

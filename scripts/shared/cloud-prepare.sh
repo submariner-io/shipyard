@@ -43,8 +43,9 @@ function prepare_kind() {
 }
 
 function prepare_ocp() {
+    source "${SCRIPTS_DIR}/lib/ocp_utils"
     local platform
-    platform=$(yq '.platform | keys | join("")' "${OCP_TEMPLATE_DIR}/install-config.yaml")
+    platform=$(determine_ocp_platform "$OCP_TEMPLATE_DIR")
 
     # In case of OpenStack, `cloud prepare` addresses it as `rhos`.
     [[ "$platform" != "openstack" ]] || platform=rhos

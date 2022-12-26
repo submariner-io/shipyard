@@ -27,7 +27,7 @@ export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 TESTDIR ?= test/e2e
 LAZY_DEPLOY ?= true
 SUBCTL_VERIFICATIONS ?= connectivity
-export FOCUS LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TESTDIR
+export FOCUS LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TEST_ARGS TESTDIR
 
 # Specific to `reload-images`
 export RESTART ?= none
@@ -110,6 +110,11 @@ endif
 
 ifneq (,$(filter ocp,$(_using)))
 PROVIDER = ocp
+IMAGE_TAG = subctl
+endif
+
+ifneq (,$(filter acm,$(_using)))
+PROVIDER = acm
 IMAGE_TAG = subctl
 endif
 

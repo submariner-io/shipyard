@@ -5,13 +5,7 @@
 
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
-declare -gA kind_k8s_versions kind_binaries
-# kind-0.12 hashes
-kind_k8s_versions[1.17]=1.17.17@sha256:e477ee64df5731aa4ef4deabbafc34e8d9a686b49178f726563598344a3898d5
-kind_binaries[1.17]='kind-0.12'
-# kind-0.15 hashes
-kind_k8s_versions[1.18]=1.18.20@sha256:61c9e1698c1cb19c3b1d8151a9135b379657aee23c59bde4a8d87923fcb43a91
-kind_binaries[1.18]='kind-0.15'
+declare -gA kind_k8s_versions
 # kind 0.17 hashes
 kind_k8s_versions[1.19]=1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7
 kind_k8s_versions[1.20]=1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394
@@ -88,9 +82,9 @@ function provider_create_cluster() {
     export KUBECONFIG=${KUBECONFIGS_DIR}/kind-config-${cluster}
     rm -f "$KUBECONFIG"
 
-    if "${kind}" get clusters | grep -q "^${cluster}$"; then
+    if kind get clusters | grep -q "^${cluster}$"; then
         echo "KIND cluster already exists, skipping its creation..."
-        "${kind}" export kubeconfig --name="${cluster}"
+        kind export kubeconfig --name="${cluster}"
         kind_fixup_config
         return
     fi
@@ -105,9 +99,9 @@ function provider_create_cluster() {
     local image_flag=''
     [[ -z "${K8S_VERSION}" ]] || image_flag="--image=kindest/node:v${K8S_VERSION}"
 
-    "${kind}" version
+    kind version
     cat "${RESOURCES_DIR}/${cluster}-config.yaml"
-    "${kind}" create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
+    kind create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
     [[ -n "${cluster_cni[$cluster]}" ]] || delete_cluster_on_fail schedule_dummy_pod
@@ -138,7 +132,7 @@ function delete_cluster_on_fail() {
     if ! wait $! ; then
         echo "Failed to run '$*', removing the cluster"
         kubectl cluster-info dump || echo "Can't get cluster info" 1>&2
-        "${kind}" delete cluster --name="${cluster}"
+        kind delete cluster --name="${cluster}"
         return 1
     fi
 }
@@ -261,7 +255,6 @@ function download_ovnk() {
 
 function provider_prepare() {
     [[ -z "${K8S_VERSION}" ]] && K8S_VERSION="${DEFAULT_K8S_VERSION}"
-    kind="${kind_binaries[$K8S_VERSION]:-kind}"
     [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
 
     download_kind

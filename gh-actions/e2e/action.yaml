@@ -24,7 +24,10 @@ inputs:
   skip:
     description: '-ginkgo.skip argument to pass to E2E tests'
     required: false
-    default: '\[external-dataplane\]'
+  test_args:
+    description: 'Extra arguments to pass to E2E tests'
+    required: false
+    default: '-ginkgo.failFast'
   testdir:
     description: 'Where to look for the E2E tests'
     required: false
@@ -84,4 +87,5 @@ runs:
             FOCUS="${{ inputs.focus }}" \
             SKIP="${{ inputs.skip }}" \
             PLUGIN="${{ inputs.plugin }}" \
+            TEST_ARGS="${{ inputs.test_args }}" \
             E2E_TESTDIR="${{ inputs.testdir }}"
