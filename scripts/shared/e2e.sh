@@ -3,12 +3,7 @@
 set -em -o pipefail
 source "${SCRIPTS_DIR}/lib/utils"
 
-# shellcheck disable=SC2206 # Split on purpose
-ginkgo_args=(${TEST_ARGS})
-[[ -n "${FOCUS}" ]] && ginkgo_args+=("-ginkgo.focus=${FOCUS}")
-[[ -n "${SKIP}" ]] && ginkgo_args+=("-ginkgo.skip=${SKIP}")
-
-print_env FOCUS LAZY_DEPLOY SKIP SUBCTL_VERIFICATIONS TEST_ARGS TESTDIR
+print_env LAZY_DEPLOY SUBCTL_VERIFICATIONS TEST_ARGS TESTDIR
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
 ### Functions ###
@@ -32,11 +27,12 @@ function generate_kubecontexts() {
 function test_with_e2e_tests {
     cd "${DAPPER_SOURCE}/${TESTDIR}"
 
+    # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
     ${GO:-go} test -v -timeout 30m -args -test.timeout 15m \
         -submariner-namespace $SUBM_NS "${clusters[@]/#/-dp-context=}" \
         -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace \
         -ginkgo.reportPassed -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" \
-        "${ginkgo_args[@]}" 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
+        $TEST_ARGS 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
 }
 
 function test_with_subctl {
