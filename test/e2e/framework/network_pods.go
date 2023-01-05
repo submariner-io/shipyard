@@ -254,7 +254,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -302,7 +302,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			HostNetwork:   bool(np.Config.Networking),
 			Containers: []v1.Container{
@@ -356,7 +356,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -401,7 +401,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -438,7 +438,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -478,7 +478,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -511,7 +511,7 @@ func (np *NetworkPod) buildCustomPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:                      nodeAffinity(np.Config.Scheduling),
+			Affinity:                      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy:                 v1.RestartPolicyNever,
 			HostNetwork:                   bool(np.Config.Networking),
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
@@ -537,14 +537,21 @@ func (np *NetworkPod) buildCustomPod() {
 	np.AwaitReady()
 }
 
-func nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
+func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
 	Expect(scheduling).ShouldNot(Equal(InvalidScheduling))
 
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
 	case GatewayNode:
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpIn, []string{"true"})
+		smGWPodList, err := KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
+			metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
+
+		Expect(err).NotTo(HaveOccurred())
+		Expect(len(smGWPodList.Items)).To(Equal(1))
+		hostname := smGWPodList.Items[0].GetObjectMeta().GetLabels()["gateway.submariner.io/node"]
+		Expect(len(hostname)).NotTo(BeZero())
+		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, []string{hostname})
 
 	case NonGatewayNode:
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
