@@ -27,12 +27,21 @@ function generate_kubecontexts() {
 function test_with_e2e_tests {
     cd "${DAPPER_SOURCE}/${TESTDIR}"
 
-    # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
-    ${GO:-go} test -v -timeout 30m -args -test.timeout 15m \
-        -submariner-namespace $SUBM_NS "${clusters[@]/#/-dp-context=}" \
-        -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace \
-        -ginkgo.reportPassed -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" \
-        $TEST_ARGS 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
+    if go mod graph | grep 'submariner.*ginkgo/v2' >/dev/null; then
+        # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
+        ${GO:-go} test -v -timeout 30m -args -test.timeout 15m \
+            -submariner-namespace $SUBM_NS "${clusters[@]/#/-dp-context=}" \
+            --ginkgo.v --ginkgo.randomize-all --ginkgo.trace \
+            --ginkgo.junit-report "${DAPPER_OUTPUT}/e2e-junit.xml" \
+            $TEST_ARGS 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
+    else
+        # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
+        ${GO:-go} test -v -timeout 30m -args -test.timeout 15m \
+            -submariner-namespace $SUBM_NS "${clusters[@]/#/-dp-context=}" \
+            -ginkgo.v -ginkgo.randomizeAllSpecs -ginkgo.trace \
+            -ginkgo.reportPassed -ginkgo.reportFile "${DAPPER_OUTPUT}/e2e-junit.xml" \
+            $TEST_ARGS 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
+    fi
 }
 
 function test_with_subctl {

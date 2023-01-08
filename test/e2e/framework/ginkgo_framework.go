@@ -18,7 +18,7 @@ limitations under the License.
 
 package framework
 
-import "github.com/onsi/ginkgo"
+import "github.com/onsi/ginkgo/v2"
 
 // NewFramework creates a test framework, under ginkgo.
 func NewFramework(baseName string) *Framework {
