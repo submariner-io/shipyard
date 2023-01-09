@@ -5,8 +5,6 @@ MULTIARCH_IMAGES ?= nettest
 EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
-FOCUS ?=
-SKIP ?=
 PLUGIN ?=
 
 export BASE_BRANCH OCM_BASE_BRANCH

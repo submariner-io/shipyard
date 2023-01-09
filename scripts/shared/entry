@@ -14,5 +14,7 @@ else
     command="$1"
 fi
 
+# This ends the GHA group that started in Makefile.dapper
+[[ -z "$CI" ]] || echo "::endgroup::"
 shift
 "$command" "$@"

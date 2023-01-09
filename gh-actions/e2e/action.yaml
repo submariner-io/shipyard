@@ -17,13 +17,6 @@ inputs:
     description: 'Target for make'
     required: false
     default: 'e2e'
-  focus:
-    description: '-ginkgo.focus argument to pass to E2E tests'
-    required: false
-    default: '\[.*\]'
-  skip:
-    description: '-ginkgo.skip argument to pass to E2E tests'
-    required: false
   test_args:
     description: 'Extra arguments to pass to E2E tests'
     required: false
@@ -84,8 +77,6 @@ runs:
         make "${{ inputs.target }}" \
             using="${{ inputs.using }}" \
             ${k8s_version:+K8S_VERSION="$k8s_version"} \
-            FOCUS="${{ inputs.focus }}" \
-            SKIP="${{ inputs.skip }}" \
             PLUGIN="${{ inputs.plugin }}" \
             TEST_ARGS="${{ inputs.test_args }}" \
             E2E_TESTDIR="${{ inputs.testdir }}"
