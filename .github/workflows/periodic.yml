@@ -16,7 +16,7 @@ jobs:
       issues: write
     steps:
       - name: Check out the repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Run markdown-link-check
         uses: gaurav-nelson/github-action-markdown-link-check@4d97ad89bbb0de4be573a9d7a2fc0ce900afc519
@@ -44,13 +44,13 @@ jobs:
         ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Build go-mod-outdated
         run: go build -o bin/go-mod-outdated github.com/psampaz/go-mod-outdated
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
