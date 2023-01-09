@@ -40,13 +40,13 @@ jobs:
             k8s_version: '1.22'
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           # This is replaced to stable branch by auto release process
           ref: release-0.12
@@ -83,13 +83,13 @@ jobs:
         project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           # This is replaced to stable branch by auto release process
           ref: release-0.12
@@ -118,13 +118,13 @@ jobs:
         project: ['admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'submariner', 'submariner-charts', 'submariner-operator']
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@755da8c3cf115ac066823e79a1e1788f8940201b
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           # This is replaced to stable branch by auto release process
           ref: release-0.12
