@@ -20,7 +20,7 @@ inputs:
   test_args:
     description: 'Extra arguments to pass to E2E tests'
     required: false
-    default: '-ginkgo.failFast'
+    default: '--ginkgo.fail-fast'
   testdir:
     description: 'Where to look for the E2E tests'
     required: false

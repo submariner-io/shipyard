@@ -56,13 +56,8 @@ for module in "${modules[@]}"; do
         [ "${ARCH}" == "amd64" ] && race=-race
         # It's important that the `go test` command's exit status is reported from this () block.
         # Can't be one command (with -cover). Need detailed -coverprofile for Sonar and summary to console.
-        if go mod graph | grep 'submariner.*ginkgo/v2' >/dev/null; then
-            ${GO:-go} test -v ${race} -coverprofile unit.coverprofile "${packages[@]}" --ginkgo.v --ginkgo.trace --ginkgo.junit-report junit.xml "$@" && \
-            go tool cover -func unit.coverprofile
-        else
-            ${GO:-go} test -v ${race} -coverprofile unit.coverprofile "${packages[@]}" -ginkgo.v -ginkgo.trace -ginkgo.reportPassed -ginkgo.reportFile junit.xml "$@" && \
-            go tool cover -func unit.coverprofile
-        fi
+        "${GO:-go}" test -v ${race} -coverprofile unit.coverprofile "${packages[@]}" --ginkgo.v --ginkgo.trace --ginkgo.junit-report junit.xml "$@" && \
+        go tool cover -func unit.coverprofile
     ) || result=1
 done
 
