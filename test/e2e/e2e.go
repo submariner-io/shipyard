@@ -86,8 +86,13 @@ func RunE2ETests(t *testing.T) bool {
 	gomega.RegisterFailHandler(Fail)
 
 	suiteConfig, reporterConfig := GinkgoConfiguration()
-	if framework.TestContext.JunitReport != "" {
-		reporterConfig.JUnitReport = framework.TestContext.JunitReport
+
+	if framework.TestContext.SuiteConfig != nil {
+		suiteConfig = *framework.TestContext.SuiteConfig
+	}
+
+	if framework.TestContext.ReporterConfig != nil {
+		reporterConfig = *framework.TestContext.ReporterConfig
 	}
 
 	return RunSpecs(t, "Submariner E2E suite", suiteConfig, reporterConfig)
