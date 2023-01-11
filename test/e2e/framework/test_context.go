@@ -23,6 +23,7 @@ import (
 	"os"
 	"strings"
 
+	"github.com/onsi/ginkgo/v2/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/klog/v2"
 )
@@ -30,12 +31,13 @@ import (
 type contextArray []string
 
 type TestContextType struct {
+	ReporterConfig      *types.ReporterConfig
+	SuiteConfig         *types.SuiteConfig
 	KubeConfigs         []string // KubeConfigs provides an alternative to KubeConfig + KubeContexts
 	KubeConfig          string
 	KubeContexts        contextArray
 	ClusterIDs          []string
 	NumNodesInCluster   map[ClusterIndex]int
-	JunitReport         string
 	SubmarinerNamespace string
 	ConnectionTimeout   uint
 	ConnectionAttempts  uint
@@ -66,8 +68,6 @@ func init() {
 	flag.StringVar(&TestContext.KubeConfig, "kubeconfig", os.Getenv("KUBECONFIG"),
 		"Path to kubeconfig containing embedded authinfo.")
 	flag.Var(&TestContext.KubeContexts, "dp-context", "kubeconfig context for dataplane clusters (use several times).")
-	flag.StringVar(&TestContext.JunitReport, "junit-report", "",
-		"Path to the directory and filename of the JUnit XML report. Default is empty, which doesn't generate these reports.")
 	flag.StringVar(&TestContext.SubmarinerNamespace, "submariner-namespace", "submariner",
 		"Namespace in which the submariner components are deployed.")
 	flag.UintVar(&TestContext.ConnectionTimeout, "connection-timeout", 18,
