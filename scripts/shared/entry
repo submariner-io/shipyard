@@ -16,5 +16,13 @@ fi
 
 # This ends the GHA group that started in Makefile.dapper
 [[ -z "$CI" ]] || echo "::endgroup::"
+
+# Replace any requested module with local module.
+# Use a relative path so it also works outside the container (assuming the projects share same root dir).
+IFS=':' read -ra modules <<< "$LOCAL_MODULES"
+for module in "${modules[@]##*/}"; do
+    go mod edit -replace="github.com/submariner-io/${module}=../${module}"
+done
+
 shift
 "$command" "$@"
