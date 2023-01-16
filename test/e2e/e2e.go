@@ -20,7 +20,6 @@ package e2e
 
 import (
 	"fmt"
-	"strings"
 	"testing"
 
 	. "github.com/onsi/ginkgo/v2"
@@ -74,12 +73,7 @@ func RunE2ETests(t *testing.T) bool {
 	})
 
 	framework.SetUserAgentFunction(func() string {
-		testDesc := CurrentGinkgoTestDescription()
-		prefix := "ginkgo"
-		if len(testDesc.ComponentTexts) > 0 {
-			prefix = strings.Join(testDesc.ComponentTexts, " ")
-		}
-		return fmt.Sprintf("%v -- %v", rest.DefaultKubernetesUserAgent(), prefix)
+		return fmt.Sprintf("%v -- %v", rest.DefaultKubernetesUserAgent(), CurrentSpecReport().FullText())
 	})
 
 	framework.ValidateFlags(framework.TestContext)
