@@ -275,6 +275,11 @@ yamllint:
 backport:
 	$(SCRIPTS_DIR)/backport.sh $(release) $(pr)
 
+# [go-replace] allows anyone to quickly and easily set a Go replace
+go-replace:
+	go mod edit -replace=$(REPLACE)
+	go mod tidy
+
 # [post-mortem] prints a heap of information, to help in debugging failures on the KIND clusters
 post-mortem:
 	$(SCRIPTS_DIR)/post_mortem.sh

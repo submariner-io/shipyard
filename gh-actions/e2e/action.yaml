@@ -13,10 +13,6 @@ inputs:
   using:
     description: 'Various options to pass via using="..."'
     required: false
-  working-directory:
-    description: 'Working directory to run in'
-    required: false
-    default: '.'
   target:
     description: 'Target for make'
     required: false
@@ -81,7 +77,6 @@ runs:
 
     - name: Run E2E deployment and tests
       shell: bash
-      working-directory: ${{ inputs.working-directory }}
       run: |
         k8s_version=${{ inputs.k8s_version }} &&
         make "${{ inputs.target }}" \
