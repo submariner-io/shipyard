@@ -41,36 +41,41 @@ jobs:
           - project: submariner-operator
             k8s_version: '1.24'
     steps:
-      - name: Check out the Shipyard repository
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-
-      - name: Build the latest Shipyard image
-        run: make images
-
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
           repository: submariner-io/${{ matrix.project }}
-          path: ${{ matrix.project }}
+
+      - name: Check out the Shipyard repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+        with:
+          path: shipyard
+
+      - name: Build the latest Shipyard image
+        run: make -C shipyard images
 
       - name: Copy Shipyard resources
-        run: cp -n Dockerfile.* Makefile.dapper .dapper ${{ matrix.project }}/
+        run: cp -n shipyard/{Dockerfile.*,Makefile.dapper,.dapper} .
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
-        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
+        run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
+
+      - name: Make sure ${{ matrix.project }} is using the Shipyard go module
+        run: |
+          go mod edit -replace=github.com/submariner-io/shipyard=./shipyard
+          go mod tidy
 
       - name: Run E2E deployment and tests
-        uses: ./gh-actions/e2e
+        uses: ./shipyard/gh-actions/e2e
         with:
           k8s_version: ${{ matrix.k8s_version }}
           using: ${{ matrix.cabledriver }} ${{ matrix.deploytool }}
-          working-directory: ./${{ matrix.project }}
 
       - name: Post mortem
         if: failure()
-        uses: ./gh-actions/post-mortem
+        uses: ./shipyard/gh-actions/post-mortem
 
   lint-consuming:
     name: Lint
