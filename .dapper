@@ -3,12 +3,18 @@
 # Pass credential file as read-only, so that the container can use it if necessary
 function pass_credentials() {
     local credentials=$1
-    local suffix=$suffix
     local mountpoint=${credentials/$HOME//root}
+    mount_volume "$credentials" "$mountpoint"
+}
 
-    [ -r "$credentials" ] || return 0
+function mount_volume() {
+    local volume="$1"
+    local mountpoint="$2"
+    local suffix="$suffix"
+
     [ -z "${suffix}" ] && suffix=':ro' || suffix+=',ro'
-    dockerargs+=" -v ${credentials}:${mountpoint}${suffix}"
+    [ -r "$volume" ] || return 0
+    dockerargs+=" -v $(realpath -s ${volume}):${mountpoint}${suffix}"
 }
 
 file=Dockerfile.dapper
@@ -115,6 +121,14 @@ pass_credentials "${HOME}/.aws/credentials"
 
 # Pass through ~/.gcp/osServiceAccount.json so that the container can operate on GCP (if needed).
 pass_credentials "${HOME}/.gcp/osServiceAccount.json"
+
+# Attempt to mount any local replaces specified in `go.mod`.
+# We can't rely on having the right version (or any version) of go, so parse go.mod manually.
+while read -a replace; do
+    mount_root=""
+    [[ "${replace[1]}" =~ ^\. ]] && mount_root="$DAPPER_SOURCE/"
+    mount_volume "${replace[1]}" "${mount_root}${replace[1]}"
+done < <(grep -o -E '=>[ ]*(\.\.?)?/[^ ]+' go.mod)
 
 # seccomp is unconfined to avoid problems with clone3 in Fedora 35
 # See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
