@@ -220,7 +220,7 @@ gitlint:
 	fi
 
 # List of vendor/modules.txt files we might encounter
-VENDOR_MODULES := $(shell find . -name vendor -prune -o -name go.mod -printf "%h/vendor/modules.txt\n")
+VENDOR_MODULES := $(shell find . -name vendor -prune -o -writable -name go.mod -printf "%h/vendor/modules.txt\n")
 
 # [golangci-lint] validates Go code in the project
 golangci-lint:
