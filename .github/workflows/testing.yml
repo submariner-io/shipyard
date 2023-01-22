@@ -1,5 +1,5 @@
 ---
-name: Shared Scripts
+name: Testing
 
 on:
   pull_request:
@@ -27,8 +27,8 @@ jobs:
       - name: Clean up clusters
         run: make clean-clusters
 
-  compile:
-    name: Compile
+  compilation:
+    name: Compilation
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -37,8 +37,8 @@ jobs:
       - name: Test the compile.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
-  deploy:
-    name: Deploy
+  deployment:
+    name: Deployment
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
@@ -101,8 +101,21 @@ jobs:
         if: failure()
         uses: ./gh-actions/post-mortem
 
-  post_mortem:
-    name: Post Mortem
+  mutliple-gateways-support:
+    name: Multiple gateways support
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Deploy clusters and test cloud-prepare
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
+
+      - name: Clean up deployment
+        run: make clean-clusters
+
+  post-mortem:
+    name: Post mortem
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -114,15 +127,3 @@ jobs:
       - name: Test the post_mortem.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/post_mortem/test.sh"
 
-  verify_gateways:
-    name: Verify gateways
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check out the repository
-        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
-
-      - name: Deploy clusters and test cloud-prepare
-        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
-
-      - name: Clean up deployment
-        run: make clean-clusters
