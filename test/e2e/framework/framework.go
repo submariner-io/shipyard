@@ -162,6 +162,7 @@ func init() {
 
 func BeforeSuite() {
 	By("Creating kubernetes clients")
+	Expect(1).To(BeZero())
 
 	if len(RestConfigs) == 0 {
 		if len(TestContext.KubeConfig) > 0 {
