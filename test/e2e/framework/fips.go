@@ -43,11 +43,7 @@ func DetectFIPSConfig(cluster ClusterIndex) (bool, error) {
 		return false, err
 	}
 
-	if strings.Contains(configMap.Data["install-config"], "fips: true") {
-		return true, nil
-	}
-
-	return false, nil
+	return strings.Contains(configMap.Data["install-config"], "fips: true"), nil
 }
 
 func (f *Framework) FindFIPSEnabledCluster() ClusterIndex {
@@ -64,12 +60,8 @@ func (f *Framework) FindFIPSEnabledCluster() ClusterIndex {
 }
 
 func verifyFIPSOutput(data string) bool {
-	if strings.Contains(strings.ToLower(data), "fips mode: yes") &&
-		strings.Contains(strings.ToLower(data), "fips mode enabled for pluto daemon") {
-		return true
-	}
-
-	return false
+	return strings.Contains(strings.ToLower(data), "fips mode: yes") &&
+		strings.Contains(strings.ToLower(data), "fips mode enabled for pluto daemon")
 }
 
 func (f *Framework) TestGatewayNodeFIPSMode(cluster ClusterIndex, gwPod string) {

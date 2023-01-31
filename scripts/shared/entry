@@ -3,8 +3,8 @@ set -e
 
 source "${SCRIPTS_DIR}/lib/debug_functions"
 
-# shellcheck disable=SC2064 # We want the current values
-trap "chown -R $DAPPER_UID:$DAPPER_GID ." exit
+# Change ownership of files created inside the container
+trap 'find . -writable -newercc /proc -execdir chown $DAPPER_UID:$DAPPER_GID {} +' exit
 
 mkdir -p bin dist output
 
