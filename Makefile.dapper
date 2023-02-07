@@ -46,7 +46,7 @@ endif
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
 $(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
-	@[[ -z "$$CI" ]] || echo "::group::Launching a container to run 'make $@'"
+	@[ -z "$$CI" ] || echo "::group::Launching a container to run 'make $@'"
 	-docker network create -d bridge kind
 	+$(RUN_IN_DAPPER) make $(MAKE_DEBUG_FLAG) $@
 
@@ -58,7 +58,7 @@ $(BASE_DAPPER) $(LINTING_DAPPER):
 # Run silently as the commands are pretty straightforward and `make` hasn't a lot to do
 $(LINTING_GOALS): DAPPER_ARGS := -f $(LINTING_DAPPER)
 $(LINTING_GOALS): .dapper $(LINTING_DAPPER)
-	@[[ -z "$$CI" ]] || echo "::group::Launching a container to run 'make $@'"
+	@[ -z "$$CI" ] || echo "::group::Launching a container to run 'make $@'"
 	@$(RUN_IN_DAPPER) make $@
 
 # [prune-images] removes all Submariner-provided images and all untagged images

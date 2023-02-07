@@ -33,7 +33,7 @@ export LAZY_DEPLOY SUBCTL_VERIFICATIONS TEST_ARGS TESTDIR
 export RESTART ?= none
 
 # Specific to `shellcheck`
-export SHELLCHECK_ARGS += $(shell [[ ! -d scripts ]] || find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
+export SHELLCHECK_ARGS += $(shell [ ! -d scripts ] || find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
 
 # Specific to `compile.sh`
 export BUILD_DEBUG BUILD_UPX LDFLAGS
