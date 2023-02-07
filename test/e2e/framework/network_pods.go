@@ -40,6 +40,7 @@ type NetworkingType bool
 const (
 	HostNetworking NetworkingType = true
 	PodNetworking  NetworkingType = false
+	dataPrefixSize uint           = 25 // size of prefix string '[dataplane] listener says'
 )
 
 type NetworkPodType int
@@ -69,6 +70,7 @@ type NetworkPodConfig struct {
 	Scheduling         NetworkPodScheduling
 	Port               int
 	Data               string
+	NumOfDataBufs      uint
 	RemoteIP           string
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
@@ -105,6 +107,12 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 
 	if config.Data == "" {
 		config.Data = string(uuid.NewUUID())
+	}
+
+	if TestContext.PacketSize == 0 {
+		config.NumOfDataBufs = 50
+	} else {
+		config.NumOfDataBufs = 1 + (TestContext.PacketSize / (uint(len(config.Data)) + dataPrefixSize))
 	}
 
 	networkPod := &NetworkPod{Config: config, framework: f, TerminationCode: -1}
@@ -265,7 +273,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					Command: []string{
 						"sh",
 						"-c",
-						"for i in $(seq 50);" +
+						"for i in $(seq 1 $BUFS_NUM);" +
 							" do echo [dataplane] listener says $SEND_STRING;" +
 							" done" +
 							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
@@ -274,6 +282,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 						{Name: "LISTEN_PORT", Value: strconv.Itoa(np.Config.Port)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * np.Config.ConnectionAttempts))},
+						{Name: "BUFS_NUM", Value: strconv.Itoa(int(np.Config.NumOfDataBufs))},
 					},
 					SecurityContext: podSecurityContext,
 				},
@@ -314,7 +323,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Command: []string{
 						"sh",
 						"-c",
-						"for in in $(seq 50);" +
+						"for in in $(seq 1 $BUFS_NUM);" +
 							" do echo [dataplane] connector says $SEND_STRING; done" +
 							" | for i in $(seq $CONN_TRIES);" +
 							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
@@ -329,6 +338,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
 						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
 						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
+						{Name: "BUFS_NUM", Value: strconv.Itoa(int(np.Config.NumOfDataBufs))},
 					},
 					SecurityContext: podSecurityContext,
 				},
