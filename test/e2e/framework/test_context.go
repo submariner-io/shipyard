@@ -42,6 +42,7 @@ type TestContextType struct {
 	ConnectionTimeout   uint
 	ConnectionAttempts  uint
 	OperationTimeout    uint
+	PacketSize          uint
 	GlobalnetEnabled    bool
 	ClientQPS           float32
 	ClientBurst         int
