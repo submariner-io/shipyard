@@ -5,7 +5,7 @@ inputs:
   k8s_version:
     description: 'Version of Kubernetes to use for clusters'
     required: false
-    default: '1.23'
+    default: '1.25'
   using:
     description: 'Various options to pass via using="..."'
     required: false
