@@ -175,12 +175,15 @@ function add_cluster_cidrs() {
 
     cluster_CIDRs[$idx]="10.$((val+129)).0.0/16"
     service_CIDRs[$idx]="100.$((val+65)).0.0/16"
+
+    cluster_IPv6_CIDRs[$idx]="fc00:$((val+1000))::/48"
+    service_IPv6_CIDRs[$idx]="fc00:$((val+2000))::/112"
 }
 
 function declare_cidrs() {
     local DEBUG_PRINT=false
     # shellcheck disable=SC2034 # these variables are used elsewhere
-    declare -gA cluster_CIDRs service_CIDRs global_CIDRs
+    declare -gA cluster_CIDRs cluster_IPv6_CIDRs service_CIDRs service_IPv6_CIDRs global_CIDRs
     local cluster i=1
 
     for cluster in "${clusters[@]}"; do

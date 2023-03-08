@@ -43,11 +43,18 @@ ifeq (true,$(DEBUG_PRINT))
 MAKE_DEBUG_FLAG = --debug=b
 endif
 
+USING = $(subst $(,), ,$(using))
+_using = ${USING}
+
+ifneq (,$(filter dual-stack,$(_using)))
+IPV6_FLAGS = --ipv6 --subnet fc00:1234:4444::/64
+endif
+
 # Only run command line goals in dapper (except things that have to run outside of dapper).
 # Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
 $(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
 	@[ -z "$$CI" ] || echo "::group::Launching a container to run 'make $@'"
-	-docker network create -d bridge kind
+	-docker network create $(IPV6_FLAGS) -d bridge kind
 	+$(RUN_IN_DAPPER) make $(MAKE_DEBUG_FLAG) $@
 
 # The original dockerfiles will live in Shipyard and be downloaded by consuming projects.
