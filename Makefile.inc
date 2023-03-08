@@ -9,7 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export AIR_GAPPED DEBUG_PRINT GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT
+export AIR_GAPPED DEBUG_PRINT GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TIMEOUT DUAL_STACK
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.25
@@ -124,6 +124,10 @@ endif
 
 ifneq (,$(filter air-gap,$(_using)))
 AIR_GAPPED = true
+endif
+
+ifneq (,$(filter dual-stack,$(_using)))
+DUAL_STACK = true
 endif
 
 ifeq ($(LIGHTHOUSE),true)

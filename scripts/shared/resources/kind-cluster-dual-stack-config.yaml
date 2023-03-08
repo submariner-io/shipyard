@@ -1,0 +1,23 @@
+---
+kind: Cluster
+apiVersion: kind.x-k8s.io/v1alpha4
+networking:
+  disableDefaultCNI: ${disable_cni}
+  podSubnet: ${pod_cidr},${pod_cidr_ipv6}
+  serviceSubnet: ${service_cidr},${service_cidr_ipv6}
+  ipFamily: dual
+containerdConfigPatches:
+  - |-
+    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5000\"]
+      endpoint = [\"http://kind-registry:5000\"]
+kubeadmConfigPatches:
+  - |
+    apiVersion: kubeadm.k8s.io/v1beta2
+    kind: ClusterConfiguration
+    metadata:
+      name: config
+    networking:
+      podSubnet: ${pod_cidr},${pod_cidr_ipv6}
+      serviceSubnet: ${service_cidr},${service_cidr_ipv6}
+      dnsDomain: ${dns_domain}
+nodes: ${nodes}
