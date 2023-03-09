@@ -55,6 +55,7 @@ jobs:
             lighthouse: lighthouse
           - extra-toggles: air-gap
             ovn: ovn
+          - extra-toggles: dual-stack
           - extra-toggles: ovn
           - deploytool: operator
             extra-toggles: lighthouse
