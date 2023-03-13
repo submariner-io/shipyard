@@ -199,7 +199,7 @@ function deploy_kind_ovn(){
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
 
-    delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"
+    delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -dd "${KIND_CLUSTER_NAME}.local"
 
     [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
 }
@@ -254,9 +254,9 @@ function download_ovnk() {
         echo contrib/ > .git/info/sparse-checkout
         echo dist/ >> .git/info/sparse-checkout
         if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git; then
-            git pull origin af58536d749c2ad377e3e1a032375ffcee4dcb4c
+            git pull origin master
         else
-            git fetch && git reset --hard af58536d749c2ad377e3e1a032375ffcee4dcb4c
+            git fetch && git reset --hard origin/master
         fi
     )
 }
