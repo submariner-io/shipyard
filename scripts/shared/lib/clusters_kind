@@ -254,9 +254,9 @@ function download_ovnk() {
         echo contrib/ > .git/info/sparse-checkout
         echo dist/ >> .git/info/sparse-checkout
         if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git; then
-            git pull origin master
+            git pull origin af58536d749c2ad377e3e1a032375ffcee4dcb4c
         else
-            git fetch && git reset --hard origin/master
+            git fetch && git reset --hard af58536d749c2ad377e3e1a032375ffcee4dcb4c
         fi
     )
 }
