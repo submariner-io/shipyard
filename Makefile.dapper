@@ -73,7 +73,7 @@ $(LINTING_GOALS): .dapper $(LINTING_DAPPER)
 # Copied from Makefile to provide this everywhere (until we can share
 # non-Dapper goals across projects)
 prune-images:
-	docker images | grep -E '(admiral|cloud-prepare|coastguard|lighthouse|nettest|shipyard|submariner|<none>)' | while read image tag hash _; do \
+	docker images | grep -E '(admiral|cloud-prepare|coastguard|lighthouse|nettest|shipyard|subctl|submariner|<none>)' | while read image tag hash _; do \
 	    if [ "$$tag" != "<none>" ]; then \
 	        docker rmi $$image:$$tag; \
 	    else \
