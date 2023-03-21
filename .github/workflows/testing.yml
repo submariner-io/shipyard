@@ -1,5 +1,5 @@
 ---
-name: Shared Scripts
+name: Testing
 
 on:
   pull_request:
@@ -9,6 +9,59 @@ permissions: {}
 env:
   DEBUG_PRINT: true
 jobs:
+  build-multiarch-images:
+    name: Build multi-arch images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Set up QEMU (to support building on non-native architectures)
+        uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18
+
+      - name: Set up buildx
+        uses: docker/setup-buildx-action@f03ac48505955848960e80bbb68046aa35c7b9e7
+
+      - name: Build the multi-arch images
+        run: make multiarch-images
+
+      - name: Check that we actually built multi-arch images
+        run: bash -c '[ "$(echo package/*.tar)" != "package/*.tar" ]'
+
+  clean-clusters:
+    name: Clean up clusters
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Deploy clusters
+        run: make clusters TIMEOUT=1m
+
+      - name: Clean up clusters
+        run: make clean-clusters
+
+      - name: Check that clusters are gone
+        run: test "$(kind get clusters 2>&1)" = "No kind clusters found."
+
+  clean-generated:
+    name: Clean up generated files
+    timeout-minutes: 20
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Build images
+        run: make images
+
+      - name: Clean up generated files
+        run: make clean-generated
+
+      - name: Check that image markers are gone
+        run: test package/.image.* = "package/.image.*"
+
   clusters:
     name: Clusters
     timeout-minutes: 20
@@ -24,11 +77,8 @@ jobs:
         if: failure()
         uses: ./gh-actions/post-mortem
 
-      - name: Clean up clusters
-        run: make clean-clusters
-
-  compile:
-    name: Compile
+  compilation:
+    name: Compilation
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -37,8 +87,8 @@ jobs:
       - name: Test the compile.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
-  deploy:
-    name: Deploy
+  deployment:
+    name: Deployment
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
@@ -83,9 +133,6 @@ jobs:
         if: failure()
         uses: ./gh-actions/post-mortem
 
-      - name: Clean up deployment
-        run: make clean-clusters
-
   e2e:
     name: E2E
     timeout-minutes: 30
@@ -101,8 +148,18 @@ jobs:
         if: failure()
         uses: ./gh-actions/post-mortem
 
-  post_mortem:
-    name: Post Mortem
+  mutliple-gateways-support:
+    name: Multiple gateways support
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Deploy clusters and test cloud-prepare
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
+
+  post-mortem:
+    name: Post mortem
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -114,15 +171,15 @@ jobs:
       - name: Test the post_mortem.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/post_mortem/test.sh"
 
-  verify_gateways:
-    name: Verify gateways
+  unit:
+    name: Unit tests
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
 
-      - name: Deploy clusters and test cloud-prepare
-        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
+      - name: Running `make unit` is expected to pass
+        run: make unit
 
-      - name: Clean up deployment
-        run: make clean-clusters
+      - name: Running `make unit` is expected to fail
+        run: sh -c '! make unit TEST_ARGS="--fail"'
