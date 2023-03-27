@@ -554,12 +554,16 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 
 	switch scheduling {
 	case GatewayNode:
-		smGWPodList, err := KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
-			metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
+		smGWPodList := AwaitUntil("await active gateway Pod",
+			func() (interface{}, error) {
+				return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
+					metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
+			},
+			func(result interface{}) (bool, string, error) {
+				return len(result.(*v1.PodList).Items) == 1, "", nil
+			}).(*v1.PodList)
 
-		Expect(err).NotTo(HaveOccurred())
-		Expect(len(smGWPodList.Items)).To(Equal(1))
-		hostname := smGWPodList.Items[0].GetObjectMeta().GetLabels()["gateway.submariner.io/node"]
+		hostname := smGWPodList.Items[0].Labels["gateway.submariner.io/node"]
 		Expect(len(hostname)).NotTo(BeZero())
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, []string{hostname})
 
