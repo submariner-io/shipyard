@@ -74,7 +74,7 @@ runs:
         echo "::endgroup::"
 
     - name: Restore images from the cache
-      uses: ./gh-actions/restore-images
+      uses: submariner-io/shipyard/gh-actions/restore-images@release-0.15
       with:
         cache: ${{ inputs.cache }}
         working-directory: ${{ inputs.working-directory }}
