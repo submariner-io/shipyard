@@ -1,0 +1,31 @@
+---
+name: 'Cache Images'
+description: 'Builds project images and caches them'
+inputs:
+  cache:
+    description: 'Location of the cache'
+    required: false
+    default: '~/image-cache'
+runs:
+  using: "composite"
+  steps:
+    - name: Set up the cache
+      id: image-cache
+      uses: actions/cache@88522ab9f39a2ea568f7027eddc7d8d8bc9d59c8
+      with:
+        path: ${{ inputs.cache }}
+        key: image-cache-${{ github.sha }}
+
+    - name: Build the images if necessary
+      if: steps.image-cache.outputs.cache-hit != 'true'
+      shell: bash
+      run: |
+        echo "::group::Building images and storing them"
+        make images
+        mkdir -p ${{ inputs.cache }}
+        for image in package/.image.*; do \
+          docker save quay.io/submariner/${image#package/.image.} | \
+          gzip > ${{ inputs.cache }}/${image#package/.image.}.tar.gz; \
+          cp $image ${{ inputs.cache }}; \
+        done
+        echo "::endgroup::"
