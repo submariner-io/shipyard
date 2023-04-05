@@ -11,6 +11,7 @@ env:
 jobs:
   build-multiarch-images:
     name: Build multi-arch images
+    needs: images
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
@@ -22,6 +23,9 @@ jobs:
       - name: Set up buildx
         uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c
 
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
+
       - name: Build the multi-arch images
         run: make multiarch-images
 
@@ -30,11 +34,15 @@ jobs:
 
   clean-clusters:
     name: Clean up clusters
+    needs: images
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Deploy clusters
         run: make clusters TIMEOUT=1m
@@ -64,11 +72,15 @@ jobs:
 
   clusters:
     name: Clusters
+    needs: images
     timeout-minutes: 20
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Deploy clusters
         run: make clusters TIMEOUT=1m
@@ -79,16 +91,21 @@ jobs:
 
   compilation:
     name: Compilation
+    needs: images
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Test the compile.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
   deployment:
     name: Deployment
+    needs: images
     timeout-minutes: 30
     runs-on: ubuntu-latest
     strategy:
@@ -126,6 +143,9 @@ jobs:
       - name: Fetch all git tags
         run: git fetch origin +refs/tags/*:refs/tags/*
 
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
+
       - name: Deploy clusters and Submariner
         run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}" TIMEOUT=1m
 
@@ -135,11 +155,15 @@ jobs:
 
   e2e:
     name: E2E
+    needs: images
     timeout-minutes: 30
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Run E2E deployment and tests
         run: make e2e
@@ -148,22 +172,40 @@ jobs:
         if: failure()
         uses: ./gh-actions/post-mortem
 
+  images:
+    name: Images
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repository
+        uses: actions/checkout@ac593985615ec2ede58e132d2e21d2b1cbd6127c
+
+      - name: Build the images if necessary
+        uses: ./gh-actions/cache-images
+
   mutliple-gateways-support:
     name: Multiple gateways support
+    needs: images
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Deploy clusters and test cloud-prepare
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/cloud-prepare/test.sh"
 
   post-mortem:
     name: Post mortem
+    needs: images
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Deploy some clusters
         run: make clusters
@@ -173,10 +215,14 @@ jobs:
 
   unit:
     name: Unit tests
+    needs: images
     runs-on: ubuntu-latest
     steps:
       - name: Check out the repository
         uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+
+      - name: Restore images from the cache
+        uses: ./gh-actions/restore-images
 
       - name: Running `make unit` is expected to pass
         run: make unit

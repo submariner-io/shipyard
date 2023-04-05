@@ -2,6 +2,10 @@
 name: 'End to End'
 description: 'Runs end to end tests with multiple clusters'
 inputs:
+  cache:
+    description: 'Location of the cache'
+    required: false
+    default: '~/image-cache'
   k8s_version:
     description: 'Version of Kubernetes to use for clusters'
     required: false
@@ -68,6 +72,12 @@ runs:
         sudo apt install -y linux-headers-$(uname -r) wireguard
         sudo modprobe wireguard
         echo "::endgroup::"
+
+    - name: Restore images from the cache
+      uses: submariner-io/shipyard/gh-actions/restore-images@devel
+      with:
+        cache: ${{ inputs.cache }}
+        working-directory: ${{ inputs.working-directory }}
 
     - name: Run E2E deployment and tests
       shell: bash
