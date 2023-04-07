@@ -61,7 +61,7 @@ func testListingNodesFromCluster(cs *kubernetes.Clientset) {
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Checking that we had more than 0 nodes on the response")
-	Expect(len(nodes.Items)).ToNot(BeZero())
+	Expect(nodes.Items).ToNot(BeEmpty())
 
 	for i := range nodes.Items {
 		inIP, err := getIP(v1.NodeInternalIP, &nodes.Items[i])
