@@ -165,7 +165,7 @@ func BeforeSuite() {
 
 	if len(RestConfigs) == 0 {
 		if len(TestContext.KubeConfig) > 0 {
-			Expect(len(TestContext.KubeConfigs)).To(BeZero(),
+			Expect(TestContext.KubeConfigs).To(BeEmpty(),
 				"Either KubeConfig or KubeConfigs must be specified but not both")
 
 			for _, ctx := range TestContext.KubeContexts {
@@ -177,7 +177,7 @@ func BeforeSuite() {
 				TestContext.ClusterIDs = TestContext.KubeContexts
 			}
 		} else if len(TestContext.KubeConfigs) > 0 {
-			Expect(len(TestContext.KubeConfigs)).To(Equal(len(TestContext.ClusterIDs)),
+			Expect(TestContext.KubeConfigs).To(HaveLen(len(TestContext.ClusterIDs)),
 				"One ClusterID must be provided for each item in the KubeConfigs")
 			for _, kubeConfig := range TestContext.KubeConfigs {
 				RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))

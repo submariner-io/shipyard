@@ -564,7 +564,7 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 			}).(*v1.PodList)
 
 		hostname := smGWPodList.Items[0].Labels["gateway.submariner.io/node"]
-		Expect(len(hostname)).NotTo(BeZero())
+		Expect(hostname).NotTo(BeEmpty())
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, []string{hostname})
 
 	case NonGatewayNode:
