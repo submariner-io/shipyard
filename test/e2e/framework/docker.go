@@ -26,7 +26,6 @@ import (
 	"time"
 
 	. "github.com/onsi/gomega"
-	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 type Docker struct {
@@ -90,19 +89,15 @@ func (d *Docker) RunCommand(command ...string) (string, string) {
 }
 
 func (d *Docker) RunCommandUntil(command ...string) (string, string) {
-	var cmdErr error
 	var stdout, stderr string
 
-	err := wait.PollImmediate(5*time.Second, time.Duration(TestContext.OperationTimeout)*time.Second,
-		func() (bool, error) {
-			stdout, stderr, cmdErr = d.runCommand(command...)
-			if cmdErr != nil {
-				Logf("Error attempting to run %v: %v", append([]string{}, command...), cmdErr)
-				return false, nil //nolint:nilerr // Returning nil value is intentional
-			}
-			return true, nil
-		})
-	Expect(err).NotTo(HaveOccurred())
+	Eventually(func() error {
+		var err error
+
+		stdout, stderr, err = d.runCommand(command...)
+		return err
+	}, time.Duration(TestContext.OperationTimeout)*time.Second, 5*time.Second).Should(Succeed(),
+		"Error attempting to run %v", append([]string{}, command...))
 
 	return stdout, stderr
 }

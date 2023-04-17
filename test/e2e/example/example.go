@@ -112,27 +112,28 @@ func testCreatingAPodInCluster(cs *kubernetes.Clientset, f *framework.Framework)
 
 	By("Waiting for the example-pod(s) to be scheduled and running")
 
-	err := wait.PollImmediate(10*time.Second, 1*time.Minute, func() (bool, error) {
-		pods, err := pc.List(context.TODO(), metav1.ListOptions{LabelSelector: "example-pod"})
-		if err != nil {
-			if errors.IsUnexpectedServerError(err) {
-				framework.Logf("Transient failure when attempting to list pods: %v", err)
-				return false, nil // return nil to avoid PollImmediate from stopping
-			}
-			return false, err
-		}
-
-		// check all pods are running
-		for i := range pods.Items {
-			if pods.Items[i].Status.Phase != v1.PodRunning {
-				if pods.Items[i].Status.Phase != v1.PodPending {
-					return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\"")
+	err := wait.PollUntilContextTimeout(context.Background(), 10*time.Second, 1*time.Minute, true,
+		func(ctx context.Context) (bool, error) {
+			pods, err := pc.List(ctx, metav1.ListOptions{LabelSelector: "example-pod"})
+			if err != nil {
+				if errors.IsUnexpectedServerError(err) {
+					framework.Logf("Transient failure when attempting to list pods: %v", err)
+					return false, nil // return nil to avoid PollImmediate from stopping
 				}
-				return false, nil // pod is still pending
+				return false, err
 			}
-		}
-		return true, nil // all pods are running
-	})
+
+			// check all pods are running
+			for i := range pods.Items {
+				if pods.Items[i].Status.Phase != v1.PodRunning {
+					if pods.Items[i].Status.Phase != v1.PodPending {
+						return false, fmt.Errorf("expected pod to be in phase \"Pending\" or \"Running\"")
+					}
+					return false, nil // pod is still pending
+				}
+			}
+			return true, nil // all pods are running
+		})
 	Expect(err).NotTo(HaveOccurred())
 
 	By("Collecting pod ClusterIPs just for fun")
