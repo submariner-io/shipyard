@@ -223,9 +223,6 @@ gitlint:
 	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
 	fi
 
-# List of vendor/modules.txt files we might encounter
-VENDOR_MODULES := $(shell find . -name vendor -prune -o -writable -name go.mod -printf "%h/vendor/modules.txt\n")
-
 # [golangci-lint] validates Go code in the project
 golangci-lint:
 ifneq (,$(shell find . -name '*.go'))
@@ -238,7 +235,7 @@ endif
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
-	md_ignored=($(patsubst %/modules.txt,%,$(VENDOR_MODULES))); \
+	md_ignored=(); \
 	if [ -r .mdignore ]; then \
 		md_ignored+=($$(< .mdignore)); \
 	fi; \
@@ -285,17 +282,6 @@ post-mortem:
 # [unit] executes the Go unit tests of the project
 unit:
 	$(SCRIPTS_DIR)/unit_test.sh
-
-vendor/modules.txt: go.mod
-	$(GO) mod download
-	$(GO) mod vendor
-	$(GO) mod tidy
-
-%/vendor/modules.txt: %/go.mod
-	cd $(patsubst %/vendor/,%,$(dir $@)) && \
-	$(GO) mod download && \
-	$(GO) mod vendor && \
-	$(GO) mod tidy
 
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
