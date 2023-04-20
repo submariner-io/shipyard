@@ -22,7 +22,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # golang             | build
 # golangci-lint      | code linting
 # helm               | e2e tests
-# j2cli[yaml]        | Jinja2 template engine CLI (Used by OVN KIND setup)
 # jq                 | JSON processing (GitHub API)
 # kind               | e2e tests
 # kubectl            | e2e tests (in kubernetes-client)
@@ -30,8 +29,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # moby-engine        | Docker (for Dapper)
 # moreutils          | sponge (for system tests)
 # procps-ng          | watch (for installing ACM)
-# python3-pip        | Needed (temprorarily) to install j2cli, removed once done
-# python3-setuptools | Needed by j2cli
 # qemu-user-static   | Emulation (for multiarch builds)
 # skopeo             | container image manipulation
 # unzip              | ZIP extraction
@@ -46,10 +43,9 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - Precompiled packages in go (see https://github.com/golang/go/issues/47257)
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils moreutils upx jq gitlint procps-ng python3-setuptools \
-                   qemu-user-static python3-pip skopeo file unzip && \
-    pip install j2cli[yaml] --user && \
-    rpm -e --nodeps containerd python3-pip && \
+                   findutils moreutils upx jq gitlint procps-ng \
+                   qemu-user-static skopeo file unzip && \
+    rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
@@ -82,7 +78,8 @@ RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/i
     go clean -cache -modcache
 
 # Link get-subctl script so it can be easily run inside a shell
-RUN ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
+RUN mkdir -p /root/.local/bin && \
+    ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
