@@ -59,6 +59,9 @@ function post_analyze() {
     print_section "* Output of 'subctl diagnose all' in $cluster *"
     subctl diagnose all --context "$cluster"
 
+    print_section "* Collecting 'subctl gather' in $cluster *"
+    subctl gather --context "$cluster" --dir gather_output
+
     return 0
 }
 
