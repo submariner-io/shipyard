@@ -42,13 +42,13 @@ jobs:
             k8s_version: '1.24'
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -88,13 +88,13 @@ jobs:
         ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -143,13 +143,13 @@ jobs:
         ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@8f4b7f84864484a7bf31766abe9204da3cbe65b3
+        uses: actions/checkout@8e5e7e5ab8b370d6c329ec480221332ada57f0ab
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
