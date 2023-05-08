@@ -65,6 +65,7 @@ const (
 	RouteAgent         = "submariner-routeagent"
 	GatewayLabel       = "submariner.io/gateway"
 	ActiveGatewayLabel = "gateway.submariner.io/status=active"
+	TestNonGWNodeLabel = "test.submariner.io/non-gateway-node=true"
 )
 
 type PatchFunc func(pt types.PatchType, payload []byte) error
