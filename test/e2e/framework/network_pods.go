@@ -554,22 +554,38 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 
 	switch scheduling {
 	case GatewayNode:
-		smGWPodList := AwaitUntil("await active gateway Pod",
-			func() (interface{}, error) {
-				return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
-					metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
-			},
-			func(result interface{}) (bool, string, error) {
-				return len(result.(*v1.PodList).Items) == 1, "", nil
-			}).(*v1.PodList)
-
-		hostname := smGWPodList.Items[0].Labels["gateway.submariner.io/node"]
-		Expect(hostname).NotTo(BeEmpty())
+		hostname := np.activeGatewayHostname()
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, []string{hostname})
 
 	case NonGatewayNode:
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
-		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+		smE2eNonGWLabelledNodeList, err := KubeClients[np.Config.Cluster].CoreV1().Nodes().List(context.TODO(),
+			metav1.ListOptions{LabelSelector: TestNonGWNodeLabel})
+		Expect(err).NotTo(HaveOccurred())
+
+		nonGWNodes := []string{}
+
+		if len(smE2eNonGWLabelledNodeList.Items) > 0 {
+			activeGWHostname := np.activeGatewayHostname()
+
+			for i := range smE2eNonGWLabelledNodeList.Items {
+				hostname := smE2eNonGWLabelledNodeList.Items[i].GetObjectMeta().GetLabels()["kubernetes.io/hostname"]
+				Expect(hostname).NotTo(BeEmpty())
+
+				if hostname != activeGWHostname {
+					nonGWNodes = append(nonGWNodes, hostname)
+				}
+			}
+		}
+
+		switch {
+		case len(nonGWNodes) > 0:
+			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, nonGWNodes)
+		case len(smE2eNonGWLabelledNodeList.Items) == 0:
+			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
+			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+		default:
+			Failf("%q label is only present on the active GW node and not on any other nodes", TestNonGWNodeLabel)
+		}
 
 	case InvalidScheduling:
 		panic("scheduling can't equal InvalidScheduling here, we checked above")
@@ -582,6 +598,22 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 			},
 		},
 	}
+}
+
+func (np *NetworkPod) activeGatewayHostname() string {
+	smGWPodList := AwaitUntil("await active gateway Pod",
+		func() (interface{}, error) {
+			return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
+				metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
+		},
+		func(result interface{}) (bool, string, error) {
+			return len(result.(*v1.PodList).Items) == 1, "", nil
+		}).(*v1.PodList)
+
+	hostname := smGWPodList.Items[0].Labels["gateway.submariner.io/node"]
+	Expect(hostname).NotTo(BeEmpty())
+
+	return hostname
 }
 
 func addNodeSelectorTerm(nodeSelTerms []v1.NodeSelectorTerm, label string,
