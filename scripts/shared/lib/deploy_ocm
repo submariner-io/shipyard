@@ -84,13 +84,13 @@ function install_submariner_addon() {
     submariner_addon_dir=/tmp/submariner-addon/deploy
   fi
   # Set submariner-addon imagePullPolicy to IfNotPresent
-  sed -i -- '/image: quay.io*/a\        imagePullPolicy: IfNotPresent' ${submariner_addon_dir}/config/operator/operator.yaml
+  sed -i -- '/image: quay.io*/a\        imagePullPolicy: IfNotPresent' "${submariner_addon_dir}/config/operator/operator.yaml"
   # Add master apiserver to submariner-addon deployment
   broker_api_server=$(kubectl get endpoints kubernetes -n default -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
   yq eval -i '.spec.template.spec.containers[].env += {"name": "BROKER_API_SERVER", "value": "'"${broker_api_server}"'"}' \
-  ${submariner_addon_dir}/config/operator/operator.yaml
+  "${submariner_addon_dir}/config/operator/operator.yaml"
   # Deploy
-  kubectl apply -k ${submariner_addon_dir}/config/manifests
+  kubectl apply -k "${submariner_addon_dir}/config/manifests"
 }
 
 function create_managed_clusters() {

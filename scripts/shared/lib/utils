@@ -131,7 +131,7 @@ function run_parallel() {
     done
 
     for pid in "${pids[@]}"; do
-        wait $pid
+        wait "$pid"
     done
 }
 
