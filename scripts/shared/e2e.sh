@@ -60,7 +60,7 @@ function order_clusters {
 
     local orig_cluster="${clusters[0]}"
     clusters[0]="${clusters[$biggest_cluster]}"
-    clusters[$biggest_cluster]="${orig_cluster}"
+    clusters[biggest_cluster]="${orig_cluster}"
 }
 
 ### Main ###
