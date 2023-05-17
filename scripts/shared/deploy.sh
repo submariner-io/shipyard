@@ -130,6 +130,25 @@ fi
 
 run_if_defined post_deploy
 
+# Check that the deployed images match those we built (if any)
+image_mismatch=false
+for image in package/.image.*; do
+    expected="$(docker image inspect "$(cat "$image")" | jq -r '.[0].RepoDigests[0]')"
+    image="${image#package/.image.}"
+    for deployed in $(kubectl get pods -A -o json | jq -r '.items[].status.containerStatuses[].imageID' | grep "$image"); do
+        if [ "$deployed" != "$expected" ]; then
+            printf "Image %s is deployed with %s, expected %s\n" "$image" "$deployed" "$expected"
+            image_mismatch=true
+        else
+            printf "Successfully checked image %s, deployed with %s\n" "$image" "$deployed"
+        fi
+    done
+done
+if [ "$image_mismatch" = true ]; then
+    kubectl get pods -A -o json
+    exit 1
+fi
+
 # Print installed versions for manual validation of CI
 subctl show versions
 print_clusters_message
