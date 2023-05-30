@@ -2,6 +2,9 @@
 # body-is-missing: Allow commit messages with only a title
 # body-min-length: Allow short body lines, like "Relates-to: #issue"
 ignore=body-is-missing,body-min-length
+# Our ignore-by-body regex is correct for re.search(). Required for suppressing a warning. See:
+# https://jorisroovers.com/gitlint/latest/configuration/general_options/#regex-style-search
+regex-style-search=true
 
 [ignore-by-body]
 # Dependabot doesn't follow our conventions, unfortunately
