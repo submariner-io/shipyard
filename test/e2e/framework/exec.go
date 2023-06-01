@@ -72,6 +72,11 @@ func (f *Framework) ExecWithOptions(ctx context.Context, options *ExecOptions, i
 		TTY:       tty,
 	}, scheme.ParameterCodec)
 
+	err = req.Error()
+	if err != nil {
+		return "", "", err
+	}
+
 	var stdout, stderr bytes.Buffer
 
 	for attempts := 5; attempts > 0; attempts-- {
