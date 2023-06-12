@@ -18,6 +18,7 @@ component_by_image['submariner-operator']=submariner-operator
 component_by_image['submariner-route-agent']=submariner-routeagent
 component_by_image['lighthouse-agent']=submariner-lighthouse-agent
 component_by_image['lighthouse-coredns']=submariner-lighthouse-coredns
+component_by_image['nettest']='submariner-nettest submariner-metrics-proxy'
 
 ### Functions ###
 
@@ -66,9 +67,11 @@ function subctl_install_subm() {
         [[ "$AIR_GAPPED" = true ]] && extra_flags+=(--repository "${SUBM_IMAGE_REPO}" --version "${SUBM_IMAGE_TAG}")
 
         for image in ${PRELOAD_IMAGES}; do
-            local image_key="${component_by_image[$image]}"
-            [[ -n "${image_key}" ]] || continue
-            extra_flags+=(--image-override "${image_key}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+            local image_keys="${component_by_image[$image]}"
+            [[ -n "${image_keys}" ]] || continue
+            for image_key in $image_keys; do
+                extra_flags+=(--image-override "${image_key}=${SUBM_IMAGE_REPO}/${image}:${SUBM_IMAGE_TAG}")
+            done
         done
     fi
 
