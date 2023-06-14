@@ -49,8 +49,8 @@ linters:
     - dupl
     - durationcheck
     - errcheck
-    - errorlint
     - errname
+    - errorlint
     - exhaustive
     # - exhaustivestruct # Not recommended for general use - meant to be used only for special cases
     - exportloopref
@@ -66,30 +66,29 @@ linters:
     - goconst
     - gocritic
     - gocyclo
-    - goerr113
     - godot
     # - godox #  Let's not forbid inline TODOs, FIXMEs et al
+    - goerr113
     - gofmt
     - gofumpt
     - goheader
     - goimports
-    # - golint # Deprecated since v1.41.0
     # - gomnd # It doesn't seem useful in general to enforce constants for all numeric values
     - gomoddirectives
     # - gomodguard # We don't block any modules
     # - goprintffuncname # This doesn't seem useful at all
     - gosec
     - gosimple
+    - gosmopolitan
     - govet
     # - ifshort # This is a style preference and doesn't seem compelling
     - importas
     - ineffassign
     # - ireturn # The argument to always "Return Concrete Types" doesn't seem compelling. It is perfectly valid to return
     #             an interface to avoid exposing the entire underlying struct
-    # - interfacer # Deprecated since v1.38.0
     - lll
     - makezero
-    # - maligned # Deprecated since v1.38.0
+    - mirror
     - misspell
     - nakedret
     # - nestif # This calculates cognitive complexity but we're doing that elsewhere
@@ -104,10 +103,10 @@ linters:
     - promlinter
     - revive
     # - rowserrcheck # We don't use SQL
-    # - scopelint # Deprecated since v1.39.0
     # - sqlclosecheck # We don't use SQL
     - staticcheck
     - stylecheck
+    - tagalign
     # - tagliatelle # Inconsistent with stylecheck and not as good
     # - tenv # Not relevant for our Ginkgo UTs
     - testpackage
@@ -122,6 +121,7 @@ linters:
     - whitespace
     - wrapcheck
     - wsl
+    - zerologlint
 issues:
   exclude-rules:
     # Allow dot-imports for Gomega BDD directives per idiomatic Gomega
