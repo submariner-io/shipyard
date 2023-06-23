@@ -215,6 +215,8 @@ func (np *NetworkPod) RunCommand(ctx context.Context, cmd []string) (string, str
 		TTY:       false,
 	}, scheme.ParameterCodec)
 
+	Expect(req.Error()).NotTo(HaveOccurred())
+
 	config := RestConfigs[np.Config.Cluster]
 
 	executor, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
