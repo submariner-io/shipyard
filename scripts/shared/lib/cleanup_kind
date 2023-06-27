@@ -19,4 +19,5 @@ function provider_finalize {
 
     docker system prune --volumes -f
     rm -f "${KUBECONFIGS_DIR}"/kind-config-*
+    [[ "${CABLE_DRIVER}" != "nexodus" ]] || rm -rf nexodus
 }

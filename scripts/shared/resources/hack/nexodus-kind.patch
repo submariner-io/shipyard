@@ -1,0 +1,24 @@
+This "hack" is needed in order to be able to run kubectl commands from within the Shipyard container.
+Otherwise, the commands fail with errors such as:
+  E0626 12:59:05.070513    1486 memcache.go:265] couldn't get current server API group list: Get "https://127.0.0.1:32779/api?timeout=32s": dial tcp 127.0.0.1:32779: connect: connection refused
+diff --git a/Makefile b/Makefile
+index c2c268a..de91f03 100644
+--- a/Makefile
++++ b/Makefile
+@@ -1,3 +1,4 @@
++export KUBECONFIG=$(DAPPER_OUTPUT)/kubeconfigs/kind-config-nexodus-dev
+ .PHONY: help
+ help:
+ 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-18s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
+@@ -500,6 +501,11 @@ teardown: ## Teardown the kind cluster
+ .PHONY: setup-kind
+ setup-kind: teardown ## Create a kind cluster with ingress enabled, but don't install nexodus.
+ 	$(CMD_PREFIX) kind create cluster --config ./deploy/kind.yaml
++
++	kind export kubeconfig --name=nexodus-dev
++	master_ip=$$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' nexodus-dev-control-plane | head -n 1) && \
++	yq -i ".clusters[0].cluster.server = \"https://$${master_ip}:6443\"" "$${KUBECONFIG}"
++
+ 	$(CMD_PREFIX) kubectl cluster-info --context kind-nexodus-dev
+ 	$(CMD_PREFIX) kubectl apply -f ./deploy/kind-ingress.yaml
+ 

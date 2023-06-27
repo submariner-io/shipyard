@@ -1,0 +1,15 @@
+This is needed since default nexodus IPAM CIDR conflicts with the service CIDRs we assign in Shipyard.
+We assign those since 172.16.0.0/12 is used by docker networks so we cant use that one.
+diff --git a/internal/handlers/organization.go b/internal/handlers/organization.go
+index 942fc23..b9839e5 100644
+--- a/internal/handlers/organization.go
++++ b/internal/handlers/organization.go
+@@ -18,7 +18,7 @@ import (
+ var defaultIPAMNamespace = uuid.UUID{}
+ 
+ const (
+-	defaultIPAMv4Cidr = "100.64.0.0/10"
++	defaultIPAMv4Cidr = "100.100.0.0/16"
+ 	defaultIPAMv6Cidr = "200::/64"
+ )
+ 

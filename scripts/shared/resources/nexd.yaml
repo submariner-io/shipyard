@@ -1,0 +1,76 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: nexd
+  namespace: nexodus
+  labels:
+    name: nexd
+spec:
+  selector:
+    matchLabels:
+      name: nexd
+  template:
+    metadata:
+      labels:
+        name: nexd
+    spec:
+      restartPolicy: Always
+      nodeSelector:
+        submariner.io/gateway: \"true\"
+      hostNetwork: true
+      hostAliases:
+        # IP of the machine running the Nexodus KIND environment
+        - ip: ${HOST_IP}
+          hostnames:
+            - try.nexodus.127.0.0.1.nip.io
+            - api.try.nexodus.127.0.0.1.nip.io
+            - auth.try.nexodus.127.0.0.1.nip.io
+      tolerations:
+        - key: node-role.kubernetes.io/control-plane
+          operator: Exists
+          effect: NoSchedule
+        - key: node-role.kubernetes.io/master
+          operator: Exists
+          effect: NoSchedule
+      containers:
+        - name: nexd
+          image: quay.io/nexodus/nexd:latest
+          securityContext:
+            # Needed to mount volumes with bidirectional propagation to the host
+            privileged: true
+          command:
+            - nexd
+          args:
+            - --username
+            - admin
+            - --password
+            - floofykittens
+            - --insecure-skip-tls-verify
+            - router
+            - --disable-nat
+            - --child-prefix
+            - ${cluster_CIDRs[${cluster}]}
+            - --child-prefix
+            - ${service_CIDRs[${cluster}]}
+            - https://try.nexodus.127.0.0.1.nip.io
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh", "-c", "ip link delete wg0"]
+          volumeMounts:
+            - name: host-nexodus
+              mountPath: "/etc/nexodus"
+              mountPropagation: Bidirectional
+            - name: host-wireguard
+              mountPath: "/etc/wireguard"
+              mountPropagation: Bidirectional
+      volumes:
+        - name: host-nexodus
+          hostPath:
+            path: /etc/nexodus
+            type: DirectoryOrCreate
+        - name: host-wireguard
+          hostPath:
+            path: /etc/wireguard
+            type: DirectoryOrCreate

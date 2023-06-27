@@ -9,3 +9,4 @@ junit.xml
 *.coverprofile
 *~
 /ovn-kubernetes
+/nexodus

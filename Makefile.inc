@@ -5,11 +5,12 @@ _using = ${USING}
 
 ### Tunable variables for affecting make commands ###
 # Affecting multiple commands
+CABLE_DRIVER ?= libreswan
 DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export AIR_GAPPED DEBUG_PRINT DUAL_STACK GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
+export AIR_GAPPED CABLE_DRIVER DEBUG_PRINT DUAL_STACK GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
 
 # Specific to `clusters`
 K8S_VERSION ?= 1.25
@@ -18,10 +19,9 @@ OLM_VERSION ?= v0.18.3
 export K8S_VERSION METALLB_VERSION OLM OLM_VERSION PROMETHEUS
 
 # Specific to `deploy`
-CABLE_DRIVER ?= libreswan
 DEPLOYTOOL ?= operator
 IMAGE_TAG ?= local
-export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
+export DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 
 # Specific to `e2e`
 TESTDIR ?= test/e2e
@@ -74,6 +74,8 @@ else ifneq (,$(filter wireguard,$(_using)))
 CABLE_DRIVER = wireguard
 else ifneq (,$(filter vxlan,$(_using)))
 CABLE_DRIVER = vxlan
+else ifneq (,$(filter nexodus,$(_using)))
+CABLE_DRIVER = nexodus
 endif
 
 ifneq (,$(filter lighthouse,$(_using)))

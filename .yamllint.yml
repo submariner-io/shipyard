@@ -9,6 +9,7 @@ rules:
     ignore: '.github/workflows/*.yml'
 
 ignore: |
+  /nexodus
   /vendor
   /scripts/shared/resources/cluster*-config.yaml
   /scripts/shared/resources/prometheus/bundle.yaml

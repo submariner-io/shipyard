@@ -12,6 +12,10 @@ export MAKEFLAGS
 export PROJECT
 export USING
 
+# We need the host's actual IP to connect to some services (e.g. nexodus)
+HOST_IP = $(shell ip route get 1 | grep -o "src .*" | cut -f2 -d' ')
+export HOST_IP
+
 # Define LOCAL_BUILD to build directly on the host and not inside a Dapper container
 ifdef LOCAL_BUILD
 DAPPER_HOST_ARCH ?= $(shell go env GOHOSTARCH)

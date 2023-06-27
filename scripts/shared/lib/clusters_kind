@@ -117,6 +117,7 @@ function provider_create_cluster() {
 
     [[ -n "${cluster_cni[$cluster]}" ]] || delete_cluster_on_fail schedule_dummy_pod
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
+    [[ "${CABLE_DRIVER}" != "nexodus" ]] || delete_cluster_on_fail deploy_nexd
     [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
@@ -233,6 +234,8 @@ function run_local_registry() {
 }
 
 function provider_failed() {
+    [[ "${CABLE_DRIVER}" != "nexodus" ]] || make -C nexodus teardown
+
     if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
         echo "Your inotify settings are lower than our recommendation."
         echo "This may cause failures in large deployments, but we don't know if it caused this failure."
@@ -264,6 +267,32 @@ function download_ovnk() {
     )
 }
 
+function deploy_nexodus() {
+    local mkcert_cmd=/usr/local/bin/mkcert
+    echo "Validating mkcert is installed"
+    test -x "$mkcert_cmd" || curl -JL -o "$mkcert_cmd" "https://dl.filippo.io/mkcert/latest?for=linux/amd64"
+    chmod +x "$mkcert_cmd"
+
+    echo "Synchronizing nexodus source repository"
+    git config --global --add safe.directory "$DAPPER_SOURCE"/nexodus
+    if [[ -d nexodus ]]; then
+        git -C nexodus fetch
+        git -C nexodus reset --hard origin/main
+    else
+        git clone --single-branch --branch main --depth 1 https://github.com/nexodus-io/nexodus.git
+    fi
+
+    git -C nexodus apply "$RESOURCES_DIR"/hack/nexodus-kind.patch
+    git -C nexodus apply "$RESOURCES_DIR"/hack/nexodus-ipam.patch
+    make -C nexodus run-on-kind
+}
+
+function deploy_nexd() {
+    source "${SCRIPTS_DIR}"/lib/deploy_funcs
+    kubectl create ns nexodus
+    deploy_resource "$RESOURCES_DIR"/nexd.yaml nexodus
+}
+
 function provider_prepare() {
     [[ -z "${K8S_VERSION}" ]] && K8S_VERSION="${DEFAULT_K8S_VERSION}"
     [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
@@ -271,4 +300,5 @@ function provider_prepare() {
     download_kind
     [[ "${cluster_cni[*]}" != *"ovn"* ]] || download_ovnk
     run_local_registry
+    [[ "${CABLE_DRIVER}" != "nexodus" ]] || deploy_nexodus
 }
