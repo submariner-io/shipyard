@@ -52,3 +52,7 @@ updates:
       # These are included by k8s.io/client-go
       - dependency-name: k8s.io/api
       - dependency-name: k8s.io/apimachinery
+  - package-ecosystem: gomod
+    directory: "/tools"
+    schedule:
+      interval: weekly

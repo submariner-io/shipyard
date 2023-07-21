@@ -58,28 +58,29 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
-ENV LINT_VERSION=v1.53.3 \
-    HELM_VERSION=v3.11.3 \
-    KIND_VERSION=v0.18.0 \
-    BUILDX_VERSION=v0.10.4 \
-    GH_VERSION=2.28.0 \
-    YQ_VERSION=4.33.3
+COPY tools/go.mod /tools.mod
 
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
-RUN curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
+RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
+    curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
+    HELM_VERSION=$(awk '/helm.sh/ { print $2 }' /tools.mod) && \
     i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
+    KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
-    GOFLAGS="" go install -v github.com/mikefarah/yq/v4@v${YQ_VERSION} && \
+    YQ_VERSION=$(awk '/mikefarah.yq.v4/ { print $2 }' /tools.mod) && \
+    GOFLAGS="" go install -v github.com/mikefarah/yq/v4@${YQ_VERSION} && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \
+    BUILDX_VERSION=$(awk '/docker.buildx/ { print $2 }' /tools.mod) && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
     chmod 755 /usr/local/libexec/docker/cli-plugins/docker-buildx && \
+    GH_VERSION=$(awk '/github.com.cli.cli/ { print substr($2, 2) }' /tools.mod) && \
     curl -L https://github.com/cli/cli/releases/download/v${GH_VERSION}/gh_${GH_VERSION}_linux_${ARCH}.tar.gz | tar xzf - && \
     mv gh_${GH_VERSION}_linux_${ARCH}/bin/gh /go/bin/ && \
     rm -rf gh_${GH_VERSION}_linux_${ARCH} && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
-    go clean -cache -modcache
+    go clean -cache -modcache && rm -f /tools.mod
 
 # Link get-subctl script so it can be easily run inside a shell
 RUN ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
