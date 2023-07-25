@@ -284,13 +284,27 @@ function deploy_nexodus() {
 
     git -C nexodus apply "$RESOURCES_DIR"/hack/nexodus-kind.patch
     git -C nexodus apply "$RESOURCES_DIR"/hack/nexodus-ipam.patch
-    make -C nexodus run-on-kind
+
+    echo "Deploying a Nexodus KIND cluster"
+    if kind get kubeconfig --name nexodus-dev > /dev/null 2>&1; then
+        make -C nexodus redeploy
+    else
+        make -C nexodus run-on-kind
+    fi
+
+    # Extract certificate for later deploying nexd
+    NEXODUS_CERT=$(kubectl --kubeconfig="$DAPPER_OUTPUT"/kubeconfigs/kind-config-nexodus-dev \
+                       get secret -n nexodus nexodus-ca-key-pair -o json | jq -r '.data."ca.crt"')
+    declare -g NEXODUS_CERT
 }
 
 function deploy_nexd() {
-    source "${SCRIPTS_DIR}"/lib/deploy_funcs
-    kubectl create ns nexodus
-    deploy_resource "$RESOURCES_DIR"/nexd.yaml nexodus
+    local NEXODUS_CIDRS=(--child-prefix "${cluster_CIDRs[${cluster}]}" --child-prefix "${service_CIDRs[${cluster}]}")
+    [[ "$GLOBALNET" != true ]] || NEXODUS_CIDRS=(--child-prefix "${global_CIDRs[$cluster]}")
+
+    mkdir -p "$DAPPER_OUTPUT"/nexd
+    render_template "$RESOURCES_DIR"/nexd-kustomization.yaml > "$DAPPER_OUTPUT"/nexd/kustomization.yaml
+    kubectl apply -k "$DAPPER_OUTPUT"/nexd/
 }
 
 function provider_prepare() {

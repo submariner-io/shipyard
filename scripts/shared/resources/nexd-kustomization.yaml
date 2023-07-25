@@ -1,0 +1,37 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+namespace: nexodus
+bases:
+  - ../../nexodus/deploy/nexodus-client/base
+secretGenerator:
+  - name: nexodus-client-secret
+    literals:
+      - cert=${NEXODUS_CERT}
+      - url=https://try.nexodus.127.0.0.1.nip.io
+      - auth_url=https://auth.try.nexodus.127.0.0.1.nip.io/token
+      - username=kitteh1
+      - password=floofykittens
+commonLabels:
+  app.kubernetes.io/component: nexodus-client
+  app.kubernetes.io/instance: nexodus-client
+  app.kubernetes.io/name: nexodus-client
+patches:
+  - target:
+      kind: DaemonSet
+      name: nexodus
+    patch: |-
+      - op: replace
+        path: /spec/template/spec/hostAliases/0/ip
+        value: ${HOST_IP}
+      - op: replace
+        path: /spec/template/spec/containers/0/command
+        value:
+          - /bin/sh
+          - -c
+          - |
+            CAROOT=/etc/nexodus/.certs /bin/mkcert -install
+            /bin/nexd --username=\$USERNAME --password=\$PASSWORD --service-url=\$URL \\
+            router --disable-nat "${NEXODUS_CIDRS[@]}"
+      - op: add
+        path: /spec/template/spec/nodeSelector
+        value: { "submariner.io/gateway": \"true\" }
