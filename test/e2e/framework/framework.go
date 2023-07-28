@@ -43,7 +43,7 @@ import (
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/pointer"
+	"k8s.io/utils/ptr"
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 )
 
@@ -210,14 +210,14 @@ func BeforeSuite() {
 
 func initPodSecurityContext() {
 	podSecurityContext = &corev1.SecurityContext{
-		AllowPrivilegeEscalation: pointer.Bool(false),
+		AllowPrivilegeEscalation: ptr.To(false),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{
 				"ALL",
 			},
 		},
-		RunAsNonRoot: pointer.Bool(true),
-		RunAsUser:    pointer.Int64(10000), // We need to set some user ID other than 0.
+		RunAsNonRoot: ptr.To(true),
+		RunAsUser:    ptr.To(int64(10000)), // We need to set some user ID other than 0.
 	}
 
 	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
