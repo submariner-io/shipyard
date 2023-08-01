@@ -16,6 +16,8 @@ FROM alpine
 
 WORKDIR /app
 
+ARG VERSION
+
 RUN apk add --no-cache \
 	bash \
 	bind-tools \
@@ -26,5 +28,7 @@ RUN apk add --no-cache \
 
 COPY --from=0 /usr/local/bin/net* /usr/local/bin/
 COPY scripts/nettest/* /app/
+
+RUN echo ${VERSION} >> /app/version
 
 CMD ["/bin/bash","-l"]

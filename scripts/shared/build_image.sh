@@ -55,7 +55,7 @@ fi
 [[ -n "$PLATFORM" ]] || PLATFORM="$default_platform"
 
 # Rebuild the image to update any changed layers and tag it back so it will be used.
-buildargs_flags=(--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg "BASE_BRANCH=${BASE_BRANCH}")
+buildargs_flags=(--build-arg BUILDKIT_INLINE_CACHE=1 --build-arg "BASE_BRANCH=${BASE_BRANCH}" --build-arg "VERSION=${VERSION}")
 if [[ "${PLATFORM}" != "${default_platform}" ]] && docker buildx version > /dev/null 2>&1; then
     docker buildx use buildx_builder || docker buildx create --name buildx_builder --use
     docker buildx build "${output_flag}" -t "${local_image}" "${cache_flags[@]}" -f "${dockerfile}" --iidfile "${hashfile}" --platform "${PLATFORM}" "${buildargs_flags[@]}" .
