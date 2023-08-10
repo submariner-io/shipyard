@@ -13,10 +13,14 @@ ifneq (,$(DAPPER_HOST_ARCH))
 
 # Running in Dapper
 
-ifneq (,$(filter ovn,$(USING)))
+ifneq (,$(filter ovn%,$(USING)))
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.ovn.yml
 else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
+endif
+
+ifneq (,$(filter ovn-ic,$(USING)))
+export OVN_IC = true
 endif
 
 export LAZY_DEPLOY = false
