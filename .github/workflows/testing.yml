@@ -124,6 +124,7 @@ jobs:
             ovn: ovn
           - extra-toggles: dual-stack
           - extra-toggles: ovn
+          - extra-toggles: ovn-ic
           - deploytool: operator
             extra-toggles: lighthouse
           - deploytool: helm
@@ -132,7 +133,7 @@ jobs:
           - extra-toggles: prometheus
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
-        if: ${{ matrix.ovn != '' }}
+        if: ${{ matrix.ovn != '' }} && ${{ matrix.ovn-ic != '' }}
         run: rm -rf /usr/share/dotnet
 
       - name: Check out the repository
