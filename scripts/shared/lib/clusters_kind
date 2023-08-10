@@ -188,18 +188,14 @@ EOF
 }
 
 function deploy_kind_ovn(){
-    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
     export K8s_VERSION="${K8S_VERSION}"
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
 
-    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
-    docker pull "${OVN_SRC_IMAGE}"
-    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
-    docker push "${OVN_IMAGE}"
-
-    delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric -lr -dd "${KIND_CLUSTER_NAME}.local"
+    local ovn_flags=()
+    [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
+    delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric "${ovn_flags[@]}" -lr -dd "${KIND_CLUSTER_NAME}.local"
 
     [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
 }
@@ -244,7 +240,7 @@ function provider_failed() {
 # ovn-kubernetes repo from master in order to access the required
 # kind scripts, and manifest generation templates.
 function download_ovnk() {
-    echo "Cloning ovn-kubernetes from source"
+    echo "Cloning ovn-kubernetes source"
     mkdir -p ovn-kubernetes
     # We only need the contrib directory, use a sparse checkout
     (
@@ -261,11 +257,46 @@ function download_ovnk() {
     )
 }
 
+function prepare_ovn_ic() {
+    echo "Building ovn-kubernetes with interconnect (OVN-IC) from source"
+    echo "This will become unnecessary if OVN CI image publishing is fixed"
+    echo "https://github.com/ovn-org/ovn-kubernetes/actions/workflows/docker.yml"
+    rm -rf ovn-kubernetes
+    git clone https://github.com/ovn-org/ovn-kubernetes
+    pushd ovn-kubernetes || exit
+
+    make -C go-controller
+
+    cp go-controller/_output/go/bin/* dist/images
+
+    echo "ref: $(git rev-parse --symbolic-full-name HEAD) commit: $(git rev-parse HEAD)" > dist/images/git_info
+    docker build -t "${OVN_IMAGE}" -f dist/images/Dockerfile.fedora dist/images/
+    docker push "${OVN_IMAGE}"
+
+    popd || exit
+}
+
+function prepare_ovn() {
+    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
+
+    if [[ "$OVN_IC" = true ]]; then
+        prepare_ovn_ic
+        return
+    fi
+
+    download_ovnk
+
+    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
+    docker pull "${OVN_SRC_IMAGE}"
+    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
+    docker push "${OVN_IMAGE}"
+}
+
 function provider_prepare() {
     [[ -z "${K8S_VERSION}" ]] && K8S_VERSION="${DEFAULT_K8S_VERSION}"
     [[ -n "${kind_k8s_versions[$K8S_VERSION]}" ]] && K8S_VERSION="${kind_k8s_versions[$K8S_VERSION]}"
 
     download_kind
-    [[ "${cluster_cni[*]}" != *"ovn"* ]] || download_ovnk
     run_local_registry
+    [[ "${cluster_cni[*]}" != *"ovn"* ]] || prepare_ovn
 }
