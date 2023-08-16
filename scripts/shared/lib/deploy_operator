@@ -13,7 +13,6 @@ readonly SUBCTL=${SUBCTL:-subctl}
 declare -gA component_by_image
 component_by_image['submariner-gateway']=submariner-gateway
 component_by_image['submariner-globalnet']=submariner-globalnet
-component_by_image['submariner-networkplugin-syncer']=submariner-networkplugin-syncer
 component_by_image['submariner-operator']=submariner-operator
 component_by_image['submariner-route-agent']=submariner-routeagent
 component_by_image['lighthouse-agent']=submariner-lighthouse-agent
