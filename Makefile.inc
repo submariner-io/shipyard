@@ -146,6 +146,9 @@ override PRELOAD_IMAGES = $(EXTRA_PRELOAD_IMAGES) nettest \
 ifeq ($(GLOBALNET),true)
 override PRELOAD_IMAGES += submariner-globalnet
 endif
+ifneq (,$(shell grep -w ovn $(SETTINGS)))
+override PRELOAD_IMAGES += submariner-networkplugin-syncer
+endif
 ifeq ($(LIGHTHOUSE),true)
 override PRELOAD_IMAGES += lighthouse-agent lighthouse-coredns
 endif
