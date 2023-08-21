@@ -5,7 +5,7 @@ go 1.20
 require (
 	github.com/cli/cli/v2 v2.32.1
 	github.com/docker/buildx v0.11.2
-	github.com/golangci/golangci-lint v1.54.1
+	github.com/golangci/golangci-lint v1.54.2
 	github.com/mikefarah/yq/v4 v4.35.1
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.12.3
@@ -19,8 +19,8 @@ require (
 	github.com/Abirdcfly/dupword v0.0.12 // indirect
 	github.com/AdaLogics/go-fuzz-headers v0.0.0-20230106234847-43070de90fa1 // indirect
 	github.com/AlecAivazis/survey/v2 v2.3.7 // indirect
-	github.com/Antonboom/errname v0.1.10 // indirect
-	github.com/Antonboom/nilnil v0.1.5 // indirect
+	github.com/Antonboom/errname v0.1.12 // indirect
+	github.com/Antonboom/nilnil v0.1.7 // indirect
 	github.com/Azure/go-ansiterm v0.0.0-20210617225240-d185dfc1b5a1 // indirect
 	github.com/BurntSushi/toml v1.3.2 // indirect
 	github.com/Djarvur/go-err113 v0.0.0-20210108212216-aea10b59be24 // indirect
@@ -71,6 +71,7 @@ require (
 	github.com/briandowns/spinner v1.18.1 // indirect
 	github.com/butuzov/ireturn v0.2.0 // indirect
 	github.com/butuzov/mirror v1.1.0 // indirect
+	github.com/ccojocar/zxcvbn-go v1.0.1 // indirect
 	github.com/cenkalti/backoff/v4 v4.2.1 // indirect
 	github.com/cespare/xxhash/v2 v2.2.0 // indirect
 	github.com/chai2010/gettext-go v1.0.2 // indirect
@@ -255,10 +256,9 @@ require (
 	github.com/muhammadmuzzammil1998/jsonc v0.0.0-20201229145248-615b0916ca38 // indirect
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/nakabonne/nestif v0.3.1 // indirect
-	github.com/nbutton23/zxcvbn-go v0.0.0-20210217022336-fa2cb2858354 // indirect
 	github.com/nishanths/exhaustive v0.11.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.13.3 // indirect
+	github.com/nunnatsa/ginkgolinter v0.13.5 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc3 // indirect
@@ -269,7 +269,7 @@ require (
 	github.com/peterbourgon/diskv v2.0.1+incompatible // indirect
 	github.com/pkg/errors v0.9.1 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
-	github.com/polyfloyd/go-errorlint v1.4.3 // indirect
+	github.com/polyfloyd/go-errorlint v1.4.4 // indirect
 	github.com/prometheus/client_golang v1.14.0 // indirect
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
@@ -286,9 +286,9 @@ require (
 	github.com/ryanrolds/sqlclosecheck v0.4.0 // indirect
 	github.com/sanposhiho/wastedassign/v2 v2.0.7 // indirect
 	github.com/sashamelentyev/interfacebloat v1.1.0 // indirect
-	github.com/sashamelentyev/usestdlibvars v1.23.0 // indirect
+	github.com/sashamelentyev/usestdlibvars v1.24.0 // indirect
 	github.com/secure-systems-lab/go-securesystemslib v0.4.0 // indirect
-	github.com/securego/gosec/v2 v2.16.0 // indirect
+	github.com/securego/gosec/v2 v2.17.0 // indirect
 	github.com/serialx/hashring v0.0.0-20190422032157-8b2912629002 // indirect
 	github.com/shazow/go-diff v0.0.0-20160112020656-b6b7b6733b8c // indirect
 	github.com/shibumi/go-pathspec v1.3.0 // indirect
@@ -315,7 +315,7 @@ require (
 	github.com/subosito/gotenv v1.4.1 // indirect
 	github.com/t-yuki/gocover-cobertura v0.0.0-20180217150009-aaee18c8195c // indirect
 	github.com/tdakkota/asciicheck v0.2.0 // indirect
-	github.com/tetafro/godot v1.4.11 // indirect
+	github.com/tetafro/godot v1.4.14 // indirect
 	github.com/theupdateframework/notary v0.6.1 // indirect
 	github.com/thlib/go-timezone-local v0.0.0-20210907160436-ef149e42d28e // indirect
 	github.com/timakin/bodyclose v0.0.0-20230421092635-574207250966 // indirect
@@ -354,7 +354,7 @@ require (
 	go.opentelemetry.io/otel/trace v1.14.0 // indirect
 	go.opentelemetry.io/proto/otlp v0.19.0 // indirect
 	go.starlark.net v0.0.0-20200306205701-8dd3e2ee1dd5 // indirect
-	go.tmz.dev/musttag v0.7.1 // indirect
+	go.tmz.dev/musttag v0.7.2 // indirect
 	go.uber.org/atomic v1.9.0 // indirect
 	go.uber.org/multierr v1.8.0 // indirect
 	go.uber.org/zap v1.24.0 // indirect
@@ -380,7 +380,7 @@ require (
 	gopkg.in/op/go-logging.v1 v1.0.0-20160211212156-b2cb9fa56473 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	gopkg.in/yaml.v3 v3.0.1 // indirect
-	honnef.co/go/tools v0.4.3 // indirect
+	honnef.co/go/tools v0.4.5 // indirect
 	k8s.io/api v0.27.3 // indirect
 	k8s.io/apiextensions-apiserver v0.27.3 // indirect
 	k8s.io/apimachinery v0.27.3 // indirect
