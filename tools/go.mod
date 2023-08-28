@@ -3,7 +3,7 @@ module github.com/submariner-io/shipyard/tools
 go 1.20
 
 require (
-	github.com/cli/cli/v2 v2.32.1
+	github.com/cli/cli/v2 v2.33.0
 	github.com/docker/buildx v0.11.2
 	github.com/golangci/golangci-lint v1.54.2
 	github.com/mikefarah/yq/v4 v4.35.1
