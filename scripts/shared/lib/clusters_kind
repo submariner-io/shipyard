@@ -232,28 +232,9 @@ function provider_failed() {
     fi
 }
 
-# If any of the clusters use OVN-K as the CNI then clone the
-# ovn-kubernetes repo from master in order to access the required
-# kind scripts, and manifest generation templates.
-function download_ovnk() {
-    echo "Cloning ovn-kubernetes source"
-    mkdir -p ovn-kubernetes
-    # We only need the contrib directory, use a sparse checkout
-    (
-        cd ovn-kubernetes || exit
-        git init
-        git config core.sparseCheckout true
-        echo contrib/ > .git/info/sparse-checkout
-        echo dist/ >> .git/info/sparse-checkout
-        if git remote add -f origin https://github.com/ovn-org/ovn-kubernetes.git; then
-            git pull origin master
-        else
-            git fetch && git reset --hard origin/master
-        fi
-    )
-}
+function prepare_ovn() {
+    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
 
-function prepare_ovn_ic() {
     echo "Building ovn-kubernetes with interconnect (OVN-IC) from source"
     echo "This will become unnecessary if OVN CI image publishing is fixed"
     echo "https://github.com/ovn-org/ovn-kubernetes/actions/workflows/docker.yml"
@@ -270,22 +251,6 @@ function prepare_ovn_ic() {
     docker push "${OVN_IMAGE}"
 
     popd || exit
-}
-
-function prepare_ovn() {
-    export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
-
-    if [[ "$OVN_IC" = true ]]; then
-        prepare_ovn_ic
-        return
-    fi
-
-    download_ovnk
-
-    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-f:master"
-    docker pull "${OVN_SRC_IMAGE}"
-    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
-    docker push "${OVN_IMAGE}"
 }
 
 function provider_prepare() {
