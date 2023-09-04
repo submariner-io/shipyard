@@ -47,7 +47,7 @@ jobs:
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
 
       - name: Build go-mod-outdated
-        run: go build -o bin/go-mod-outdated github.com/psampaz/go-mod-outdated
+        run: cd tools && go build -o ../bin/go-mod-outdated github.com/psampaz/go-mod-outdated
 
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@c85c95e3d7251135ab7dc9ce3241c5835cc595a9
