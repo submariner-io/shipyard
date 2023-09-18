@@ -264,6 +264,7 @@ function prepare_ovn_ic() {
     rm -rf ovn-kubernetes
     git clone https://github.com/ovn-org/ovn-kubernetes
     pushd ovn-kubernetes || exit
+    git checkout c6d8579689fe3b15c87abdf7e7647777bad26605
 
     make -C go-controller
 
