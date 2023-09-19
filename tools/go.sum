@@ -229,8 +229,8 @@ github.com/chzyer/test v0.0.0-20180213035817-a1ea475d72b1/go.mod h1:Q3SI9o4m/ZMn
 github.com/cli/browser v1.0.0/go.mod h1:IEWkHYbLjkhtjwwWlwTHW2lGxeS5gezEQBMLTwDHf5Q=
 github.com/cli/browser v1.2.0 h1:yvU7e9qf97kZqGFX6n2zJPHsmSObY9ske+iCvKelvXg=
 github.com/cli/browser v1.2.0/go.mod h1:xFFnXLVcAyW9ni0cuo6NnrbCP75JxJ0RO7VtCBiH/oI=
-github.com/cli/cli/v2 v2.34.0 h1:h1oJTYcJu5W2Ylw2z9E+nnvn46CYz5FmmUdvrNw719A=
-github.com/cli/cli/v2 v2.34.0/go.mod h1:Va/nKHhg0RjXgqDm7MYaM+DFNfKUINxwuhDsaIhMnWg=
+github.com/cli/cli/v2 v2.35.0 h1:zNswvXgCgy63vJJ3o/GaIAFHT+TDPgqH7b3tDMMOyGU=
+github.com/cli/cli/v2 v2.35.0/go.mod h1:Va/nKHhg0RjXgqDm7MYaM+DFNfKUINxwuhDsaIhMnWg=
 github.com/cli/go-gh/v2 v2.3.0 h1:FAQAP4PaWSAJf4VSxFEIYDQ1oBIs+bKB4GXQAiRr2sQ=
 github.com/cli/go-gh/v2 v2.3.0/go.mod h1:6WBUuf7LUVAc+eXYYX/nYTYURRc6M03K9cJNwBKvwT0=
 github.com/cli/oauth v1.0.1 h1:pXnTFl/qUegXHK531Dv0LNjW4mLx626eS42gnzfXJPA=
