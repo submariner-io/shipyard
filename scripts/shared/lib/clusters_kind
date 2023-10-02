@@ -188,7 +188,7 @@ EOF
 }
 
 function deploy_kind_ovn(){
-    export K8s_VERSION="${K8S_VERSION}"
+    export K8S_VERSION
     export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
     export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
     export KIND_CLUSTER_NAME="${cluster}"
