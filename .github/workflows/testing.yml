@@ -118,10 +118,8 @@ jobs:
           - extra-toggles: air-gap
           - extra-toggles: air-gap
             globalnet: globalnet
-          - extra-toggles: air-gap
-            lighthouse: lighthouse
-          - extra-toggles: air-gap
-            ovn: ovn
+          - extra-toggles: 'air-gap, lighthouse'
+          - extra-toggles: 'air-gap, ovn'
           - extra-toggles: dual-stack
           - extra-toggles: ovn
           - deploytool: operator
@@ -132,7 +130,7 @@ jobs:
           - extra-toggles: prometheus
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
-        if: ${{ matrix.ovn != '' }}
+        if: ${{ contains('ovn', matrix.extra-toggles) }}
         run: rm -rf /usr/share/dotnet
 
       - name: Check out the repository
