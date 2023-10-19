@@ -37,17 +37,26 @@ var gatewayGVR = &schema.GroupVersionResource{
 	Resource: "gateways",
 }
 
-func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
+func findGateway(cluster ClusterIndex, name string) (*unstructured.Unstructured, error) {
 	gwClient := gatewayClient(cluster)
-	// Set short name without a suffix as exists in the Gateway resource
-	name = strings.Split(name, ".")[0]
+	resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
+
+	if apierrors.IsNotFound(err) {
+		// Some environments sets a node in Gateway resource without a suffix
+		resGw, err = gwClient.Get(context.TODO(), strings.Split(name, ".")[0], metav1.GetOptions{})
+	}
+
+	if apierrors.IsNotFound(err) {
+		return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+	}
+
+	return resGw, err
+}
+
+func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
 		func() (interface{}, error) {
-			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
-			if apierrors.IsNotFound(err) {
-				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
-			}
-			return resGw, err
+			return findGateway(cluster, name)
 		},
 		func(result interface{}) (bool, string, error) {
 			if result == nil {
@@ -105,16 +114,9 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 }
 
 func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string) *unstructured.Unstructured {
-	gwClient := gatewayClient(cluster)
-	// Set short name without a suffix as exists in the Gateway resource
-	name = strings.Split(name, ".")[0]
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
 		func() (interface{}, error) {
-			resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
-			if apierrors.IsNotFound(err) {
-				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
-			}
-			return resGw, err
+			return findGateway(cluster, name)
 		},
 		func(result interface{}) (bool, string, error) {
 			if result == nil {
