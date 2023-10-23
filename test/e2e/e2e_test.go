@@ -22,7 +22,6 @@ import (
 
 	"github.com/submariner-io/shipyard/test/e2e"
 	_ "github.com/submariner-io/shipyard/test/e2e/dataplane"
-	_ "github.com/submariner-io/shipyard/test/e2e/example"
 )
 
 func TestE2E(t *testing.T) {
