@@ -3,7 +3,7 @@ module github.com/submariner-io/shipyard/tools
 go 1.20
 
 require (
-	github.com/cli/cli/v2 v2.36.0
+	github.com/cli/cli/v2 v2.37.0
 	github.com/docker/buildx v0.11.2
 	github.com/golangci/golangci-lint v1.54.2
 	github.com/mikefarah/yq/v4 v4.35.2
@@ -125,7 +125,7 @@ require (
 	github.com/fsnotify/fsnotify v1.6.0 // indirect
 	github.com/fvbommel/sortorder v1.1.0 // indirect
 	github.com/fzipp/gocyclo v0.6.0 // indirect
-	github.com/gabriel-vasile/mimetype v1.4.2 // indirect
+	github.com/gabriel-vasile/mimetype v1.4.3 // indirect
 	github.com/gdamore/encoding v1.0.0 // indirect
 	github.com/gdamore/tcell/v2 v2.5.4 // indirect
 	github.com/go-critic/go-critic v0.9.0 // indirect
@@ -233,8 +233,8 @@ require (
 	github.com/mbilski/exhaustivestruct v1.2.0 // indirect
 	github.com/mgechev/revive v1.3.2 // indirect
 	github.com/mgutz/ansi v0.0.0-20200706080929-d51e80ef957d // indirect
-	github.com/microcosm-cc/bluemonday v1.0.21 // indirect
-	github.com/microsoft/dev-tunnels v0.0.21 // indirect
+	github.com/microcosm-cc/bluemonday v1.0.26 // indirect
+	github.com/microsoft/dev-tunnels v0.0.25 // indirect
 	github.com/miekg/pkcs11 v1.1.1 // indirect
 	github.com/mitchellh/copystructure v1.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -305,7 +305,6 @@ require (
 	github.com/sivchari/tenv v1.7.1 // indirect
 	github.com/sonatard/noctx v0.0.2 // indirect
 	github.com/sourcegraph/go-diff v0.7.0 // indirect
-	github.com/sourcegraph/jsonrpc2 v0.1.0 // indirect
 	github.com/spf13/afero v1.9.2 // indirect
 	github.com/spf13/cast v1.5.0 // indirect
 	github.com/spf13/cobra v1.7.0 // indirect
