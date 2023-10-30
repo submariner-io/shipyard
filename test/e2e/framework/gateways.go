@@ -59,11 +59,11 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 			return findGateway(cluster, name)
 		},
 		func(result interface{}) (bool, string, error) {
-			if result == nil {
+			gw := result.(*unstructured.Unstructured)
+			if gw == nil {
 				return false, "gateway not found yet", nil
 			}
 
-			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != status {
 				return false, fmt.Sprintf("gateway %q exists but has wrong status %q, expected %q", gw.GetName(), haStatus, status), nil
@@ -118,11 +118,11 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 			return findGateway(cluster, name)
 		},
 		func(result interface{}) (bool, string, error) {
-			if result == nil {
+			gw := result.(*unstructured.Unstructured)
+			if gw == nil {
 				return false, "gateway not found yet", nil
 			}
 
-			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != "active" {
 				return false, fmt.Sprintf("Gateway %q exists but not active yet",
