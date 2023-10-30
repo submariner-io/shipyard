@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/onsi/ginkgo/v2 v2.13.0
-	github.com/onsi/gomega v1.28.1
+	github.com/onsi/gomega v1.29.0
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3
