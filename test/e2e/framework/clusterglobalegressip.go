@@ -52,11 +52,12 @@ func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []st
 			return resGip, err
 		},
 		func(result interface{}) (bool, string, error) {
-			if result == nil {
+			obj := result.(*unstructured.Unstructured)
+			if obj == nil {
 				return false, fmt.Sprintf("Egress IP resource %q not found yet", name), nil
 			}
 
-			globalIPs := getGlobalIPs(result.(*unstructured.Unstructured))
+			globalIPs := getGlobalIPs(obj)
 			if len(globalIPs) == 0 {
 				return false, fmt.Sprintf("Egress IP resource %q exists but allocatedIPs not available yet", name), nil
 			}
