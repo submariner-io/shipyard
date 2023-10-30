@@ -287,12 +287,8 @@ func DetectGlobalnet() {
 		}
 		return clusters, err
 	}, func(result interface{}) (bool, string, error) {
-		if result == nil {
-			return false, "No Cluster found", nil
-		}
-
 		clusterList := result.(*unstructured.UnstructuredList)
-		if len(clusterList.Items) == 0 {
+		if clusterList == nil || len(clusterList.Items) == 0 {
 			return false, "No Cluster found", nil
 		}
 
@@ -342,7 +338,7 @@ func fetchClusterIDs() {
 
 			return ds, err
 		}, func(result interface{}) (bool, string, error) {
-			if result == nil {
+			if result.(*appsv1.DaemonSet) == nil {
 				return false, "No DaemonSet found", nil
 			}
 
