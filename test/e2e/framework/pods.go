@@ -116,11 +116,11 @@ func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation, 
 		}
 		return pod, err
 	}, func(result interface{}) (bool, string, error) {
-		pod := result.(*v1.Pod)
-		if pod == nil {
+		if result == nil {
 			return false, "No Pod found", nil
 		}
 
+		pod := result.(*v1.Pod)
 		if pod.GetAnnotations()[annotation] == "" {
 			return false, fmt.Sprintf("Pod %q does not have annotation %q yet", podName, annotation), nil
 		}
