@@ -281,11 +281,7 @@ func DetectGlobalnet() {
 	}).Namespace(TestContext.SubmarinerNamespace)
 
 	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
-		clusters, err := clusters.List(context.TODO(), metav1.ListOptions{})
-		if apierrors.IsNotFound(err) {
-			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
-		}
-		return clusters, err
+		return clusters.List(context.TODO(), metav1.ListOptions{})
 	}, func(result interface{}) (bool, string, error) {
 		clusterList := result.(*unstructured.UnstructuredList)
 		if clusterList == nil || len(clusterList.Items) == 0 {
@@ -338,7 +334,7 @@ func fetchClusterIDs() {
 
 			return ds, err
 		}, func(result interface{}) (bool, string, error) {
-			if result.(*appsv1.DaemonSet) == nil {
+			if result == nil {
 				return false, "No DaemonSet found", nil
 			}
 

@@ -46,24 +46,25 @@ func findGateway(cluster ClusterIndex, name string) (*unstructured.Unstructured,
 		resGw, err = gwClient.Get(context.TODO(), strings.Split(name, ".")[0], metav1.GetOptions{})
 	}
 
-	if apierrors.IsNotFound(err) {
-		return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
-	}
-
 	return resGw, err
 }
 
 func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
 		func() (interface{}, error) {
-			return findGateway(cluster, name)
+			gw, err := findGateway(cluster, name)
+			if apierrors.IsNotFound(err) {
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+			}
+
+			return gw, err
 		},
 		func(result interface{}) (bool, string, error) {
-			gw := result.(*unstructured.Unstructured)
-			if gw == nil {
+			if result == nil {
 				return false, "gateway not found yet", nil
 			}
 
+			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != status {
 				return false, fmt.Sprintf("gateway %q exists but has wrong status %q, expected %q", gw.GetName(), haStatus, status), nil
@@ -115,14 +116,19 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string) *unstructured.Unstructured {
 	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
 		func() (interface{}, error) {
-			return findGateway(cluster, name)
+			gw, err := findGateway(cluster, name)
+			if apierrors.IsNotFound(err) {
+				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+			}
+
+			return gw, err
 		},
 		func(result interface{}) (bool, string, error) {
-			gw := result.(*unstructured.Unstructured)
-			if gw == nil {
+			if result == nil {
 				return false, "gateway not found yet", nil
 			}
 
+			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 			if haStatus != "active" {
 				return false, fmt.Sprintf("Gateway %q exists but not active yet",
