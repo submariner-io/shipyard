@@ -47,12 +47,11 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 				return resGip, err
 			},
 			func(result interface{}) (bool, string, error) {
-				obj := result.(*unstructured.Unstructured)
-				if obj == nil {
+				if result == nil {
 					return false, fmt.Sprintf("GlobalEgressIP %s not found yet", name), nil
 				}
 
-				globalIP := getGlobalIP(obj)
+				globalIP := getGlobalIP(result.(*unstructured.Unstructured))
 				if globalIP == "" {
 					return false, fmt.Sprintf("GlobalIngress %q exists but allocatedIP not available yet",
 						name), nil
