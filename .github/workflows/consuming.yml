@@ -19,16 +19,9 @@ jobs:
       fail-fast: false
       matrix:
         project: ['admiral', 'lighthouse', 'subctl', 'submariner', 'submariner-operator']
-        deploytool: ['operator', 'helm']
+        deploytool: ['operator']
         cabledriver: ['libreswan']
         k8s_version: ['1.25']
-        exclude:
-          # Admiral E2E doesn't respect deploy-tool params, as it uses clusters without Submariner
-          - project: admiral
-            deploytool: helm
-          # Operator and Helm are mutually exclusive, don't try to use Helm in Operator repo
-          - project: submariner-operator
-            deploytool: helm
         include:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner

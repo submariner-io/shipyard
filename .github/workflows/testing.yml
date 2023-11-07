@@ -112,7 +112,7 @@ jobs:
       fail-fast: false
       matrix:
         globalnet: ['', 'globalnet']
-        deploytool: ['operator', 'helm']
+        deploytool: ['operator']
         extra-toggles: ['']
         include:
           - extra-toggles: air-gap
@@ -124,8 +124,6 @@ jobs:
           - extra-toggles: ovn
           - extra-toggles: ovn-ic
           - deploytool: operator
-            extra-toggles: lighthouse
-          - deploytool: helm
             extra-toggles: lighthouse
           - extra-toggles: load-balancer
           - extra-toggles: prometheus
