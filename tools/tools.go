@@ -23,7 +23,6 @@ limitations under the License.
 package tools
 
 import (
-	_ "github.com/cli/cli/v2/cmd/gh"
 	_ "github.com/docker/buildx/cmd/buildx"
 	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
 	_ "github.com/mikefarah/yq/v4"
