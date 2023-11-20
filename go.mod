@@ -7,9 +7,9 @@ require (
 	github.com/onsi/gomega v1.22.1
 	github.com/pkg/errors v0.9.1
 	github.com/psampaz/go-mod-outdated v0.8.0
-	k8s.io/api v0.25.15
-	k8s.io/apimachinery v0.25.15
-	k8s.io/client-go v0.25.15
+	k8s.io/api v0.25.16
+	k8s.io/apimachinery v0.25.16
+	k8s.io/client-go v0.25.16
 	k8s.io/klog v1.0.0
 	k8s.io/utils v0.0.0-20220728103510-ee6ede2d64ed
 	sigs.k8s.io/mcs-api v0.1.0
