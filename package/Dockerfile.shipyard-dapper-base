@@ -24,6 +24,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # helm               | e2e tests
 # jq                 | JSON processing (GitHub API)
 # kind               | e2e tests
+# kube-ps1           | print out kube context in dapper shell
 # kubectl            | e2e tests (in kubernetes-client)
 # make               | OLM installation
 # moby-engine        | Docker (for Dapper)
@@ -69,6 +70,7 @@ RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
     BUILDX_VERSION=$(awk '/docker.buildx/ { print $2 }' /tools.mod) && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
     chmod 755 /usr/local/libexec/docker/cli-plugins/docker-buildx && \
+    curl -L https://raw.githubusercontent.com/jonmosco/kube-ps1/1b8fe913b25ba857b84a94c3b1dbf7bb34f7caef/kube-ps1.sh -o /etc/profile.d/kube-ps1.sh && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     go clean -cache -modcache && rm -f /tools.mod
@@ -78,6 +80,9 @@ RUN mkdir -p /root/.local/bin && ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/b
 
 # Copy kubecfg to always run on the shell
 COPY scripts/shared/lib/kubecfg /etc/profile.d/kubecfg.sh
+
+# Print kube context on interactive shell
+COPY scripts/shared/kubeps1.sh /etc/profile.d/
 
 # Copy shared files so that downstream projects can use them
 COPY Makefile.* .gitlint ${SHIPYARD_DIR}/
