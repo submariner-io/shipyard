@@ -32,9 +32,6 @@ export LAZY_DEPLOY SUBCTL_VERIFICATIONS TESTDIR
 # Specific to `reload-images`
 export RESTART ?= none
 
-# Specific to `shellcheck`
-export SHELLCHECK_ARGS += $(shell [ ! -d scripts ] || find scripts -type f -exec awk 'FNR == 1 && /sh$$/ { print FILENAME }' {} +)
-
 # Specific to `compile.sh`
 export BUILD_DEBUG BUILD_UPX LDFLAGS
 
@@ -62,6 +59,7 @@ $(call check_shipyard_file,Dockerfile.linting)
 ##### END GLOBAL FILES STALENESS CHECK #####
 
 include $(SHIPYARD_DIR)/Makefile.images
+include $(SHIPYARD_DIR)/Makefile.linting
 include $(SHIPYARD_DIR)/Makefile.versions
 
 # Process extra flags from the `using=a,b,c` optional flag
@@ -209,61 +207,6 @@ upgrade-e2e: deploy-latest deploy e2e
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
 	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl using=$(using)
-
-##### LINTING TARGETS #####
-.PHONY: gitlint golangci-lint markdownlint packagedoc-lint shellcheck yamllint
-
-# [gitlint] validates the commits are valid
-gitlint:
-	if [ -r .gitlint ]; then \
-	    gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
-	else \
-	    gitlint --config $(SHIPYARD_DIR)/.gitlint --commits origin/$(BASE_BRANCH)..HEAD; \
-	fi
-
-# [golangci-lint] validates Go code in the project
-golangci-lint:
-ifneq (,$(shell find . -name '*.go'))
-	golangci-lint version
-	golangci-lint linters
-	golangci-lint run --timeout 10m
-else
-	@echo 'There are no Go files to lint.'
-endif
-
-# [markdownlint] validates Markdown files in the project
-markdownlint:
-	md_ignored=(); \
-	if [ -r .mdignore ]; then \
-		md_ignored+=($$(< .mdignore)); \
-	fi; \
-	markdownlint -c .markdownlint.yml $${md_ignored[@]/#/-i } .
-
-# [packagedoc-lint] checks that the package docs don’t include the SPDX header
-packagedoc-lint:
-	result=0; \
-	for package in $$(find . -name vendor -prune -o -name \*.go -printf "%h\n" | sort -u); do \
-		if $(GO) doc $$package | grep -q SPDX; then \
-			echo $$package has an invalid package documentation; \
-			result=1; \
-		fi; \
-	done 2>/dev/null; \
-	exit $$result
-
-# [shellcheck] validates your shell files
-shellcheck:
-# Only run shellcheck if there are files to check
-ifneq (,$(SHELLCHECK_ARGS))
-	shellcheck -x -P $${SCRIPTS_DIR} $(SHELLCHECK_ARGS)
-	# https://github.com/koalaman/shellcheck/issues/1659
-	! grep $$'\t' $(SHELLCHECK_ARGS)
-else
-	@echo 'There are no shell scripts to check; if this is incorrect, specify them in SHELLCHECK_ARGS.'
-endif
-
-# [yamllint] validates YAML files in the project
-yamllint:
-	yamllint --strict .
 
 ##### MISC TARGETS #####
 .PHONY: backport post-mortem unit
