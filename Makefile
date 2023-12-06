@@ -54,7 +54,7 @@ include Makefile.versions
 # Shipyard-specific starts
 # We need to ensure images, including the Shipyard base image, are updated
 # before we start Dapper
-clean-clusters cleanup cloud-prepare clusters deploy deploy-latest e2e golangci-lint post-mortem print-version scale unit upgrade-e2e: package/.image.shipyard-dapper-base
+clean-clusters cleanup cloud-prepare clusters deploy deploy-latest e2e golangci-lint post-mortem packagedoc-lint print-version scale unit upgrade-e2e: package/.image.shipyard-dapper-base
 deploy deploy-latest e2e upgrade-e2e: package/.image.nettest
 
 .DEFAULT_GOAL := lint
