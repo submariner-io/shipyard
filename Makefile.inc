@@ -55,6 +55,7 @@ endef
 check_shipyard_file=$(if $(wildcard $(SHIPYARD_DIR)/$(1)),$(if $(wildcard $(1)),$(call _check_shipyard_file,$(1)),),)
 
 $(call check_shipyard_file,Makefile.dapper)
+$(call check_shipyard_file,Makefile.shipyard)
 $(call check_shipyard_file,Dockerfile.dapper)
 $(call check_shipyard_file,Dockerfile.linting)
 

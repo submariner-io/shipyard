@@ -46,7 +46,7 @@ do
             set -x
             ;;
         --version|-v)
-            echo Submariner Dapper
+            echo Shipyard Dapper
             exit 0
             ;;
         --mount-suffix|-S)
@@ -74,6 +74,7 @@ gitid="${gitid:-$(git show --format=%h -s)}"
 container="$(basename "$(pwd)"):${gitid}"
 DOCKER_BUILDKIT=1 docker build -t "${container}" -f "${file}" \
        --build-arg "BASE_BRANCH=${BASE_BRANCH:-devel}" \
+       --build-arg "ORG=${ORG}" \
        --build-arg "PROJECT=${PROJECT}" \
        .
 
