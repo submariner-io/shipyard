@@ -49,7 +49,7 @@ jobs:
         run: make -C shipyard images
 
       - name: Copy Shipyard resources
-        run: cp -n shipyard/{Dockerfile.*,Makefile.dapper,.dapper} .
+        run: cp -n shipyard/{Dockerfile.*,Makefile.dapper,Makefile.shipyard,.dapper} .
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' Dockerfile.dapper
@@ -97,7 +97,7 @@ jobs:
           path: ${{ matrix.project }}
 
       - name: Copy Shipyard resources
-        run: cp -n Dockerfile.* Makefile.dapper .dapper ${{ matrix.project }}/
+        run: cp -n Dockerfile.* Makefile.dapper Makefile.shipyard .dapper ${{ matrix.project }}/
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
@@ -152,7 +152,7 @@ jobs:
           path: ${{ matrix.project }}
 
       - name: Copy Shipyard resources
-        run: cp -n Dockerfile.* Makefile.dapper .dapper ${{ matrix.project }}/
+        run: cp -n Dockerfile.* Makefile.dapper* .dapper ${{ matrix.project }}/
 
       - name: Make sure ${{ matrix.project }} is using the built Shipyard image
         run: sed -i 's/shipyard-dapper-base:*.*/shipyard-dapper-base:dev/' ${{ matrix.project }}/Dockerfile.dapper
