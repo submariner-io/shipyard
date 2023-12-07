@@ -9,13 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export AIR_GAPPED DEBUG_PRINT DUAL_STACK GLOBALNET LOAD_BALANCER PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
-
-# Specific to `clusters`
-K8S_VERSION ?= 1.28
-METALLB_VERSION ?= 0.13.5
-OLM_VERSION ?= v0.18.3
-export K8S_VERSION METALLB_VERSION OLM OLM_VERSION PROMETHEUS
+export AIR_GAPPED DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
 
 # Specific to `deploy`
 CABLE_DRIVER ?= libreswan
@@ -58,6 +52,7 @@ $(call check_shipyard_file,Dockerfile.linting)
 
 ##### END GLOBAL FILES STALENESS CHECK #####
 
+include $(SHIPYARD_DIR)/Makefile.clusters
 include $(SHIPYARD_DIR)/Makefile.images
 include $(SHIPYARD_DIR)/Makefile.linting
 include $(SHIPYARD_DIR)/Makefile.versions
@@ -98,22 +93,16 @@ DEPLOYTOOL = ocm
 LIGHTHOUSE = true
 endif
 
-ifneq (,$(filter prometheus,$(_using)))
-PROMETHEUS = true
-endif
-
 # Force running E2E with `subctl verify`
 ifneq (,$(filter subctl-verify,$(_using)))
 TESTDIR = non-existent-dir
 endif
 
 ifneq (,$(filter ocp,$(_using)))
-PROVIDER = ocp
 IMAGE_TAG = subctl
 endif
 
 ifneq (,$(filter acm,$(_using)))
-PROVIDER = acm
 IMAGE_TAG = subctl
 endif
 
@@ -123,10 +112,6 @@ endif
 
 ifneq (,$(filter air-gap,$(_using)))
 AIR_GAPPED = true
-endif
-
-ifneq (,$(filter dual-stack,$(_using)))
-DUAL_STACK = true
 endif
 
 ifeq ($(LIGHTHOUSE),true)
@@ -156,7 +141,7 @@ export GO
 # Shipyard provided targets
 
 ##### CLEANING TARGETS #####
-.PHONY: clean clean-clusters clean-generated clean-buildx
+.PHONY: clean clean-generated clean-buildx
 
 # [clean] cleans everything (running clusters, generated files ...)
 clean: clean-clusters clean-generated clean-buildx
@@ -165,11 +150,6 @@ clean: clean-clusters clean-generated clean-buildx
 clean-generated:
 	git clean -X -f -d
 
-# [clean-clusters] removes running clusters
-clean-clusters:
-	$(SCRIPTS_DIR)/cleanup.sh
-cleanup: clean-clusters
-
 # [clean-buildx] removes the buildx builder, if any
 clean-buildx:
 	docker buildx version > /dev/null 2>&1 && \
@@ -177,11 +157,7 @@ clean-buildx:
 	docker buildx rm
 
 ##### DEPLOYMENT& TESTING TARGETS #####
-.PHONY: clusters cloud-prepare deploy e2e scale upgrade-e2e deploy-latest
-
-# [clusters] creates KIND clusters that can then be used to deploy Submariner
-clusters:
-	$(SCRIPTS_DIR)/$@.sh
+.PHONY: cloud-prepare deploy e2e scale upgrade-e2e deploy-latest
 
 # [cloud-prepare] can be run on a POC/testing cloud environment to prepare it before deploying Submariner
 cloud-prepare:
