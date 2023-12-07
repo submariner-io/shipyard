@@ -1,0 +1,60 @@
+### VARIABLES ###
+
+, := ,
+USING = $(subst $(,), ,$(using))
+_using = ${USING}
+
+# General make flags/variables
+PARALLEL ?= true
+TIMEOUT ?= 5m
+export PARALLEL SETTINGS TIMEOUT
+
+# Flags affecting `make clusters`
+K8S_VERSION ?= 1.28
+METALLB_VERSION ?= 0.13.5
+OLM_VERSION ?= v0.18.3
+PROVIDER ?= kind
+export AIR_GAPPED DUAL_STACK GLOBALNET K8S_VERSION LOAD_BALANCER METALLB_VERSION OLM OLM_VERSION PROMETHEUS PROVIDER
+
+### PROCESSING `using=` ###
+
+ifneq (,$(filter ocp,$(_using)))
+PROVIDER = ocp
+endif
+
+ifneq (,$(filter acm,$(_using)))
+PROVIDER = acm
+endif
+
+ifneq (,$(filter load-balancer,$(_using)))
+LOAD_BALANCER = true
+endif
+
+ifneq (,$(filter air-gap,$(_using)))
+AIR_GAPPED = true
+endif
+
+ifneq (,$(filter dual-stack,$(_using)))
+DUAL_STACK = true
+endif
+
+ifneq (,$(filter globalnet,$(_using)))
+GLOBALNET = true
+endif
+
+ifneq (,$(filter prometheus,$(_using)))
+PROMETHEUS = true
+endif
+
+### TARGETS ###
+
+# [clean-clusters] removes running clusters
+clean-clusters:
+	$(SCRIPTS_DIR)/cleanup.sh
+cleanup: clean-clusters
+
+# [clusters] creates KIND clusters that can then be used to deploy Submariner
+clusters:
+	$(SCRIPTS_DIR)/$@.sh
+
+.PHONY: clean-clusters cleanup clusters
