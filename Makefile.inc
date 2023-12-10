@@ -9,7 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export AIR_GAPPED DEBUG_PRINT GLOBALNET PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
+export AIR_GAPPED DEBUG_PRINT OVERLAPPING PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
 
 # Specific to `deploy`
 CABLE_DRIVER ?= libreswan
@@ -74,8 +74,13 @@ ifneq (,$(filter lighthouse,$(_using)))
 LIGHTHOUSE = true
 endif
 
+# Support existing Submariner flag
 ifneq (,$(filter globalnet,$(_using)))
-GLOBALNET = true
+OVERLAPPING = true
+endif
+
+ifneq (,$(filter overlapping,$(_using)))
+OVERLAPPING = true
 endif
 
 ifneq (,$(filter helm,$(_using)))
@@ -127,7 +132,7 @@ ifeq ($(AIR_GAPPED),true)
 override PRELOAD_IMAGES = $(EXTRA_PRELOAD_IMAGES) nettest \
 	$(foreach image,gateway operator route-agent,submariner-$(image))
 
-ifeq ($(GLOBALNET),true)
+ifeq ($(OVERLAPPING),true)
 override PRELOAD_IMAGES += submariner-globalnet
 endif
 ifeq ($(LIGHTHOUSE),true)

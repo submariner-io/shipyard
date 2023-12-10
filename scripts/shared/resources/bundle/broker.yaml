@@ -7,5 +7,5 @@ metadata:
 spec:
   components: ["${components}"]
   defaultGlobalnetClusterSize: 8192
-  globalnetEnabled: ${GLOBALNET}
+  globalnetEnabled: ${OVERLAPPING}
   globalnetCIDRRange: 169.254.0.0/16

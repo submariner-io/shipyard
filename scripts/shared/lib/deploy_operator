@@ -28,7 +28,7 @@ function deploytool_prereqs() {
 
 function setup_broker() {
     local extra_flags=()
-    [[ "${GLOBALNET}" = true ]] && extra_flags+=(--globalnet)
+    [[ "${OVERLAPPING}" = true ]] && extra_flags+=(--globalnet)
     if [[ "${LIGHTHOUSE}" == true ]]; then
         extra_flags+=(--components 'service-discovery,connectivity')
     else
