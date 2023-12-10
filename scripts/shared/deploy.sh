@@ -3,7 +3,7 @@
 set -em
 
 source "${SCRIPTS_DIR}/lib/utils"
-print_env CABLE_DRIVER DEPLOYTOOL GLOBALNET IMAGE_TAG LIGHTHOUSE PARALLEL PLUGIN PRELOAD_IMAGES SETTINGS TIMEOUT
+print_env CABLE_DRIVER DEPLOYTOOL OVERLAPPING IMAGE_TAG LIGHTHOUSE PARALLEL PLUGIN PRELOAD_IMAGES SETTINGS TIMEOUT
 source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
@@ -99,10 +99,20 @@ function install_bundle() {
   echo "[INFO](${cluster}) Bundle ${bundle} installed"
 }
 
+function declare_global_cidrs() {
+  declare -gA global_CIDRs
+
+  for cluster in "${clusters[@]}"; do
+    # shellcheck disable=SC2034
+    global_CIDRs[$cluster]="242.254.${cluster_number[$cluster]}.0/24"
+  done
+}
+
 ### Main ###
 
 load_settings
 declare_cidrs
+[[ "$OVERLAPPING" != "true" ]] || declare_global_cidrs
 declare_kubeconfig
 
 # Always import nettest image on kind, to be able to test connectivity and other things

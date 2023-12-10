@@ -166,9 +166,7 @@ function air_gap_iptables() {
 function deploy_load_balancer() {
     local kind_ip start_ip end_ip net_addr
     kind_ip=$(docker network inspect -f '{{.IPAM.Config}}' kind | awk '/.*/ { print $2 }')
-    net_addr=$(echo "${cluster_CIDRs[$cluster]}" | cut -f2 -d'.')
-    [[ "$GLOBALNET" != true ]] || net_addr=$(echo "${global_CIDRs[$cluster]}" | cut -f3 -d'.')
-    start_ip=$(echo "$kind_ip" | cut -f1-2 -d'.')."$net_addr".100
+    start_ip=$(echo "$kind_ip" | cut -f1-2 -d'.')."${cluster_number[$cluster]}".100
     end_ip=$(echo "$start_ip" | cut -f1-3 -d'.').250
 
     kubectl apply -f "https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"

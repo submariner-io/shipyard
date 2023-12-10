@@ -164,14 +164,11 @@ function registry_running() {
     return $?
 }
 
-function add_cluster_cidrs() {
+function set_cluster_cidrs() {
     local val=$1
     local idx=$2
 
-    if [[ "${GLOBALNET}" == "true" ]]; then
-        val="0"
-        global_CIDRs[$idx]="242.254.${1}.0/24"
-    fi
+    [[ "$OVERLAPPING" != "true" ]] || val="0"
 
     cluster_CIDRs[$idx]="10.$((val+129)).0.0/16"
     service_CIDRs[$idx]="100.$((val+65)).0.0/16"
@@ -183,11 +180,12 @@ function add_cluster_cidrs() {
 function declare_cidrs() {
     local DEBUG_PRINT=false
     # shellcheck disable=SC2034 # these variables are used elsewhere
-    declare -gA cluster_CIDRs cluster_IPv6_CIDRs service_CIDRs service_IPv6_CIDRs global_CIDRs
+    declare -gA cluster_number cluster_CIDRs cluster_IPv6_CIDRs service_CIDRs service_IPv6_CIDRs
     local cluster i=1
 
     for cluster in "${clusters[@]}"; do
-        add_cluster_cidrs "$i" "$cluster"
+        cluster_number[$cluster]="$i"
+        set_cluster_cidrs "$i" "$cluster"
         i=$(("$i"+1))
     done
 }
