@@ -27,7 +27,7 @@ else
 
 .dapper:
 	@echo Downloading dapper
-	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+	@curl -sfLO $(SHIPYARD_URL)/$@
 	@chmod +x .dapper
 	@./.dapper -v
 
@@ -57,7 +57,7 @@ $(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOA
 # The original dockerfiles will live in Shipyard and be downloaded by consuming projects.
 $(BASE_DAPPER) $(LINTING_DAPPER):
 	@echo Downloading $@
-	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+	@curl -sfLO $(SHIPYARD_URL)/$@
 
 # Run silently as the commands are pretty straightforward and `make` hasn't a lot to do
 $(LINTING_GOALS): DAPPER_ARGS := -f $(LINTING_DAPPER)

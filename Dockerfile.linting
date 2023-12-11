@@ -1,5 +1,6 @@
-ARG BASE_BRANCH
-FROM quay.io/submariner/shipyard-linting:${BASE_BRANCH}
+ARG SHIPYARD_REPO=quay.io/submariner
+ARG SHIPYARD_TAG=devel
+FROM ${SHIPYARD_REPO}/shipyard-linting:${SHIPYARD_TAG}
 
 ENV DAPPER_ENV="CI GITHUB_SHA MAKEFLAGS" \
     DAPPER_SOURCE=/opt/linting
