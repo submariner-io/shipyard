@@ -23,7 +23,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
 # yamllint         | YAML linting
 # yq               | YAML processing
 
-ENV MARKDOWNLINT_VERSION=0.33.0 \
+ENV MARKDOWNLINT_VERSION=0.38.0 \
     GITLINT_VERSION=0.19.1
 
 RUN apk add --no-cache bash findutils git grep make nodejs py3-six shellcheck upx yamllint yq && \
