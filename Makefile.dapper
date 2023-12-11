@@ -3,12 +3,13 @@
 
 ORG ?= submariner-io
 PROJECT ?= $(notdir $(CURDIR))
-export ORG
-export PROJECT
+SHIPYARD_TAG ?= $(BASE_BRANCH)
+SHIPYARD_URL ?= https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)
+export ORG PROJECT SHIPYARD_TAG SHIPYARD_URL
 
 Makefile.shipyard:
 	@echo Downloading $@
-	@curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+	@curl -sfLO $(SHIPYARD_URL)/$@
 
 include Makefile.shipyard
 

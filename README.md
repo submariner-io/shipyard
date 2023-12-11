@@ -52,8 +52,8 @@ The simplest Makefile would look like this:
 ```Makefile
 BASE_BRANCH=devel
 PROJECT=shipyard
-export BASE_BRANCH
-export PROJECT
+SHIPYARD_URL=https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)
+export BASE_BRANCH PROJECT SHIPYARD_URL
 
 ifneq (,$(DAPPER_HOST_ARCH))
 
@@ -67,7 +67,7 @@ else
 
 Makefile.dapper:
         @echo Downloading $@
-        @curl -sfLO https://raw.githubusercontent.com/submariner-io/shipyard/$(BASE_BRANCH)/$@
+        @curl -sfLO $(SHIPYARD_URL)/$@
 
 include Makefile.dapper
 

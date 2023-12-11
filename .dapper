@@ -69,14 +69,13 @@ done
 
 [ -n "$command" ] && set -- "$command"
 
+buildargs=(--build-arg "ORG=${ORG}" --build-arg "PROJECT=${PROJECT}")
+[ -n "${SHIPYARD_REPO}" ] && buildargs+=(--build-arg "SHIPYARD_REPO=${SHIPYARD_REPO}")
+[ -n "${SHIPYARD_TAG}" ] && buildargs+=(--build-arg "SHIPYARD_TAG=${SHIPYARD_TAG}")
 gitid="$(git symbolic-ref --short HEAD 2>/dev/null | tr / _ || :)"
 gitid="${gitid:-$(git show --format=%h -s)}"
 container="$(basename "$(pwd)"):${gitid}"
-DOCKER_BUILDKIT=1 docker build -t "${container}" -f "${file}" \
-       --build-arg "BASE_BRANCH=${BASE_BRANCH:-devel}" \
-       --build-arg "ORG=${ORG}" \
-       --build-arg "PROJECT=${PROJECT}" \
-       .
+DOCKER_BUILDKIT=1 docker build -t "${container}" -f "${file}" "${buildargs[@]}" .
 
 extract_var() {
     docker inspect "$1" | grep "$2" | sed -E "s/.*\"$2=(.*)\",?/\1/;q"
