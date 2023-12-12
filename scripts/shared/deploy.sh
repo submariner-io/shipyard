@@ -108,6 +108,25 @@ function declare_global_cidrs() {
   done
 }
 
+# This is a workaround and can be removed once we switch the CNI from kindnet to a different one.
+# In order to support health-check and hostNetwork use-cases, submariner requires an IPaddress from the podCIDR
+# for each node in the cluster. Normally, most of the CNIs create a cniInterface on the host and assign an IP
+# from the podCIDR to the interface. Submariner relies on this interface to support the aforementioned use-cases.
+# However, with kindnet CNI, it was seen that it does not create a dedicated CNI Interface on the nodes.
+# But as soon as a pod is scheduled on a node, it creates a veth-xxx interface which has an IPaddress from the
+# podCIDR. In this workaround, we are scheduling a dummy pod as a demonSet on the cluster to trigger the creation
+# of this veth-xxx interface which can be used as a cniInterface and we can continue to validate Submariner use-cases.
+function schedule_dummy_pod() {
+    [[ -z "${cluster_cni[$cluster]}" ]] || return 0
+    local ns="subm-kindnet-workaround"
+    source "${SCRIPTS_DIR}"/lib/deploy_funcs
+    import_image "${REPO}/nettest"
+
+    echo "Creating the ${ns} namespace..."
+    kubectl create namespace "${ns}" || :
+    deploy_resource "${RESOURCES_DIR}"/dummypod.yaml "$ns"
+}
+
 ### Main ###
 
 load_settings
@@ -123,6 +142,7 @@ declare_kubeconfig
 
 load_library deploy DEPLOYTOOL
 deploytool_prereqs
+[[ "$PROVIDER" != kind ]] || run_all_clusters schedule_dummy_pod
 
 run_if_defined pre_deploy
 
