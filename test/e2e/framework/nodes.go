@@ -77,6 +77,11 @@ func (f *Framework) SetGatewayLabelOnNode(ctx context.Context, cluster ClusterIn
 	PatchString("/metadata/labels/"+strings.ReplaceAll(GatewayLabel, "/", "~1"), strconv.FormatBool(isGateway),
 		func(pt types.PatchType, payload []byte) error {
 			_, err := KubeClients[cluster].CoreV1().Nodes().Patch(ctx, nodeName, pt, payload, metav1.PatchOptions{})
+			if err != nil && f.stopped {
+				Errorf("Error setting gateway label on node %q: %v", nodeName, err)
+				err = nil
+			}
+
 			return err
 		})
 }
