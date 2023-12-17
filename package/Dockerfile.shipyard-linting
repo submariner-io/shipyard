@@ -29,7 +29,7 @@ ENV MARKDOWNLINT_VERSION=0.33.0 \
 RUN apk add --no-cache bash findutils git grep make nodejs py3-six shellcheck upx yamllint yq && \
     apk add --no-cache --virtual installers npm py3-pip && \
     npm install -g markdownlint-cli@${MARKDOWNLINT_VERSION} && \
-    pip install gitlint==${GITLINT_VERSION} && \
+    pip install --break-system-packages gitlint==${GITLINT_VERSION} && \
     find /usr/bin/ -type f -executable -newercc /proc -size +1M  \( -execdir upx {} \; -o -true \) && \
     find /usr/lib/ -name __pycache__ -type d -exec rm -rf {} + && \
     apk del installers
