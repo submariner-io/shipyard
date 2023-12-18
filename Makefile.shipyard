@@ -6,6 +6,7 @@ USING = $(subst $(,), ,$(using))
 LINTING_DAPPER := Dockerfile.linting
 LINTING_GOALS := gitlint shellcheck yamllint markdownlint
 NON_DAPPER_GOALS += .dapper shell targets $(LINTING_GOALS)
+SHIPYARD_GOALS += cleanup clean-clusters clusters golangci-lint packagedoc-lint
 export MAKEFLAGS
 export USING
 
@@ -47,9 +48,12 @@ ifneq (,$(filter dual-stack,$(_using)))
 IPV6_FLAGS = --ipv6 --subnet fc00:1234:4444::/64
 endif
 
-# Only run command line goals in dapper (except things that have to run outside of dapper).
-# Otherwise, make applies this rule to various files and tries to build them in dapper (which doesn't work, obviously).
+# Run only Shipyard goals inside the container when requested, otherwise run any suitable goal inside the container.
+ifdef ONLY_SHIPYARD_GOALS
+$(SHIPYARD_GOALS): .dapper $(BASE_DAPPER)
+else
 $(filter-out .dapper prune-images shell targets $(NON_DAPPER_GOALS),$(MAKECMDGOALS)): .dapper $(BASE_DAPPER)
+endif
 	@[ -z "$$CI" ] || echo "::group::Launching a container to run 'make $@'"
 	-docker network create $(IPV6_FLAGS) -d bridge kind
 	+$(RUN_IN_DAPPER) make $(MAKE_DEBUG_FLAG) $@
