@@ -1,6 +1,6 @@
 module github.com/submariner-io/shipyard
 
-go 1.20
+go 1.21
 
 require (
 	github.com/onsi/ginkgo/v2 v2.13.2
