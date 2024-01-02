@@ -39,7 +39,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [
-          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse', 'shipyard',
+          'admiral', 'cloud-prepare', 'lighthouse', 'shipyard',
           'subctl', 'submariner-bot', 'submariner', 'submariner-operator'
         ]
     steps:
