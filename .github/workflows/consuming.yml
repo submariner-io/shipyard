@@ -86,7 +86,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [
-          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'admiral', 'cloud-prepare', 'lighthouse',
           'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
         ]
     steps:
@@ -141,7 +141,7 @@ jobs:
       fail-fast: false
       matrix:
         project: [
-          'admiral', 'cloud-prepare', 'coastguard', 'lighthouse',
+          'admiral', 'cloud-prepare', 'lighthouse',
           'subctl', 'submariner', 'submariner-charts', 'submariner-operator'
         ]
     steps:

@@ -5,31 +5,46 @@ updates:
     directory: '/'
     schedule:
       interval: monthly
-  - package-ecosystem: github-actions
-    directory: '/'
-    target-branch: "release-0.13"
-    schedule:
-      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: '/'
     target-branch: "release-0.14"
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: '/'
     target-branch: "release-0.15"
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: github-actions
     directory: '/'
     target-branch: "release-0.16"
     schedule:
       interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: gomod
     target-branch: "release-0.14"
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
     allow:
       # Pick up k8s.io updates
       - dependency-name: k8s.io/client-go
@@ -42,6 +57,10 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
     allow:
       # Pick up k8s.io updates
       - dependency-name: k8s.io/client-go
@@ -54,6 +73,10 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
     allow:
       # Pick up k8s.io updates
       - dependency-name: k8s.io/client-go
@@ -65,6 +88,10 @@ updates:
     directory: "/"
     schedule:
       interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
     ignore:
       # These are included by k8s.io/client-go
       - dependency-name: k8s.io/api
@@ -73,3 +100,7 @@ updates:
     directory: "/tools"
     schedule:
       interval: weekly
+    groups:
+      tools:
+        patterns:
+          - "*"
