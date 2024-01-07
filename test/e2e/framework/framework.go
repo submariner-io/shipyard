@@ -97,6 +97,7 @@ type Framework struct {
 	// Guaranteed to be unique in the cluster even when running the same
 	// test multiple times in parallel.
 	UniqueName               string
+	stopped                  bool
 	SkipNamespaceCreation    bool            // Whether to skip creating a namespace
 	Namespace                string          // Every test has a namespace at least unless creation is skipped
 	namespacesToDelete       map[string]bool // Some tests have more than one.
@@ -415,6 +416,7 @@ func deleteNamespace(client kubeclientset.Interface, namespaceName string) error
 
 // AfterEach deletes the namespace, after reading its events.
 func (f *Framework) AfterEach() {
+	f.stopped = true
 	RemoveCleanupAction(f.cleanupHandle)
 
 	var nsDeletionErrors []error
@@ -435,7 +437,7 @@ func (f *Framework) AfterEach() {
 
 	// if we had errors deleting, report them now.
 	if len(nsDeletionErrors) != 0 {
-		Failf(k8serrors.NewAggregate(nsDeletionErrors).Error())
+		Errorf(k8serrors.NewAggregate(nsDeletionErrors).Error())
 	}
 }
 
