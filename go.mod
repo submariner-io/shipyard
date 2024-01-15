@@ -3,13 +3,13 @@ module github.com/submariner-io/shipyard
 go 1.21
 
 require (
-	github.com/onsi/ginkgo/v2 v2.13.2
+	github.com/onsi/ginkgo/v2 v2.14.0
 	github.com/onsi/gomega v1.30.0
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.29.0
 	k8s.io/apimachinery v0.29.0
 	k8s.io/client-go v0.29.0
-	k8s.io/klog/v2 v2.110.1
+	k8s.io/klog/v2 v2.120.0
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/mcs-api v0.1.0
 )
@@ -17,7 +17,7 @@ require (
 require (
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/emicklei/go-restful/v3 v3.11.0 // indirect
-	github.com/go-logr/logr v1.3.0 // indirect
+	github.com/go-logr/logr v1.4.1 // indirect
 	github.com/go-openapi/jsonpointer v0.19.6 // indirect
 	github.com/go-openapi/jsonreference v0.20.2 // indirect
 	github.com/go-openapi/swag v0.22.3 // indirect
@@ -40,13 +40,13 @@ require (
 	github.com/munnerz/goautoneg v0.0.0-20191010083416-a7dc8b61c822 // indirect
 	github.com/mxk/go-flowrate v0.0.0-20140419014527-cca7078d478f // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
-	golang.org/x/net v0.17.0 // indirect
+	golang.org/x/net v0.19.0 // indirect
 	golang.org/x/oauth2 v0.10.0 // indirect
-	golang.org/x/sys v0.14.0 // indirect
-	golang.org/x/term v0.13.0 // indirect
-	golang.org/x/text v0.13.0 // indirect
+	golang.org/x/sys v0.15.0 // indirect
+	golang.org/x/term v0.15.0 // indirect
+	golang.org/x/text v0.14.0 // indirect
 	golang.org/x/time v0.3.0 // indirect
-	golang.org/x/tools v0.14.0 // indirect
+	golang.org/x/tools v0.16.1 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.31.0 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
