@@ -243,20 +243,16 @@ function provider_failed() {
 function prepare_ovn() {
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
 
-    echo "Building ovn-kubernetes with interconnect (OVN-IC) from source"
-    echo "This will become unnecessary if OVN CI image publishing is fixed"
-    echo "https://github.com/ovn-org/ovn-kubernetes/actions/workflows/docker.yml"
     rm -rf ovn-kubernetes
     git clone https://github.com/ovn-org/ovn-kubernetes
     pushd ovn-kubernetes || exit
-    git checkout d462cf088c44ff501e5fcf746e9163193afa2dc4
 
-    make -C go-controller
+    # When updating commit, Update the OVN_SRC_IMAGE to the corressponding commit
+    git checkout 24b0ae73a996e409bfefad7b90cb42224e34be54
+    local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-u:master@sha256:ba102783d520f0474e5c7dd5f2a0a1dce0ec2bda6cd42ac547621892e57c25e2"
 
-    cp go-controller/_output/go/bin/* dist/images
-
-    echo "ref: $(git rev-parse --symbolic-full-name HEAD) commit: $(git rev-parse HEAD)" > dist/images/git_info
-    docker build -t "${OVN_IMAGE}" -f dist/images/Dockerfile.fedora dist/images/
+    docker pull "${OVN_SRC_IMAGE}"
+    docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
 
     popd || exit
