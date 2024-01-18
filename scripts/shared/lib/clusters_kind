@@ -35,12 +35,20 @@ function generate_cluster_yaml() {
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done
 
+    local config_file
+    config_file="${RESOURCES_DIR}/${cluster}-config.yaml"
+
     if [[ "$DUAL_STACK" ]]; then
         service_cidr_ipv6="${service_IPv6_CIDRs[${cluster}]}"
         pod_cidr_ipv6="${cluster_IPv6_CIDRs[${cluster}]}"
-        render_template "${RESOURCES_DIR}/kind-cluster-dual-stack-config.yaml" > "${RESOURCES_DIR}/${cluster}-config.yaml"
+        render_template "${RESOURCES_DIR}/kind-cluster-dual-stack-config.yaml" > "$config_file"
     else
-        render_template "${RESOURCES_DIR}/kind-cluster-config.yaml" > "${RESOURCES_DIR}/${cluster}-config.yaml"
+        render_template "${RESOURCES_DIR}/kind-cluster-config.yaml" > "$config_file"
+    fi
+
+    if [[ -n "${cluster_custom_config[$cluster]}" ]]; then
+        # shellcheck disable=SC2016 # We intentionally don't expand the argument to eval-all as it's using yq syntax, not sh
+        echo "${cluster_custom_config[$cluster]}" | yq -i eval-all '. as $item ireduce ({}; . * $item )' "$config_file" -
     fi
 }
 
