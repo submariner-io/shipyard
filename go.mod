@@ -3,13 +3,13 @@ module github.com/submariner-io/shipyard
 go 1.21
 
 require (
-	github.com/onsi/ginkgo/v2 v2.14.0
-	github.com/onsi/gomega v1.30.0
+	github.com/onsi/ginkgo/v2 v2.15.0
+	github.com/onsi/gomega v1.31.1
 	github.com/pkg/errors v0.9.1
-	k8s.io/api v0.29.0
-	k8s.io/apimachinery v0.29.0
-	k8s.io/client-go v0.29.0
-	k8s.io/klog/v2 v2.120.0
+	k8s.io/api v0.29.1
+	k8s.io/apimachinery v0.29.1
+	k8s.io/client-go v0.29.1
+	k8s.io/klog/v2 v2.120.1
 	k8s.io/utils v0.0.0-20230726121419-3b25d923346b
 	sigs.k8s.io/mcs-api v0.1.0
 )
