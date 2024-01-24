@@ -35,7 +35,7 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.17
           repository: submariner-io/${{ matrix.project }}
 
       # Check out Shipyard as a sub directory of the project, so that `go replace` can work.
@@ -92,7 +92,7 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.17
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -147,7 +147,7 @@ jobs:
         uses: actions/checkout@b4ffde65f46336ab88eb53be808477a3936bae11
         with:
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.17
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
