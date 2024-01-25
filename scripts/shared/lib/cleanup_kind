@@ -5,6 +5,10 @@
 function provider_initialize() {
     # shellcheck disable=SC2034
     readarray -t clusters < <(kind get clusters)
+
+    # kind cleanup uses a lock but doesn't retry
+    # shellcheck disable=SC2034
+    PARALLEL=false
 }
 
 function provider_delete_cluster() {
