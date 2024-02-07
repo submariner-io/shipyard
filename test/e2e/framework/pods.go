@@ -140,6 +140,7 @@ func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName stri
 	}, func(result interface{}) (bool, string, error) {
 		pods := result.(*v1.PodList)
 		var podNodes []string
+
 		for i := range pods.Items {
 			pod := &pods.Items[i]
 			if pod.Spec.NodeName == nodeName {
@@ -152,6 +153,7 @@ func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName stri
 				}
 
 				found = pod
+
 				return true, "", nil
 			}
 

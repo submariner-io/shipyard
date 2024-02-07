@@ -42,7 +42,7 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 
 	framework.BeforeSuite()
 	return nil
-}, func(data []byte) {
+}, func(_ []byte) {
 	// Run on all Ginkgo nodes
 })
 

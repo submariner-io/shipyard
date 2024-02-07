@@ -167,7 +167,7 @@ func BeforeSuite() {
 	By("Creating kubernetes clients")
 
 	if len(RestConfigs) == 0 {
-		if len(TestContext.KubeConfig) > 0 {
+		if TestContext.KubeConfig != "" {
 			Expect(TestContext.KubeConfigs).To(BeEmpty(),
 				"Either KubeConfig or KubeConfigs must be specified but not both")
 
@@ -182,6 +182,7 @@ func BeforeSuite() {
 		} else if len(TestContext.KubeConfigs) > 0 {
 			Expect(TestContext.KubeConfigs).To(HaveLen(len(TestContext.ClusterIDs)),
 				"One ClusterID must be provided for each item in the KubeConfigs")
+
 			for _, kubeConfig := range TestContext.KubeConfigs {
 				RestConfigs = append(RestConfigs, createRestConfig(kubeConfig, ""))
 			}
@@ -570,6 +571,7 @@ func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult C
 				if IsTransientError(err, opMsg) {
 					return false, nil
 				}
+
 				return false, err
 			}
 
@@ -584,6 +586,7 @@ func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult C
 			}
 
 			lastMsg = msg
+
 			return false, nil
 		})
 

@@ -44,6 +44,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 				if apierrors.IsNotFound(err) {
 					return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 				}
+
 				return resGip, err
 			},
 			func(result interface{}) (bool, string, error) {
@@ -56,6 +57,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 					return false, fmt.Sprintf("GlobalIngress %q exists but allocatedIP not available yet",
 						name), nil
 				}
+
 				return true, "", nil
 			})
 
@@ -73,6 +75,7 @@ func (f *Framework) AwaitGlobalIngressIPRemoved(cluster ClusterIndex, name, name
 			if apierrors.IsNotFound(err) {
 				return true, nil
 			}
+
 			return false, err
 		},
 		func(result interface{}) (bool, string, error) {
