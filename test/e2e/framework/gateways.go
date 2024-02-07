@@ -66,9 +66,11 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 
 			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
+
 			if haStatus != status {
 				return false, fmt.Sprintf("gateway %q exists but has wrong status %q, expected %q", gw.GetName(), haStatus, status), nil
 			}
+
 			return true, "", nil
 		})
 
@@ -105,6 +107,7 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 			if apierrors.IsNotFound(err) {
 				return true, nil
 			}
+
 			return false, err
 		},
 		func(result interface{}) (bool, string, error) {
@@ -130,6 +133,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 
 			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
+
 			if haStatus != "active" {
 				return false, fmt.Sprintf("Gateway %q exists but not active yet",
 					gw.GetName()), nil
@@ -143,6 +147,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 			for _, o := range connections {
 				conn := o.(map[string]interface{})
 				status, _, _ := unstructured.NestedString(conn, "status")
+
 				if status != "connected" {
 					return false, fmt.Sprintf("Gateway %q is active but cluster %q is not connected: Status: %q, Message: %q",
 						name, NestedString(conn, "endpoint", "cluster_id"), status, NestedString(conn, "statusMessage")), nil
@@ -186,6 +191,7 @@ func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
 		if apierrors.IsNotFound(err) {
 			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
+
 		return nil, err
 	}, NoopCheckResult)
 }

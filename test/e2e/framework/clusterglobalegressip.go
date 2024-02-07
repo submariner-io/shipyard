@@ -49,6 +49,7 @@ func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []st
 			if apierrors.IsNotFound(err) {
 				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
+
 			return resGip, err
 		},
 		func(result interface{}) (bool, string, error) {
@@ -60,6 +61,7 @@ func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []st
 			if len(globalIPs) == 0 {
 				return false, fmt.Sprintf("Egress IP resource %q exists but allocatedIPs not available yet", name), nil
 			}
+
 			return true, "", nil
 		})
 
