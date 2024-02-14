@@ -24,7 +24,7 @@ ifneq (,$(shell find . -name '*.go'))
 	go work init
 	find . -name go.mod -execdir git grep -qFl 'func ' -- '*.go' \; -printf '%h ' | xargs go work use
 # Analyse all the modules containing function declarations
-	golangci-lint run --timeout 10m $$(find . -name go.mod -execdir git grep -qFl 'func ' -- '*.go' \; -printf '%h/...\n')
+	golangci-lint run --out-format=github-actions --timeout 10m $$(find . -name go.mod -execdir git grep -qFl 'func ' -- '*.go' \; -printf '%h/...\n')
 else
 	@echo 'There are no Go files to lint.'
 endif
