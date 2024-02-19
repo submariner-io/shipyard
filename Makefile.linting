@@ -20,7 +20,11 @@ golangci-lint:
 ifneq (,$(shell find . -name '*.go'))
 	golangci-lint version
 	golangci-lint linters
-	golangci-lint run --timeout 10m
+# Set up a workspace to include all modules
+	go work init
+	find . -name go.mod -execdir git grep -qFl 'func ' -- '*.go' \; -printf '%h ' | xargs go work use
+# Analyse all the modules containing function declarations
+	golangci-lint run --out-format=github-actions --timeout 10m $$(find . -name go.mod -execdir git grep -qFl 'func ' -- '*.go' \; -printf '%h/...\n')
 else
 	@echo 'There are no Go files to lint.'
 endif
