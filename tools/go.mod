@@ -7,7 +7,7 @@ require (
 	github.com/golangci/golangci-lint v1.56.2
 	github.com/mikefarah/yq/v4 v4.41.1
 	github.com/psampaz/go-mod-outdated v0.9.0
-	helm.sh/helm/v3 v3.14.1
+	helm.sh/helm/v3 v3.14.2
 	sigs.k8s.io/kind v0.22.0
 )
 
