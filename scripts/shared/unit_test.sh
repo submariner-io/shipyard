@@ -7,7 +7,7 @@ source "${SCRIPTS_DIR}/lib/debug_functions"
 function _find() {
     declare -a excludes
     for entry in .git $(git ls-files -o -i --exclude-from=.gitignore --directory); do
-        test -f "$entry" || excludes+=(-path "./${entry/\/}" -prune -o)
+        test -f "$entry" || excludes+=(-path "./${entry/%\/}" -prune -o)
     done
 
     find . "${excludes[@]}" "$@" -printf "%h\0" | sort -z -u
