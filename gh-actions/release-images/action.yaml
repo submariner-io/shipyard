@@ -14,9 +14,9 @@ runs:
     - shell: bash
       run: echo "DEBUG_PRINT=true" >> $GITHUB_ENV
     - name: Set up QEMU (to support building on non-native architectures)
-      uses: docker/setup-qemu-action@e81a89b1732b9c48d79cd809d8d81d79c4647a18
+      uses: docker/setup-qemu-action@68827325e0b33c7199eb31dd4e31fbe9023e06e3
     - name: Set up buildx
-      uses: docker/setup-buildx-action@4b4e9c3e2d4531116a6f8ba8e71fc6e2cb6e6c8c
+      uses: docker/setup-buildx-action@2b51285047da1547ffb1b2203d8be4c0af6b1f20
     - name: Build new images
       # This needs to be kept separate so that the release stage runs using the new Shipyard base image
       shell: bash
