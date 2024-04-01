@@ -4,7 +4,7 @@ go 1.21
 
 require (
 	github.com/docker/buildx v0.13.1
-	github.com/golangci/golangci-lint v1.57.1
+	github.com/golangci/golangci-lint v1.57.2
 	github.com/mikefarah/yq/v4 v4.43.1
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.14.3
@@ -75,7 +75,7 @@ require (
 	github.com/chai2010/gettext-go v1.0.2 // indirect
 	github.com/charithe/durationcheck v0.0.10 // indirect
 	github.com/chavacava/garif v0.1.0 // indirect
-	github.com/ckaznocha/intrange v0.1.0 // indirect
+	github.com/ckaznocha/intrange v0.1.1 // indirect
 	github.com/compose-spec/compose-go/v2 v2.0.0-rc.8 // indirect
 	github.com/containerd/console v1.0.4 // indirect
 	github.com/containerd/containerd v1.7.13 // indirect
@@ -176,7 +176,7 @@ require (
 	github.com/imdario/mergo v0.3.16 // indirect
 	github.com/in-toto/in-toto-golang v0.5.0 // indirect
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
-	github.com/jgautheron/goconst v1.7.0 // indirect
+	github.com/jgautheron/goconst v1.7.1 // indirect
 	github.com/jingyugao/rowserrcheck v1.1.1 // indirect
 	github.com/jinzhu/copier v0.4.0 // indirect
 	github.com/jirfag/go-printf-func-name v0.0.0-20200119135958-7558a9eaa5af // indirect
@@ -185,16 +185,16 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/julz/importas v0.1.0 // indirect
-	github.com/karamaru-alpha/copyloopvar v1.0.8 // indirect
+	github.com/karamaru-alpha/copyloopvar v1.0.10 // indirect
 	github.com/kisielk/errcheck v1.7.0 // indirect
-	github.com/kkHAIKE/contextcheck v1.1.4 // indirect
+	github.com/kkHAIKE/contextcheck v1.1.5 // indirect
 	github.com/klauspost/compress v1.17.4 // indirect
 	github.com/kulti/thelper v0.6.3 // indirect
 	github.com/kunwardeep/paralleltest v1.0.10 // indirect
 	github.com/kyoh86/exportloopref v0.1.11 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
-	github.com/ldez/gomoddirectives v0.2.3 // indirect
+	github.com/ldez/gomoddirectives v0.2.4 // indirect
 	github.com/ldez/tagliatelle v0.5.0 // indirect
 	github.com/leonklingele/grouper v1.1.1 // indirect
 	github.com/lib/pq v1.10.9 // indirect
@@ -238,7 +238,7 @@ require (
 	github.com/nakabonne/nestif v0.3.1 // indirect
 	github.com/nishanths/exhaustive v0.12.0 // indirect
 	github.com/nishanths/predeclared v0.2.2 // indirect
-	github.com/nunnatsa/ginkgolinter v0.16.1 // indirect
+	github.com/nunnatsa/ginkgolinter v0.16.2 // indirect
 	github.com/olekukonko/tablewriter v0.0.5 // indirect
 	github.com/opencontainers/go-digest v1.0.0 // indirect
 	github.com/opencontainers/image-spec v1.1.0-rc5 // indirect
