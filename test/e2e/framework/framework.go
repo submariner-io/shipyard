@@ -134,16 +134,16 @@ func AddBeforeSuite(beforeSuite func()) {
 }
 
 var (
-	By                func(string)
-	Fail              func(string)
+	By                func(string, ...func())
+	Fail              func(string, ...int)
 	userAgentFunction func() string
 )
 
-func SetStatusFunction(by func(string)) {
+func SetStatusFunction(by func(string, ...func())) {
 	By = by
 }
 
-func SetFailFunction(fail func(string)) {
+func SetFailFunction(fail func(string, ...int)) {
 	Fail = fail
 }
 
@@ -152,10 +152,14 @@ func SetUserAgentFunction(uaf func() string) {
 }
 
 func init() {
-	By = func(str string) {
+	By = func(str string, callbacks ...func()) {
 		fmt.Println(str)
+
+		for _, callback := range callbacks {
+			callback()
+		}
 	}
-	Fail = func(str string) {
+	Fail = func(str string, _ ...int) {
 		panic("Framework Fail:" + str)
 	}
 	userAgentFunction = func() string {

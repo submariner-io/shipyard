@@ -64,13 +64,9 @@ func init() {
 }
 
 func RunE2ETests(t *testing.T) bool {
-	framework.SetStatusFunction(func(text string) {
-		By(text)
-	})
+	framework.SetStatusFunction(By)
 
-	framework.SetFailFunction(func(text string) {
-		Fail(text)
-	})
+	framework.SetFailFunction(Fail)
 
 	framework.SetUserAgentFunction(func() string {
 		return fmt.Sprintf("%v -- %v", rest.DefaultKubernetesUserAgent(), CurrentSpecReport().FullText())
