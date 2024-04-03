@@ -22,7 +22,6 @@ package tcp
 import (
 	"fmt"
 
-	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	v1 "k8s.io/api/core/v1"
@@ -64,12 +63,12 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 	listenerPod.CheckSuccessfulFinish()
 	connectorPod.CheckSuccessfulFinish()
 
-	By("Verifying that the listener got the connector's data and the connector got the listener's data")
+	framework.By("Verifying that the listener got the connector's data and the connector got the listener's data")
 	Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Config.Data))
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring(listenerPod.Config.Data))
 
 	if p.Networking == framework.PodNetworking {
-		By("Verifying the output of listener pod which must contain the source IP")
+		framework.By("Verifying the output of listener pod which must contain the source IP")
 		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
 	}
 
@@ -88,11 +87,11 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 
 	listenerPod, connectorPod := createPods(&p)
 
-	By("Verifying that listener pod exits with non-zero code and timed out message")
+	framework.By("Verifying that listener pod exits with non-zero code and timed out message")
 	Expect(listenerPod.TerminationMessage).To(ContainSubstring("nc: timeout"))
 	Expect(listenerPod.TerminationCode).To(Equal(int32(1)))
 
-	By("Verifying that connector pod exists with zero code but times out")
+	framework.By("Verifying that connector pod exists with zero code but times out")
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring("Connection timed out"))
 	Expect(connectorPod.TerminationCode).To(Equal(int32(0)))
 
@@ -101,7 +100,7 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 }
 
 func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
-	By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP",
+	framework.By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP",
 		framework.TestContext.ClusterIDs[p.ToCluster]))
 
 	listenerPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
@@ -116,7 +115,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	var service *v1.Service
 
 	if p.ToEndpointType == ServiceIP {
-		By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
+		framework.By(fmt.Sprintf("Pointing a service ClusterIP to the listener pod in cluster %q",
 			framework.TestContext.ClusterIDs[p.ToCluster]))
 
 		service = listenerPod.CreateService()
@@ -125,7 +124,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	framework.Logf("Will send traffic to IP: %v", remoteIP)
 
-	By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
+	framework.By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
 		framework.TestContext.ClusterIDs[p.FromCluster]))
 
 	connectorPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
@@ -138,10 +137,10 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		Networking:         p.Networking,
 	})
 
-	By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
+	framework.By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
 	connectorPod.AwaitFinish()
 
-	By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
+	framework.By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
 	listenerPod.AwaitFinish()
 
 	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)
