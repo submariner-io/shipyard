@@ -22,7 +22,6 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/onsi/ginkgo/v2"
 	"github.com/submariner-io/shipyard/test/e2e/framework/ginkgowrapper"
 )
 
@@ -31,7 +30,7 @@ func nowStamp() string {
 }
 
 func log(level, format string, args ...interface{}) {
-	fmt.Fprintf(ginkgo.GinkgoWriter, nowStamp()+": "+level+": "+format+"\n", args...)
+	By(fmt.Sprintf(nowStamp()+": "+level+": "+format+"\n", args...))
 }
 
 func Errorf(format string, args ...interface{}) {
@@ -49,9 +48,7 @@ func Failf(format string, args ...interface{}) {
 // FailfWithOffset calls "Fail" and logs the error at "offset" levels above its caller
 // (for example, for call chain f -> g -> FailfWithOffset(1, ...) error would be logged for "f").
 func FailfWithOffset(offset int, format string, args ...interface{}) {
-	msg := fmt.Sprintf(format, args...)
-	log("INFO", msg)
-	ginkgowrapper.Fail(nowStamp()+": "+msg, 1+offset)
+	Fail(nowStamp()+": "+fmt.Sprintf(format, args...), 1+offset)
 }
 
 func Skipf(format string, args ...interface{}) {
