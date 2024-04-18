@@ -15,6 +15,10 @@ function provider_delete_cluster() {
     kind delete cluster --name="${cluster}"
 }
 
+function provider_delete_load_balancer() {
+    docker stop cloud-provider ||:
+}
+
 function provider_finalize {
     if registry_running; then
         echo "Stopping local KIND registry..."

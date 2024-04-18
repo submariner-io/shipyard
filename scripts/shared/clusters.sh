@@ -57,6 +57,8 @@ if ! wait $!; then
     exit_error "Failed to create clusters using ${PROVIDER@Q}."
 fi
 
+[[ "$LOAD_BALANCER" != true ]] || run_if_defined provider_deploy_load_balancer
+
 declare_kubeconfig
 run_if_defined provider_succeeded
 run_all_clusters deploy_cluster_capabilities

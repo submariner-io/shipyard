@@ -126,7 +126,6 @@ function provider_create_cluster() {
     kind create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
 
-    [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
     [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
@@ -154,30 +153,9 @@ function air_gap_iptables() {
     done
 }
 
-function deploy_load_balancer() {
-    local kind_ip start_ip end_ip net_addr
-    kind_ip=$(docker network inspect -f '{{.IPAM.Config}}' kind | awk '/.*/ { print $2 }')
-    start_ip=$(echo "$kind_ip" | cut -f1-2 -d'.')."${cluster_number[$cluster]}".100
-    end_ip=$(echo "$start_ip" | cut -f1-3 -d'.').250
-
-    kubectl apply -f "https://raw.githubusercontent.com/metallb/metallb/v${METALLB_VERSION}/config/manifests/metallb-native.yaml"
-    kubectl wait --for=condition=Ready pods -l app=metallb -n metallb-system --timeout="${TIMEOUT}"
-    kubectl apply -f - <<EOF
-apiVersion: metallb.io/v1beta1
-kind: IPAddressPool
-metadata:
-  name: submariner-pool
-  namespace: metallb-system
-spec:
-  addresses:
-  - ${start_ip}-${end_ip}
----
-apiVersion: metallb.io/v1beta1
-kind: L2Advertisement
-metadata:
-  name: submariner-l2
-  namespace: metallb-system
-EOF
+function provider_deploy_load_balancer() {
+    docker run --name cloud-provider -d --rm --network host -v /var/run/docker.sock:/var/run/docker.sock \
+           "${SHIPYARD_REPO:-quay.io/submariner}/shipyard-dapper-base:${SHIPYARD_TAG:-${BASE_BRANCH}}" /go/bin/cloud-provider-kind
 }
 
 function deploy_kind_ovn(){

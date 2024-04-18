@@ -11,31 +11,32 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
     SCRIPTS_DIR=${SHIPYARD_DIR}/scripts
 
 # Requirements:
-# Component          | Usage
-# -------------------------------------------------------------
-# curl               | download other tools
-# file               | file identification (in compile/test.sh)
-# findutils          | make unit (find unit test dirs)
-# gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
-# gh                 | backport, releases
-# git                | find the workspace root
-# golang             | build
-# golangci-lint      | code linting
-# helm               | e2e tests
-# jq                 | JSON processing (GitHub API)
-# kind               | e2e tests
-# kube-ps1           | print out kube context in dapper shell
-# kubectl            | e2e tests (in kubernetes-client)
-# make               | OLM installation
-# moby-engine        | Docker (for Dapper)
-# moreutils          | sponge (for system tests)
-# procps-ng          | watch (for installing ACM)
-# python3-jinja2-cli | Jinja2 template engine (used by OVN's kind setup script)
-# qemu-user-static   | Emulation (for multiarch builds)
-# skopeo             | container image manipulation
-# unzip              | ZIP extraction
-# upx                | binary compression
-# yq                 | YAML processing (OCM deploy tool)
+# Component           | Usage
+# --------------------------------------------------------------
+# curl                | download other tools
+# file                | file identification (in compile/test.sh)
+# findutils           | make unit (find unit test dirs)
+# gcc                 | needed by `go test -race` (https://github.com/golang/go/issues/27089)
+# gh                  | backport, releases
+# git                 | find the workspace root
+# golang              | build
+# golangci-lint       | code linting
+# helm                | e2e tests
+# jq                  | JSON processing (GitHub API)
+# kind                | e2e tests
+# cloud-provider-kind | e2e tests
+# kube-ps1            | print out kube context in dapper shell
+# kubectl             | e2e tests (in kubernetes-client)
+# make                | OLM installation
+# moby-engine         | Docker (for Dapper)
+# moreutils           | sponge (for system tests)
+# procps-ng           | watch (for installing ACM)
+# python3-jinja2-cli  | Jinja2 template engine (used by OVN's kind setup script)
+# qemu-user-static    | Emulation (for multiarch builds)
+# skopeo              | container image manipulation
+# unzip               | ZIP extraction
+# upx                 | binary compression
+# yq                  | YAML processing (OCM deploy tool)
 
 # This layer's versioning is handled by dnf, and isn't expected to be rebuilt much except in CI
 # Removals and UPX are done after all installations, since image layers are diffs.
@@ -64,6 +65,9 @@ RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
+    CPK_VERSION=$(awk '/cloud-provider-kind/ { print $2 }' /tools.mod) && \
+    GOFLAGS="" go install -v sigs.k8s.io/cloud-provider-kind/cmd@${CPK_VERSION} && \
+    mv /go/bin/cmd /go/bin/cloud-provider-kind && \
     YQ_VERSION=$(awk '/mikefarah.yq.v4/ { print $2 }' /tools.mod) && \
     GOFLAGS="" go install -v github.com/mikefarah/yq/v4@${YQ_VERSION} && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \

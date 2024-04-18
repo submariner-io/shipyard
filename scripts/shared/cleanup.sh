@@ -17,6 +17,7 @@ run_if_defined pre_cleanup
 provider_initialize
 
 run_all_clusters provider_delete_cluster
+run_if_defined provider_delete_load_balancer
 
 # Remove any files inside the output directory, but not any directories as a provider might be using them.
 \rm -f "${OUTPUT_DIR:?}"/* 2> /dev/null || true

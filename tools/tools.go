@@ -28,5 +28,6 @@ import (
 	_ "github.com/mikefarah/yq/v4"
 	_ "github.com/psampaz/go-mod-outdated"
 	_ "helm.sh/helm/v3/cmd/helm"
+	_ "sigs.k8s.io/cloud-provider-kind/cmd" // Drop /cmd when upgrading to v0.0.3
 	_ "sigs.k8s.io/kind/cmd/kind"
 )
