@@ -8,7 +8,7 @@ require (
 	github.com/mikefarah/yq/v4 v4.44.1
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.14.4
-	sigs.k8s.io/kind v0.22.0
+	sigs.k8s.io/kind v0.23.0
 )
 
 require (
