@@ -75,7 +75,7 @@ buildargs=(--build-arg "ORG=${ORG}" --build-arg "PROJECT=${PROJECT}")
 gitid="$(git symbolic-ref --short HEAD 2>/dev/null | tr / _ || :)"
 gitid="${gitid:-$(git show --format=%h -s)}"
 container="$(basename "$(pwd)"):${gitid}"
-DOCKER_BUILDKIT=1 docker build -t "${container}" -f "${file}" "${buildargs[@]}" .
+docker build -t "${container}" -f "${file}" "${buildargs[@]}" .
 
 extract_var() {
     docker inspect "$1" | grep "$2" | sed -E "s/.*\"$2=(.*)\",?/\1/;q"
