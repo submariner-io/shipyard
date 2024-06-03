@@ -5,7 +5,7 @@ on:
   workflow_dispatch:
   push:
     branches:
-      - devel
+      - release-0.18
       - release-*
 
 permissions: {}
