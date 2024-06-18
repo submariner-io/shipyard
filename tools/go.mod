@@ -3,7 +3,7 @@ module github.com/submariner-io/shipyard/tools
 go 1.22.0
 
 require (
-	github.com/docker/buildx v0.15.0
+	github.com/docker/buildx v0.15.1
 	github.com/golangci/golangci-lint v1.59.1
 	github.com/mikefarah/yq/v4 v4.44.2
 	github.com/psampaz/go-mod-outdated v0.9.0
@@ -219,7 +219,7 @@ require (
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mitchellh/reflectwalk v1.0.2 // indirect
-	github.com/moby/buildkit v0.14.0 // indirect
+	github.com/moby/buildkit v0.14.1 // indirect
 	github.com/moby/docker-image-spec v1.3.1 // indirect
 	github.com/moby/locker v1.0.1 // indirect
 	github.com/moby/patternmatcher v0.6.0 // indirect
