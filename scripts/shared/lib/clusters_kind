@@ -6,6 +6,15 @@
 ## Kubernetes version mapping, as supported by kind ##
 # See the release notes of the kind version in use
 declare -gA kind_k8s_versions
+# kind 0.17 hashes
+kind_k8s_versions[1.19]=1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7
+kind_k8s_versions[1.20]=1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394
+# kind 0.20.0 hashes
+kind_k8s_versions[1.21]=1.21.14@sha256:8a4e9bb3f415d2bb81629ce33ef9c76ba514c14d707f9797a01e3216376ba093
+kind_k8s_versions[1.22]=1.22.17@sha256:f5b2e5698c6c9d6d0adc419c0deae21a425c07d81bbf3b6a6834042f25d4fba2
+# kind 0.22.0 hashes
+kind_k8s_versions[1.23]=1.23.17@sha256:14d0a9a892b943866d7e6be119a06871291c517d279aedb816a4b4bc0ec0a5b3
+kind_k8s_versions[1.24]=1.24.17@sha256:bad10f9b98d54586cba05a7eaa1b61c6b90bfc4ee174fdc43a7b75ca75c95e51
 # kind 0.24.0 hashes
 kind_k8s_versions[1.25]=1.25.16@sha256:5da57dfc290ac3599e775e63b8b6c49c0c85d3fec771cd7d55b45fae14b38d3b
 kind_k8s_versions[1.26]=1.26.15@sha256:1cc15d7b1edd2126ef051e359bf864f37bbcf1568e61be4d2ed1df7a3e87b354
