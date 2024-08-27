@@ -96,7 +96,7 @@ func (d *Docker) RunCommandUntil(command ...string) (string, string) {
 
 		stdout, stderr, err = d.runCommand(command...)
 		return err
-	}, time.Duration(TestContext.OperationTimeout)*time.Second, 5*time.Second).Should(Succeed(),
+	}, TestContext.OperationTimeoutToDuration(), 5*time.Second).Should(Succeed(),
 		"Error attempting to run %v", append([]string{}, command...))
 
 	return stdout, stderr
