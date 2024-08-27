@@ -22,6 +22,7 @@ import (
 	"flag"
 	"os"
 	"strings"
+	"time"
 
 	"github.com/onsi/ginkgo/v2/types"
 	"k8s.io/apimachinery/pkg/runtime/schema"
@@ -86,4 +87,9 @@ func ValidateFlags(t *TestContextType) {
 	if len(t.KubeContexts) < 1 && len(t.KubeConfigs) < 1 {
 		klog.Fatalf("at least one kubernetes context must be specified.")
 	}
+}
+
+func (t *TestContextType) OperationTimeoutToDuration() time.Duration {
+	//nolint:gosec // Ignore G115: integer overflow conversion uint -> int64
+	return time.Duration(TestContext.OperationTimeout) * time.Second
 }

@@ -33,7 +33,7 @@ const (
 	TestAppLabel = "test-app"
 )
 
-func (f *Framework) NewService(name, portName string, port int, protocol corev1.Protocol, selector map[string]string,
+func (f *Framework) NewService(name, portName string, port int32, protocol corev1.Protocol, selector map[string]string,
 	isHeadless bool,
 ) *corev1.Service {
 	service := corev1.Service{
@@ -42,9 +42,9 @@ func (f *Framework) NewService(name, portName string, port int, protocol corev1.
 		},
 		Spec: corev1.ServiceSpec{
 			Ports: []corev1.ServicePort{{
-				Port:       int32(port),
+				Port:       port,
 				Name:       portName,
-				TargetPort: intstr.FromInt(port),
+				TargetPort: intstr.FromInt32(port),
 				Protocol:   protocol,
 			}},
 		},
@@ -62,7 +62,7 @@ func (f *Framework) NewService(name, portName string, port int, protocol corev1.
 	return &service
 }
 
-func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
+func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
 		map[string]string{TestAppLabel: selectorName}, false)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
@@ -70,7 +70,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 	return f.CreateService(sc, tcpService)
 }
 
-func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int) *corev1.Service {
+func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
 	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
 		map[string]string{TestAppLabel: selectorName}, true)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
@@ -121,7 +121,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 	return f.CreateService(sc, &nginxService)
 }
 
-func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int) *corev1.Service {
+func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int32) *corev1.Service {
 	serviceSpec := f.NewService(svcName, portName, port, corev1.ProtocolTCP, nil, false)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
