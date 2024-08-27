@@ -567,8 +567,7 @@ func AwaitUntil(opMsg string, doOperation DoOperationFunc, checkResult CheckResu
 func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult CheckResultFunc) (interface{}, string, error) {
 	var finalResult interface{}
 	var lastMsg string
-	err := wait.PollUntilContextTimeout(context.Background(), 500*time.Millisecond,
-		time.Duration(TestContext.OperationTimeout)*time.Second, true,
+	err := wait.PollUntilContextTimeout(context.Background(), 500*time.Millisecond, TestContext.OperationTimeoutToDuration(), true,
 		func(_ context.Context) (bool, error) {
 			result, err := doOperation()
 			if err != nil {

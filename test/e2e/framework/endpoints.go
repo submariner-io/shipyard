@@ -28,7 +28,7 @@ import (
 	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, address string, port int) *corev1.Endpoints {
+func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, address string, port int32) *corev1.Endpoints {
 	endpointsSpec := corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: epName,
@@ -41,7 +41,7 @@ func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, a
 				Ports: []corev1.EndpointPort{
 					{
 						Name:     portName,
-						Port:     int32(port),
+						Port:     port,
 						Protocol: corev1.ProtocolTCP,
 					},
 				},

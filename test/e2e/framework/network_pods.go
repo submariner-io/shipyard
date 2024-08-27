@@ -68,12 +68,12 @@ type NetworkPodConfig struct {
 	Type               NetworkPodType
 	Cluster            ClusterIndex
 	Scheduling         NetworkPodScheduling
-	Port               int
 	Data               string
 	NumOfDataBufs      uint
 	RemoteIP           string
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
+	Port               int32
 	Networking         NetworkingType
 	ContainerName      string
 	ImageName          string
@@ -281,10 +281,10 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
 					},
 					Env: []v1.EnvVar{
-						{Name: "LISTEN_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "LISTEN_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * np.Config.ConnectionAttempts))},
-						{Name: "BUFS_NUM", Value: strconv.Itoa(int(np.Config.NumOfDataBufs))},
+						{Name: "CONN_TIMEOUT", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout*np.Config.ConnectionAttempts), 10)},
+						{Name: "BUFS_NUM", Value: strconv.FormatUint(uint64(np.Config.NumOfDataBufs), 10)},
 					},
 					SecurityContext: podSecurityContext,
 				},
@@ -334,13 +334,13 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 							" fi; done >/dev/termination-log 2>&1",
 					},
 					Env: []v1.EnvVar{
-						{Name: "REMOTE_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "REMOTE_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
 						{Name: "SEND_STRING", Value: np.Config.Data},
 						{Name: "REMOTE_IP", Value: np.Config.RemoteIP},
-						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
-						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout / 2))},
-						{Name: "BUFS_NUM", Value: strconv.Itoa(int(np.Config.NumOfDataBufs))},
+						{Name: "CONN_TRIES", Value: strconv.FormatUint(uint64(np.Config.ConnectionAttempts), 10)},
+						{Name: "CONN_TIMEOUT", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout), 10)},
+						{Name: "RETRY_SLEEP", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout/2), 10)},
+						{Name: "BUFS_NUM", Value: strconv.FormatUint(uint64(np.Config.NumOfDataBufs), 10)},
 					},
 					SecurityContext: podSecurityContext,
 				},
@@ -384,10 +384,10 @@ func (np *NetworkPod) buildThroughputClientPod() {
 					},
 					Env: []v1.EnvVar{
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
-						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
-						{Name: "CONN_TRIES", Value: strconv.Itoa(int(np.Config.ConnectionAttempts))},
-						{Name: "RETRY_SLEEP", Value: strconv.Itoa(int(np.Config.ConnectionTimeout))},
-						{Name: "CONN_TIMEOUT", Value: strconv.Itoa(int(np.Config.ConnectionTimeout * 1000))},
+						{Name: "TARGET_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
+						{Name: "CONN_TRIES", Value: strconv.FormatUint(uint64(np.Config.ConnectionAttempts), 10)},
+						{Name: "RETRY_SLEEP", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout), 10)},
+						{Name: "CONN_TIMEOUT", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout*1000), 10)},
 					},
 					SecurityContext: podSecurityContext,
 				},
@@ -422,7 +422,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
 					Env: []v1.EnvVar{
-						{Name: "TARGET_PORT", Value: strconv.Itoa(np.Config.Port)},
+						{Name: "TARGET_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
 					},
 					SecurityContext: podSecurityContext,
 				},
