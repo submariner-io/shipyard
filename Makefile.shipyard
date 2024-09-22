@@ -44,7 +44,7 @@ endif
 USING = $(subst $(,), ,$(using))
 _using = ${USING}
 
-ifneq (,$(filter dual-stack,$(_using)))
+ifneq (,$(filter dual-stack ipv6-stack,$(_using)))
 IPV6_FLAGS = --ipv6 --subnet fc00:1234:4444::/64
 endif
 
