@@ -14,7 +14,7 @@ K8S_VERSION ?= 1.31
 METALLB_VERSION ?= 0.13.5
 OLM_VERSION ?= v0.18.3
 PROVIDER ?= kind
-export AIR_GAPPED DUAL_STACK K8S_VERSION LOAD_BALANCER METALLB_VERSION OLM OLM_VERSION OVERLAPPING PROMETHEUS PROVIDER
+export AIR_GAPPED DUAL_STACK IPV6_STACK K8S_VERSION LOAD_BALANCER METALLB_VERSION OLM OLM_VERSION OVERLAPPING PROMETHEUS PROVIDER
 
 ### PROCESSING `using=` ###
 
@@ -36,6 +36,10 @@ endif
 
 ifneq (,$(filter dual-stack,$(_using)))
 DUAL_STACK = true
+endif
+
+ifneq (,$(filter ipv6-stack,$(_using)))
+IPV6_STACK = true
 endif
 
 ifneq (,$(filter overlapping,$(_using)))
