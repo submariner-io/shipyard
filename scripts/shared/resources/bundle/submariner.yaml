@@ -8,6 +8,8 @@ spec:
   serviceCIDR: "${service_CIDRs[$cluster]}"
   clusterCIDR: "${cluster_CIDRs[$cluster]}"
   globalCIDR: "${global_CIDRs[$cluster]}"
+  clustersetIPEnabled: ${USE_CLUSTERSET_IP}
+  clustersetIPCIDR: "${clusterset_ip_CIDRs[$cluster]}"
   clusterID: "${cluster}"
   debug: false
   natEnabled: false

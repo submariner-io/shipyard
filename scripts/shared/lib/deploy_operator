@@ -29,6 +29,7 @@ function deploytool_prereqs() {
 function setup_broker() {
     local extra_flags=()
     [[ "${OVERLAPPING}" = true ]] && extra_flags+=(--globalnet)
+    [[ "${USE_CLUSTERSET_IP}" = true ]] && extra_flags+=(--enable-clusterset-ip)
     if [[ "${LIGHTHOUSE}" == true ]]; then
         extra_flags+=(--components 'service-discovery,connectivity')
     else

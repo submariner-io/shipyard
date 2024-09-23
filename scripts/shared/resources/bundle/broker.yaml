@@ -9,3 +9,4 @@ spec:
   defaultGlobalnetClusterSize: 8192
   globalnetEnabled: ${OVERLAPPING}
   globalnetCIDRRange: 169.254.0.0/16
+  clustersetIPEnabled: ${USE_CLUSTERSET_IP}
