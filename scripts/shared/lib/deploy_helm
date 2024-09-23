@@ -77,6 +77,8 @@ function helm_install_subm() {
         --set submariner.clusterCidr="${cluster_CIDRs[$cluster]}" \
         --set submariner.serviceCidr="${service_CIDRs[$cluster]}" \
         --set submariner.globalCidr="${global_CIDRs[$cluster]}" \
+        --set submariner.clustersetIpCidr="${clusterset_ip_CIDRs[$cluster]}" \
+        --set submariner.clustersetIpEnabled="${USE_CLUSTERSET_IP}" \
         --set serviceAccounts.globalnet.create="${OVERLAPPING}" \
         --set serviceAccounts.lighthouseAgent.create="${LIGHTHOUSE}" \
         --set serviceAccounts.lighthouseCoreDns.create="${LIGHTHOUSE}" \

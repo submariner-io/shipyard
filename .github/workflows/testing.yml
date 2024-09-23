@@ -129,6 +129,8 @@ jobs:
             extra-toggles: lighthouse
           - extra-toggles: load-balancer
           - extra-toggles: prometheus
+          - deploytool: operator
+            extra-toggles: lighthouse clusterset-ip
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ contains('ovn', matrix.extra-toggles) }}

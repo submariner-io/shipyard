@@ -3,7 +3,7 @@
 set -em
 
 source "${SCRIPTS_DIR}/lib/utils"
-print_env CABLE_DRIVER DEPLOYTOOL OVERLAPPING IMAGE_TAG LIGHTHOUSE PARALLEL PLUGIN PRELOAD_IMAGES SETTINGS TIMEOUT
+print_env CABLE_DRIVER DEPLOYTOOL OVERLAPPING IMAGE_TAG LIGHTHOUSE PARALLEL PLUGIN PRELOAD_IMAGES SETTINGS TIMEOUT USE_CLUSTERSET_IP
 source "${SCRIPTS_DIR}/lib/debug_functions"
 source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
@@ -108,6 +108,15 @@ function declare_global_cidrs() {
   done
 }
 
+function declare_clusterset_ip_cidrs() {
+  declare -gA clusterset_ip_CIDRs
+
+    for cluster in "${clusters[@]}"; do
+      # shellcheck disable=SC2034
+      clusterset_ip_CIDRs[$cluster]="243.254.${cluster_number[$cluster]}.0/24"
+    done
+}
+
 # This is a workaround and can be removed once we switch the CNI from kindnet to a different one.
 # In order to support health-check and hostNetwork use-cases, submariner requires an IPaddress from the podCIDR
 # for each node in the cluster. Normally, most of the CNIs create a cniInterface on the host and assign an IP
@@ -132,6 +141,7 @@ function schedule_dummy_pod() {
 load_settings
 declare_cidrs
 [[ "$OVERLAPPING" != "true" ]] || declare_global_cidrs
+[[ "$USE_CLUSTERSET_IP" != "true" ]] || declare_clusterset_ip_cidrs
 declare_kubeconfig
 
 # Always import nettest image on kind, to be able to test connectivity and other things

@@ -9,7 +9,7 @@ DEBUG_PRINT ?= true
 PARALLEL ?= true
 PROVIDER ?= kind
 TIMEOUT ?= 5m
-export AIR_GAPPED DEBUG_PRINT OVERLAPPING PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT
+export AIR_GAPPED DEBUG_PRINT OVERLAPPING PARALLEL PLUGIN PRELOAD_IMAGES PROVIDER SETTINGS TEST_ARGS TIMEOUT USE_CLUSTERSET_IP
 
 # Specific to `deploy`
 CABLE_DRIVER ?= libreswan
@@ -96,6 +96,10 @@ ifneq (,$(filter ocm,$(_using)))
 OLM = true
 DEPLOYTOOL = ocm
 LIGHTHOUSE = true
+endif
+
+ifneq (,$(filter clusterset-ip,$(_using)))
+USE_CLUSTERSET_IP = true
 endif
 
 # Force running E2E with `subctl verify`
