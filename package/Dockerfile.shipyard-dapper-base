@@ -1,4 +1,4 @@
-FROM fedora:40
+FROM fedora:41
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -45,7 +45,8 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
                    findutils moreutils upx jq gitlint procps-ng pip \
-                   qemu-user-static python3-jinja2-cli skopeo file unzip gh yq && \
+                   qemu-user-static-aarch64 qemu-user-static-x86 \
+                   python3-jinja2-cli skopeo file unzip gh yq && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
