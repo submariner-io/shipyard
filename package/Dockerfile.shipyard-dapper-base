@@ -1,4 +1,4 @@
-FROM fedora:40
+FROM fedora:41
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -44,8 +44,9 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - Any unnecessary packages and executables
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils moreutils upx jq gitlint procps-ng pip\
-                   qemu-user-static python3-jinja2-cli skopeo file unzip gh && \
+                   findutils moreutils upx jq gitlint procps-ng pip \
+                   qemu-user-static-aarch64 qemu-user-static-x86 \
+                   python3-jinja2-cli skopeo file unzip gh yq && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
@@ -64,8 +65,6 @@ RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
     mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
-    YQ_VERSION=$(awk '/mikefarah.yq.v4/ { print $2 }' /tools.mod) && \
-    GOFLAGS="" go install -v github.com/mikefarah/yq/v4@${YQ_VERSION} && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \
     BUILDX_VERSION=$(awk '/docker.buildx/ { print $2 }' /tools.mod) && \
     curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
