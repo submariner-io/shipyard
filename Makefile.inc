@@ -214,6 +214,11 @@ post-mortem:
 unit:
 	$(SCRIPTS_DIR)/unit_test.sh
 
+# [check-non-release-versions] checks that Submariner dependencies referencing
+# hashes point to commits present on the relevant branch
+check-non-release-versions:
+	$(SCRIPTS_DIR)/check-non-release-versions.sh
+
 CODEOWNERS: CODEOWNERS.in
 	$(SCRIPTS_DIR)/gen-codeowners
 
