@@ -32,7 +32,7 @@ jobs:
             k8s_version: '1.26'
     steps:
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -41,7 +41,7 @@ jobs:
       # Check out Shipyard as a sub directory of the project, so that `go replace` can work.
       # As it's all run inside an ephemeral container, this way guarantees the Shipyard bits will be readily available for `go replace`.
       - name: Check out the Shipyard repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           path: shipyard
 
@@ -83,13 +83,13 @@ jobs:
         ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
@@ -138,13 +138,13 @@ jobs:
         ]
     steps:
       - name: Check out the Shipyard repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
 
       - name: Build the latest Shipyard image
         run: make images
 
       - name: Check out the ${{ matrix.project }} repository
-        uses: actions/checkout@d632683dd7b4114ad314bca15554477dd762a938
+        uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
         with:
           # This is replaced to stable branch by auto release process
           ref: devel
