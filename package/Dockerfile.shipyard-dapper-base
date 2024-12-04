@@ -18,20 +18,17 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # findutils          | make unit (find unit test dirs)
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # gh                 | backport, releases
-# git                | find the workspace root
+# git-core           | find the workspace root, git clones
 # golang             | build
-# golangci-lint      | code linting
-# helm               | e2e tests
 # jq                 | JSON processing (GitHub API)
-# kind               | e2e tests
-# kube-ps1           | print out kube context in dapper shell
-# kubectl            | e2e tests (in kubernetes-client)
-# make               | OLM installation
+# kubernetes-client  | kubectl, used in e2e tests
+# make               | builds
 # moby-engine        | Docker (for Dapper)
 # moreutils          | sponge (for system tests)
+# pip                | Python package installation
 # procps-ng          | watch (for installing ACM)
 # python3-jinja2-cli | Jinja2 template engine (used by OVN's kind setup script)
-# qemu-user-static   | Emulation (for multiarch builds)
+# qemu-user-static-* | Emulation (for multiarch builds)
 # skopeo             | container image manipulation
 # unzip              | ZIP extraction
 # upx                | binary compression
@@ -43,10 +40,27 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - DNF cache
 # - Any unnecessary packages and executables
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
-                   gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils moreutils upx jq gitlint procps-ng pip \
+                   curl \
+                   file \
+                   findutils \
+                   gcc \
+                   gh \
+                   git-core \
+                   gitlint \
+                   golang \
+                   jq \
+                   kubernetes-client \
+                   make \
+                   moby-engine \
+                   moreutils \
+                   pip \
+                   procps-ng \
+                   python3-jinja2-cli \
                    qemu-user-static-aarch64 qemu-user-static-x86 \
-                   python3-jinja2-cli skopeo file unzip gh yq && \
+                   skopeo \
+                   unzip \
+                   upx \
+                   yq && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
