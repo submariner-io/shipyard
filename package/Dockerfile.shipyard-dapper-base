@@ -27,6 +27,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # moreutils          | sponge (for system tests)
 # pip                | Python package installation
 # procps-ng          | watch (for installing ACM)
+# protobuf-compiler  | protobuf compilation
 # python3-jinja2-cli | Jinja2 template engine (used by OVN's kind setup script)
 # qemu-user-static-* | Emulation (for multiarch builds)
 # skopeo             | container image manipulation
@@ -55,6 +56,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    moreutils \
                    pip \
                    procps-ng \
+                   protobuf-compiler \
                    python3-jinja2-cli \
                    qemu-user-static-aarch64 qemu-user-static-x86 \
                    skopeo \
