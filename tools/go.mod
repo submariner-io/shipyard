@@ -3,7 +3,7 @@ module github.com/submariner-io/shipyard/tools
 go 1.22.1
 
 require (
-	github.com/docker/buildx v0.19.1
+	github.com/docker/buildx v0.19.2
 	github.com/golangci/golangci-lint v1.62.2
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.16.3
