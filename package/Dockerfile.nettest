@@ -1,32 +1,20 @@
-FROM alpine
+ARG FEDORA_VERSION=41
 
-WORKDIR /app
+FROM --platform=${BUILDPLATFORM} fedora:${FEDORA_VERSION} AS base
+ARG FEDORA_VERSION
+ARG TARGETPLATFORM
 
-RUN apk add --update --no-cache gcc libc-dev make git automake autoconf
+COPY scripts/shared/dnf_install /
 
-RUN git clone --depth 1 https://github.com/HewlettPackard/netperf \
-    && git -C netperf reset --hard 3bc455b23f901dae377ca0a558e1e32aa56b31c4
-RUN cd netperf \
-    && ./autogen.sh \
-    && ./configure CFLAGS=-fcommon \
-    && make -C src && make -C src install
+RUN /dnf_install -a ${TARGETPLATFORM} -v ${FEDORA_VERSION} -r /output/nettest \
+    glibc bash glibc-minimal-langpack coreutils-single libcurl-minimal \
+    bind-utils curl-minimal iperf3 iputils netperf nmap-ncat tcpdump
 
+FROM scratch
+ARG TARGETPLATFORM
 
-FROM alpine
+COPY --from=base /output/nettest /
 
-WORKDIR /app
-
-ARG VERSION
-
-RUN apk add --no-cache \
-	bash \
-	bind-tools \
-	curl \
-	iputils \
-	iperf3 \
-	tcpdump
-
-COPY --from=0 /usr/local/bin/net* /usr/local/bin/
 COPY scripts/nettest/* /app/
 
 RUN echo ${VERSION} >> /app/version

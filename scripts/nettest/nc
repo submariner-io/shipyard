@@ -1,0 +1,50 @@
+#!/bin/bash
+
+# This wrapper converts Busybox syntax to nmap ncat:
+# * -e becomes -c
+# * -w and -i need a s suffix on their argument
+# * with -l, -p XX and -s YY become YY XX
+
+args=()
+listening=
+sourceport=
+sourceaddress=
+while [ -n "$1" ] && [ "$1" != "-e" ]; do
+    case "$1" in
+        -w|-i)
+            args+=("$1" "$2"s)
+            shift 2;;
+        -l|-lk)
+            listening=1
+            args+=("$1")
+            shift;;
+        -p)
+            sourceport="$2"
+            shift 2;;
+        -s)
+            sourceaddress="$2"
+            shift 2;;
+        *)
+            args+=("$1")
+            shift;;
+    esac
+done
+
+if [ -n "$listening" ]; then
+    args+=(-l ${sourceaddress:+"$sourceaddress"} ${sourceport:+"$sourceport"})
+else
+    if [ -n "$sourceaddress" ]; then
+        args+=(-s "$sourceaddress")
+    fi
+    if [ -n "$sourceport" ]; then
+        args+=(-p "$sourceport")
+    fi
+fi
+
+cmd=""
+if [ "$1" = "-e" ]; then
+    shift
+    cmd="$*"
+fi
+
+exec /usr/bin/ncat "${args[@]}" ${cmd:+"-c $cmd"}
