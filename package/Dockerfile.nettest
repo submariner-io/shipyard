@@ -12,6 +12,7 @@ RUN /dnf_install -a ${TARGETPLATFORM} -v ${FEDORA_VERSION} -r /output/nettest \
 
 FROM scratch
 ARG TARGETPLATFORM
+ENV PATH="/app:$PATH"
 
 COPY --from=base /output/nettest /
 
