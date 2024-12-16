@@ -35,12 +35,12 @@ override PRELOAD_IMAGES=nettest $(EXTRA_PRELOAD_IMAGES)
 endif
 
 # Prevent rebuilding images inside dapper since they're already built outside it in Shipyard's case
-package/.image.nettest package/.image.shipyard-dapper-base: ;
+package/.image.shipyard-dapper-base: ;
 
 # Project-specific targets go here
 deploy: package/.image.nettest
 
-e2e: clusters
+e2e: clusters package/.image.nettest
 
 else
 
