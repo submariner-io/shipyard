@@ -278,7 +278,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 						"for i in $(seq 1 $BUFS_NUM);" +
 							" do echo [dataplane] listener says $SEND_STRING;" +
 							" done" +
-							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
+							" | nc -w ${CONN_TIMEOUT}s -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
 					},
 					Env: []v1.EnvVar{
 						{Name: "LISTEN_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
@@ -328,7 +328,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 						"for in in $(seq 1 $BUFS_NUM);" +
 							" do echo [dataplane] connector says $SEND_STRING; done" +
 							" | for i in $(seq $CONN_TRIES);" +
-							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
+							" do if nc -v $REMOTE_IP $REMOTE_PORT -w ${CONN_TIMEOUT}s;" +
 							" then break;" +
 							" else sleep $RETRY_SLEEP;" +
 							" fi; done >/dev/termination-log 2>&1",
