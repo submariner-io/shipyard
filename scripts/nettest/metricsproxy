@@ -1,4 +1,4 @@
 #!/bin/sh
 
 # Arguments: source-port target-IP target-port
-exec /usr/bin/nc -v -lk -p "$1" -e nc "$2" "$3"
+exec /usr/bin/ncat -v -lk -p "$1" -c "/usr/bin/ncat $2 $3"
