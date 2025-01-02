@@ -10,7 +10,7 @@ TIMEOUT ?= 5m
 export PARALLEL SETTINGS TIMEOUT
 
 # Flags affecting `make clusters`
-K8S_VERSION ?= 1.31
+K8S_VERSION ?= 1.32
 METALLB_VERSION ?= 0.13.5
 OLM_VERSION ?= v0.18.3
 PROVIDER ?= kind

@@ -21,7 +21,7 @@ jobs:
         project: ['admiral', 'lighthouse', 'subctl', 'submariner', 'submariner-operator']
         cabledriver: ['libreswan']
         # Run most tests against the latest K8s version
-        k8s_version: ['1.31']
+        k8s_version: ['1.32']
         include:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner
