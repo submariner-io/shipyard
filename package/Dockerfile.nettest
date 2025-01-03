@@ -1,6 +1,7 @@
 ARG FEDORA_VERSION=41
 
 FROM --platform=${BUILDPLATFORM} fedora:${FEDORA_VERSION} AS base
+ARG VERSION
 ARG FEDORA_VERSION
 ARG TARGETPLATFORM
 
@@ -12,6 +13,7 @@ RUN /dnf_install -a ${TARGETPLATFORM} -v ${FEDORA_VERSION} -r /output/nettest \
 
 FROM scratch
 ARG TARGETPLATFORM
+ARG VERSION
 ENV PATH="/app:$PATH"
 
 COPY --from=base /output/nettest /
