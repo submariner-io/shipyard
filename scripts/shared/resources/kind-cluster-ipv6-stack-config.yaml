@@ -8,8 +8,8 @@ networking:
   ipFamily: ipv6
 containerdConfigPatches:
   - |-
-    [plugins.\"io.containerd.grpc.v1.cri\".registry.mirrors.\"localhost:5000\"]
-      endpoint = [\"http://kind-registry:5000\"]
+    [plugins.\"io.containerd.grpc.v1.cri\".registry]
+      config_path = \"/etc/containerd/certs.d\"
 kubeadmConfigPatches:
   - |
     apiVersion: kubeadm.k8s.io/v1beta2

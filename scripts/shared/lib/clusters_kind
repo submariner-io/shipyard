@@ -139,6 +139,7 @@ function provider_create_cluster() {
     cat "${RESOURCES_DIR}/${cluster}-config.yaml"
     kind create cluster ${image_flag:+"$image_flag"} --name="${cluster}" --config="${RESOURCES_DIR}/${cluster}-config.yaml"
     kind_fixup_config
+    kind_configure_registry "${cluster}"
 
     [[ "$LOAD_BALANCER" != true ]] || delete_cluster_on_fail deploy_load_balancer
     [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
@@ -230,6 +231,28 @@ function run_local_registry() {
             docker push "${image}" || echo "Failed to push ${image@Q} to registry."
         done
     fi
+}
+
+function kind_configure_registry() {
+    local cluster="$1"
+    REGISTRY_DIR="/etc/containerd/certs.d/localhost:5000"
+    for node in $(kind --name="${cluster}" get nodes); do
+        docker exec "${node}" mkdir -p "${REGISTRY_DIR}"
+        docker exec -i "${node}" cp /dev/stdin "${REGISTRY_DIR}/hosts.toml" <<EOF
+[host."http://${KIND_REGISTRY}:5000"]
+EOF
+    done
+    kubectl apply -f - <<EOF
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: local-registry-hosting
+  namespace: kube-public
+data:
+  localRegistryHosting.v1: |
+    host: "localhost:5000"
+    help: "https://kind.sigs.k8s.io/docs/user/local-registry/"
+EOF
 }
 
 function provider_failed() {
