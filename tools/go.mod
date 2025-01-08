@@ -4,7 +4,7 @@ go 1.22.1
 
 require (
 	github.com/docker/buildx v0.19.3
-	github.com/golangci/golangci-lint v1.63.2
+	github.com/golangci/golangci-lint v1.63.4
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.16.4
 	sigs.k8s.io/kind v0.26.0
@@ -192,11 +192,11 @@ require (
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect
 	github.com/lasiar/canonicalheader v1.1.2 // indirect
-	github.com/ldez/exptostd v0.3.0 // indirect
+	github.com/ldez/exptostd v0.3.1 // indirect
 	github.com/ldez/gomoddirectives v0.6.0 // indirect
 	github.com/ldez/grignotin v0.7.0 // indirect
 	github.com/ldez/tagliatelle v0.7.1 // indirect
-	github.com/ldez/usetesting v0.4.1 // indirect
+	github.com/ldez/usetesting v0.4.2 // indirect
 	github.com/leonklingele/grouper v1.1.2 // indirect
 	github.com/lib/pq v1.10.9 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
