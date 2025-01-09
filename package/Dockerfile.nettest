@@ -16,6 +16,8 @@ ARG TARGETPLATFORM
 ARG VERSION
 ENV PATH="/app:$PATH"
 
+WORKDIR /app
+
 COPY --from=base /output/nettest /
 
 COPY scripts/nettest/* /app/
