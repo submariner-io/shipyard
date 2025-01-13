@@ -173,3 +173,16 @@ run_if_defined post_deploy
 # Print installed versions for manual validation of CI
 subctl show versions
 print_clusters_message
+
+# If there are any local components, check that the deployed versions are the newly-built versions
+if [ -n "$LOCAL_COMPONENTS" ]; then
+    for component in $LOCAL_COMPONENTS; do
+        for version in $(subctl show versions | awk "/$component/ { print \$4 }"); do
+            # shellcheck disable=SC2153 # VERSION is provided externally
+            if [ "$version" != "$VERSION" ]; then
+                printf "Expected version %s of component %s, but got %s.\n" "$VERSION" "$component" "$version"
+                exit 1
+            fi
+        done
+    done
+fi

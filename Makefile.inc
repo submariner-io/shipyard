@@ -191,7 +191,7 @@ upgrade-e2e: deploy-latest deploy e2e
 # This uses make deploy, but forcefully ignores images so that images
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
-	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl using=$(using)
+	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl LOCAL_COMPONENTS= using=$(using)
 
 ##### MISC TARGETS #####
 .PHONY: backport post-mortem unit
