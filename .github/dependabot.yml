@@ -45,6 +45,15 @@ updates:
       github-actions:
         patterns:
           - "*"
+  - package-ecosystem: github-actions
+    directory: '/'
+    target-branch: "release-0.19"
+    schedule:
+      interval: monthly
+    groups:
+      github-actions:
+        patterns:
+          - "*"
   - package-ecosystem: gomod
     target-branch: "release-0.14"
     directory: "/"
@@ -125,6 +134,22 @@ updates:
       # 0.18 tracks the 0.30 branch
       - dependency-name: k8s.io/*
         versions: ">= 0.31.0-alpha.0"
+  - package-ecosystem: gomod
+    target-branch: "release-0.19"
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      gomod:
+        patterns:
+          - "*"
+    allow:
+      # Pick up k8s.io updates
+      - dependency-name: k8s.io/client-go
+    ignore:
+      # 0.19 tracks the 0.31 branch
+      - dependency-name: k8s.io/*
+        versions: ">= 0.32.0-alpha.0"
   - package-ecosystem: gomod
     directory: "/"
     schedule:
