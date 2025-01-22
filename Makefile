@@ -1,7 +1,7 @@
 BASE_BRANCH ?= devel
 OCM_BASE_BRANCH ?= main
 IMAGES ?= shipyard-dapper-base shipyard-linting nettest
-MULTIARCH_IMAGES ?= nettest
+MULTIARCH_IMAGES ?= $(IMAGES)
 EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 PLATFORMS ?= linux/amd64,linux/arm64
 NON_DAPPER_GOALS += images multiarch-images
