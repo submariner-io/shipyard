@@ -4,7 +4,7 @@ go 1.22.1
 toolchain go1.23.5
 
 require (
-	github.com/docker/buildx v0.20.0
+	github.com/docker/buildx v0.20.1
 	github.com/golangci/golangci-lint v1.63.4
 	github.com/psampaz/go-mod-outdated v0.9.0
 	helm.sh/helm/v3 v3.17.0
