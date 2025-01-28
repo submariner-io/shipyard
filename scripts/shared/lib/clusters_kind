@@ -268,20 +268,11 @@ function provider_failed() {
 
 function prepare_ovn() {
     export OVN_IMAGE="localhost:5000/ovn-daemonset-f:latest"
-
-    rm -rf ovn-kubernetes
-    git clone https://github.com/ovn-org/ovn-kubernetes
-    pushd ovn-kubernetes || exit
-
-    # When updating commit, Update the OVN_SRC_IMAGE to the corressponding commit
-    git checkout 24b0ae73a996e409bfefad7b90cb42224e34be54
     local OVN_SRC_IMAGE="ghcr.io/ovn-org/ovn-kubernetes/ovn-kube-u:master@sha256:ba102783d520f0474e5c7dd5f2a0a1dce0ec2bda6cd42ac547621892e57c25e2"
 
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
     docker push "${OVN_IMAGE}"
-
-    popd || exit
 }
 
 function provider_prepare() {
