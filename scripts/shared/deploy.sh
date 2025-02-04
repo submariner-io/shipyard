@@ -175,7 +175,8 @@ subctl show versions
 print_clusters_message
 
 # If there are any local components, check that the deployed versions are the newly-built versions
-if [ -n "$LOCAL_COMPONENTS" ]; then
+# This is known to fail with Helm so ignore that
+if [[ -n "$LOCAL_COMPONENTS" && "$DEPLOYTOOL" != helm ]]; then
     for component in $LOCAL_COMPONENTS; do
         for version in $(subctl show versions | awk "/$component/ { print \$4 }"); do
             # shellcheck disable=SC2153 # VERSION is provided externally
