@@ -236,7 +236,11 @@ function load_settings() {
 
     # Default kubeproxy mode
     local kube_proxy_mode
-    kube_proxy_mode=iptables
+    if [[ "$NFTABLES" == true ]]; then
+        kube_proxy_mode=nftables
+    else
+        kube_proxy_mode=iptables
+    fi
 
     # Determine per cluster settings, default to global if not defined
     local cluster
