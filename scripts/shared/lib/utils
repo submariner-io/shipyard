@@ -239,8 +239,7 @@ function load_settings() {
     for cluster in "${clusters[@]}"; do
         cluster_cni["${cluster}"]=$(_yq ".clusters.${cluster}.cni // .cni")
         cluster_nodes["${cluster}"]=$(_yq ".clusters.${cluster}.nodes // .nodes")
-        cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner")
-        cluster_subm["${cluster}"]=$(_yq ".submariner")
+        cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner // .submariner")
         cluster_gateways["${cluster}"]=$(_yq ".clusters.${cluster}.gateways // .gateways")
         cluster_custom_config["${cluster}"]=$(_yq ".clusters.${cluster}.customConfig // .customConfig")
     done
