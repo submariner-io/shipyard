@@ -31,7 +31,7 @@ kind_k8s_versions[1.32]=1.32.0@sha256:c48c62eac5da28cdadcf560d1d8616cfa6783b58f0
 
 function generate_cluster_yaml() {
     # These are used by render_template
-    local pod_cidr pod_cidr_ipv6 service_cidr service_cidr_ipv6 dns_domain disable_cni
+    local pod_cidr pod_cidr_ipv6 service_cidr service_cidr_ipv6 dns_domain disable_cni kube_proxy_mode
     pod_cidr="${cluster_CIDRs[${cluster}]}"
 
     service_cidr="${service_CIDRs[${cluster}]}"
@@ -39,6 +39,8 @@ function generate_cluster_yaml() {
     dns_domain="${cluster}.local"
     disable_cni="false"
     [[ -z "${cluster_cni[$cluster]}" ]] || disable_cni="true"
+
+    kube_proxy_mode="${cluster_kube_proxy_mode[${cluster}]}"
 
     local nodes
     for node in ${cluster_nodes[${cluster}]}; do nodes="${nodes}"$'\n'"- role: $node"; done

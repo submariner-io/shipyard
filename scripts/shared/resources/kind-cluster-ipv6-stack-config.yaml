@@ -5,6 +5,7 @@ networking:
   disableDefaultCNI: ${disable_cni}
   podSubnet: ${pod_cidr_ipv6}
   serviceSubnet: ${service_cidr_ipv6}
+  kubeProxyMode: ${kube_proxy_mode}
   ipFamily: ipv6
 containerdConfigPatches:
   - |-

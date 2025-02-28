@@ -220,7 +220,7 @@ function load_settings() {
     local DEBUG_PRINT=false
     expect_env SETTINGS "Deployment settings file"
     declare -ga clusters
-    declare -gA cluster_cni cluster_nodes cluster_subm cluster_gateways cluster_custom_config
+    declare -gA cluster_cni cluster_nodes cluster_subm cluster_gateways cluster_custom_config cluster_kube_proxy_mode
 
     local cluster_count
     cluster_count=$(_yq ".cluster-count")
@@ -234,6 +234,10 @@ function load_settings() {
         broker=$(_yq ".clusters[] | select(. | has(\"broker\")) | path | .[-1] // \"${clusters[0]}\"")
     fi
 
+    # Default kubeproxy mode
+    local kube_proxy_mode
+    kube_proxy_mode=iptables
+
     # Determine per cluster settings, default to global if not defined
     local cluster
     for cluster in "${clusters[@]}"; do
@@ -242,6 +246,7 @@ function load_settings() {
         cluster_subm["${cluster}"]=$(_yq ".clusters.${cluster}.submariner // .submariner")
         cluster_gateways["${cluster}"]=$(_yq ".clusters.${cluster}.gateways // .gateways")
         cluster_custom_config["${cluster}"]=$(_yq ".clusters.${cluster}.customConfig // .customConfig")
+        cluster_kube_proxy_mode["${cluster}"]=$(_yq ".clusters.${cluster}.kubeProxyMode // .kubeProxyMode // \"${kube_proxy_mode}\"")
     done
 
     cat << EOM
@@ -253,6 +258,7 @@ Cluster settings::
   install submariner - $(typeset -p cluster_subm | cut -f 2- -d=)
   label cluster gateways - $(typeset -p cluster_gateways | cut -f 2- -d=)
   custom configuration - $(typeset -p cluster_custom_config | cut -f 2- -d=)
+  kubeproxy mode - $(typeset -p cluster_kube_proxy_mode | cut -f 2- -d=)
 EOM
 }
 
