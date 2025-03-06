@@ -136,7 +136,7 @@ func pruneStack(skip int) string {
 	var prunedStack []string
 
 	// skip the top of the stack
-	for i := 0; i < 2*skip+1; i++ {
+	for range 2*skip + 1 {
 		scanner.Scan()
 	}
 
