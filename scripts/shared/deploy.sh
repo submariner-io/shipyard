@@ -136,6 +136,18 @@ function schedule_dummy_pod() {
     deploy_resource "${RESOURCES_DIR}"/dummypod.yaml "$ns"
 }
 
+function deploy_subm_global_cm() {
+    local ns="submariner-operator"
+    source "${SCRIPTS_DIR}"/lib/deploy_funcs
+
+    echo "Creating the ${ns} namespace..."
+    kubectl create namespace "${ns}" || :
+    echo Setting up submariner global configmap...
+    NFTABLES="${NFTABLES:-false}"
+    deploy_resource "${RESOURCES_DIR}"/sm-global-cm.yaml "$ns"
+}
+
+
 ### Main ###
 
 load_settings
@@ -153,7 +165,7 @@ declare_kubeconfig
 load_library deploy DEPLOYTOOL
 deploytool_prereqs
 [[ "$PROVIDER" != kind ]] || run_all_clusters schedule_dummy_pod
-
+run_all_clusters deploy_subm_global_cm
 run_if_defined pre_deploy
 
 with_context "$broker" setup_broker

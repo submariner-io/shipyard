@@ -1,0 +1,8 @@
+---
+apiVersion: v1
+data:
+  use-nftables: \"${NFTABLES}\"
+kind: ConfigMap
+metadata:
+  name: submariner-global
+  namespace: ${ns}
