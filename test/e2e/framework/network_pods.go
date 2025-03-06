@@ -325,7 +325,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Command: []string{
 						"sh",
 						"-c",
-						"for in in $(seq 1 $BUFS_NUM);" +
+						"for i in $(seq $BUFS_NUM);" +
 							" do echo [dataplane] connector says $SEND_STRING; done" +
 							" | for i in $(seq $CONN_TRIES);" +
 							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
