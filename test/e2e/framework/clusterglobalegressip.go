@@ -43,7 +43,7 @@ func (f *Framework) AwaitClusterGlobalEgressIPs(cluster ClusterIndex, name strin
 }
 
 func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []string {
-	obj := AwaitUntil(fmt.Sprintf("await allocated egress IPs for %s", name),
+	obj := AwaitUntil("await allocated egress IPs for "+name,
 		func() (interface{}, error) {
 			resGip, err := client.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
