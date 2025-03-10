@@ -63,7 +63,7 @@ func (f *Framework) NewService(name, portName string, port int32, protocol corev
 }
 
 func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
-	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
+	tcpService := f.NewService("test-svc-"+selectorName, "tcp", port, corev1.ProtocolTCP,
 		map[string]string{TestAppLabel: selectorName}, false)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
@@ -71,7 +71,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 }
 
 func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
-	tcpService := f.NewService(fmt.Sprintf("test-svc-%s", selectorName), "tcp", port, corev1.ProtocolTCP,
+	tcpService := f.NewService("test-svc"+selectorName, "tcp", port, corev1.ProtocolTCP,
 		map[string]string{TestAppLabel: selectorName}, true)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
