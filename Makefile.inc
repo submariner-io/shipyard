@@ -176,6 +176,10 @@ cloud-prepare:
 deploy: clusters cloud-prepare
 	$(SCRIPTS_DIR)/$@.sh
 
+# [demo] deploys Submariner on kind clusters and leaves netshoot and "nginx" pods running
+demo: export DEMO=true
+demo: deploy
+
 # [e2e] executes the project's end to end testing on the deployed KIND clusters
 # Will call `deploy` if it detects no submariner running on a cluster
 e2e:

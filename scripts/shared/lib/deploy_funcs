@@ -63,11 +63,24 @@ function test_connection() {
     echo "Connection test was successful!"
 }
 
+function deploy_demo() {
+    local target_cluster
+    target_cluster="$1"
+    deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
+    with_context "$target_cluster" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+}
+
+function clean_demo() {
+    local target_cluster
+    target_cluster="$1"
+    remove_resource "${RESOURCES_DIR}/netshoot.yaml"
+    with_context "$target_cluster" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+}
+
 function connectivity_tests() {
     target_cluster="$1"
 
-    deploy_resource "${RESOURCES_DIR}/netshoot.yaml"
-    with_context "$target_cluster" deploy_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+    deploy_demo "$target_cluster"
 
     local netshoot_pod
     netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
@@ -76,8 +89,7 @@ function connectivity_tests() {
 
     with_retries 10 sleep_on_fail 10s test_connection "$netshoot_pod" "$nginx_svc"
 
-    remove_resource "${RESOURCES_DIR}/netshoot.yaml"
-    with_context "$target_cluster" remove_resource "${RESOURCES_DIR}/nginx-demo.yaml"
+    clean_demo "$target_cluster"
 }
 
 function verify_gw_status() {

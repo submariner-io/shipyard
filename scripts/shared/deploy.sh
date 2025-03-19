@@ -180,6 +180,13 @@ else
     echo "Not executing connectivity tests - requires at least two clusters with submariner installed"
 fi
 
+if [ "$DEMO" = true ]; then
+    # shellcheck disable=2068 # the array keys don't have spaces
+    for context in ${!cluster_subm[@]}; do
+        with_context "$context" deploy_demo "$context"
+    done
+fi
+
 run_if_defined post_deploy
 
 # Print installed versions for manual validation of CI
