@@ -36,9 +36,30 @@ function prepare_kind() {
         kubectl label node "$node" "$GATEWAY_LABEL" --overwrite
 
         [[ "$AIR_GAPPED" = true ]] || continue
-        local pub_ip
-        pub_ip=$(kubectl get nodes "$node" -o jsonpath="{.status.addresses[0].address}")
-        kubectl annotate node "$node" gateway.submariner.io/public-ip=ipv4:"$pub_ip"
+        # annotate both IPv4 and IPv6 addresses
+        ips=$(kubectl get node "$node" -o jsonpath="{.status.addresses[?(@.type!='Hostname')].address}")
+
+        local ipv4=""
+        local ipv6=""
+
+        for ip in $ips; do
+            if [[ $ip == *:* ]]; then
+                ipv6=$ip
+            else
+                ipv4=$ip
+            fi
+        done
+
+        local annotation=""
+        if [[ -n $ipv4 && -n $ipv6 ]]; then
+            annotation="ipv4:$ipv4,ipv6=$ipv6"
+        elif [[ -n $ipv4 ]]; then
+            annotation="ipv4:$ipv4"
+        elif [[ -n $ipv6 ]]; then
+            annotation="ipv6=$ipv6"
+        fi
+
+        kubectl annotate node "$node" gateway.submariner.io/public-ip="$annotation"
     done
 }
 
