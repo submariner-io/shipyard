@@ -35,7 +35,7 @@ function prepare_kind() {
     for node in "${nodes[@]:0:$gw_count}"; do
         kubectl label node "$node" "$GATEWAY_LABEL" --overwrite
 
-        [[ "$AIR_GAPPED" = true ]] || continue
+        [[ "$AIR_GAPPED" = true ]] || [[ "$DUAL_STACK" || "$IPV6_STACK" ]] || continue
         # annotate both IPv4 and IPv6 addresses
         ips=$(kubectl get node "$node" -o jsonpath="{.status.addresses[?(@.type!='Hostname')].address}")
 
