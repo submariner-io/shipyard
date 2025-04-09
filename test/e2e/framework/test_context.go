@@ -77,6 +77,8 @@ func init() {
 	flag.UintVar(&TestContext.ConnectionAttempts, "connection-attempts", 7,
 		"The number of connection attempts when verifying communication between clusters.")
 	flag.UintVar(&TestContext.OperationTimeout, "operation-timeout", 190, "The general operation timeout in seconds.")
+	flag.StringVar(&TestContext.NettestImageURL, "nettest-image", TestContext.NettestImageURL,
+		"URL of the nettest image.")
 }
 
 func ValidateFlags(t *TestContextType) {

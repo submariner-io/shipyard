@@ -5,6 +5,7 @@ source "${SCRIPTS_DIR}/lib/utils"
 
 print_env LAZY_DEPLOY SUBCTL_VERIFICATIONS TEST_ARGS TESTDIR
 source "${SCRIPTS_DIR}/lib/debug_functions"
+source "${SCRIPTS_DIR}/lib/deploy_funcs"
 
 ### Functions ###
 
@@ -25,11 +26,16 @@ function generate_kubecontexts() {
 }
 
 function test_with_e2e_tests {
+    local extra_flags=()
+
     cd "${DAPPER_SOURCE}/${TESTDIR}"
+
+    [[ "$AIR_GAPPED" = true ]] && extra_flags+=(-nettest-image "${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}")
 
     # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
     "${GO:-go}" test -v -timeout 30m -args -test.timeout 15m \
         -submariner-namespace "$SUBM_NS" "${clusters[@]/#/-dp-context=}" \
+        "${extra_flags[@]}" \
         --ginkgo.v --ginkgo.randomize-all --ginkgo.trace \
         --ginkgo.junit-report "${DAPPER_OUTPUT}/e2e-junit.xml" \
          $TEST_ARGS 2>&1 | tee "${DAPPER_OUTPUT}/e2e-tests.log"
