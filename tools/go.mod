@@ -8,7 +8,7 @@ require (
 	github.com/docker/buildx v0.22.0
 	github.com/golangci/golangci-lint v1.64.8
 	github.com/psampaz/go-mod-outdated v0.9.0
-	helm.sh/helm/v3 v3.17.2
+	helm.sh/helm/v3 v3.17.3
 	sigs.k8s.io/kind v0.27.0
 )
 
