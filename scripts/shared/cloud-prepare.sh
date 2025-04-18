@@ -52,11 +52,11 @@ function prepare_kind() {
 
         local annotation=""
         if [[ -n $ipv4 && -n $ipv6 ]]; then
-            annotation="ipv4:$ipv4,ipv6=$ipv6"
+            annotation="ipv4:$ipv4,ipv6:$ipv6"
         elif [[ -n $ipv4 ]]; then
             annotation="ipv4:$ipv4"
         elif [[ -n $ipv6 ]]; then
-            annotation="ipv6=$ipv6"
+            annotation="ipv6:$ipv6"
         fi
 
         kubectl annotate node "$node" gateway.submariner.io/public-ip="$annotation"
