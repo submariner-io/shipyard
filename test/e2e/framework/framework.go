@@ -37,6 +37,7 @@ import (
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
 	k8serrors "k8s.io/apimachinery/pkg/util/errors"
+	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
 	"k8s.io/client-go/dynamic"
@@ -67,6 +68,14 @@ const (
 	ActiveGatewayLabel = "gateway.submariner.io/status=active"
 	TestNonGWNodeLabel = "test.submariner.io/non-gateway-node=true"
 	BasicTestLabel     = "basic"
+)
+
+type IPFamilyType string
+
+const (
+	SingleStackIPv4 IPFamilyType = "SingleStackIPv4"
+	SingleStackIPv6 IPFamilyType = "SingleStackIPv6"
+	DualStack       IPFamilyType = "DualStack"
 )
 
 type PatchFunc func(pt types.PatchType, payload []byte) error
@@ -103,6 +112,7 @@ type Framework struct {
 	namespacesToDelete       map[string]bool // Some tests have more than one.
 	NamespaceDeletionTimeout time.Duration
 	gatewayNodesToReset      map[int][]string // Store GW nodes for the final cleanup
+	ipFamilyTypes            map[ClusterIndex]IPFamilyType
 
 	// To make sure that this framework cleans up after itself, no matter what,
 	// we install a Cleanup action before each test and clear it after.  If we
@@ -126,6 +136,7 @@ func NewBareFramework(baseName string) *Framework {
 		BaseName:            baseName,
 		namespacesToDelete:  map[string]bool{},
 		gatewayNodesToReset: map[int][]string{},
+		ipFamilyTypes:       map[ClusterIndex]IPFamilyType{},
 	}
 }
 
@@ -485,6 +496,44 @@ func (f *Framework) AddNamespacesToDelete(namespaces ...*corev1.Namespace) {
 
 		f.namespacesToDelete[ns.Name] = true
 	}
+}
+
+func (f *Framework) DetermineIPFamilyType(cluster ClusterIndex) IPFamilyType {
+	ipFamilyType, ok := f.ipFamilyTypes[cluster]
+	if ok {
+		return ipFamilyType
+	}
+
+	svc, err := KubeClients[cluster].CoreV1().Services(f.Namespace).Create(context.TODO(), &corev1.Service{
+		ObjectMeta: metav1.ObjectMeta{Name: "test-ip-families"},
+		Spec: corev1.ServiceSpec{
+			Type:           corev1.ServiceTypeClusterIP,
+			IPFamilyPolicy: ptr.To(corev1.IPFamilyPolicyPreferDualStack),
+			Ports: []corev1.ServicePort{
+				{
+					Port: 9000,
+					TargetPort: intstr.IntOrString{
+						IntVal: 9000,
+					},
+				},
+			},
+		},
+	}, metav1.CreateOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	ipFamilyType = SingleStackIPv4
+	if len(svc.Spec.IPFamilies) == 2 {
+		ipFamilyType = DualStack
+	} else if svc.Spec.IPFamilies[0] == corev1.IPv6Protocol {
+		ipFamilyType = SingleStackIPv6
+	}
+
+	f.ipFamilyTypes[cluster] = ipFamilyType
+
+	err = KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), svc.Name, metav1.DeleteOptions{})
+	Expect(err).NotTo(HaveOccurred())
+
+	return ipFamilyType
 }
 
 func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
