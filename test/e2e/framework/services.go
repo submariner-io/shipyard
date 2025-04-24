@@ -78,9 +78,7 @@ func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName 
 	return f.CreateService(sc, tcpService)
 }
 
-func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
-	var tcpPort int32 = 80
-	var metricsPort int32 = 8183
+func (f *Framework) NewNginxServiceWithIPFamilyPolicy(cluster ClusterIndex, ipFamilyPolicy *corev1.IPFamilyPolicy) *corev1.Service {
 	nginxService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "nginx-demo",
@@ -89,10 +87,11 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 			},
 		},
 		Spec: corev1.ServiceSpec{
-			Type: "ClusterIP",
+			Type:           corev1.ServiceTypeClusterIP,
+			IPFamilyPolicy: ipFamilyPolicy,
 			Ports: []corev1.ServicePort{
 				{
-					Port:     tcpPort,
+					Port:     80,
 					Name:     "http",
 					Protocol: corev1.ProtocolTCP,
 					TargetPort: intstr.IntOrString{
@@ -101,7 +100,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 					},
 				},
 				{
-					Port:     metricsPort,
+					Port:     8183,
 					Name:     "metrics",
 					Protocol: corev1.ProtocolTCP,
 					TargetPort: intstr.IntOrString{
@@ -119,6 +118,10 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, &nginxService)
+}
+
+func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
+	return f.NewNginxServiceWithIPFamilyPolicy(cluster, nil)
 }
 
 func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int32) *corev1.Service {
