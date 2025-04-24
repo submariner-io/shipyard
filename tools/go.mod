@@ -79,7 +79,7 @@ require (
 	github.com/ckaznocha/intrange v0.3.0 // indirect
 	github.com/compose-spec/compose-go/v2 v2.4.7 // indirect
 	github.com/containerd/console v1.0.4 // indirect
-	github.com/containerd/containerd v1.7.24 // indirect
+	github.com/containerd/containerd v1.7.27 // indirect
 	github.com/containerd/containerd/api v1.8.0 // indirect
 	github.com/containerd/containerd/v2 v2.0.2 // indirect
 	github.com/containerd/continuity v0.4.5 // indirect
