@@ -34,7 +34,7 @@ const (
 )
 
 func (f *Framework) NewService(name, portName string, port int32, protocol corev1.Protocol, selector map[string]string,
-	isHeadless bool,
+	isHeadless bool, ipFamily *corev1.IPFamily,
 ) *corev1.Service {
 	service := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
@@ -50,6 +50,10 @@ func (f *Framework) NewService(name, portName string, port int32, protocol corev
 		},
 	}
 
+	if ipFamily != nil {
+		service.Spec.IPFamilies = []corev1.IPFamily{*ipFamily}
+	}
+
 	if selector != nil {
 		service.Spec.Selector = selector
 	}
@@ -62,9 +66,14 @@ func (f *Framework) NewService(name, portName string, port int32, protocol corev
 	return &service
 }
 
-func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
+func (f *Framework) CreateTCPServiceWithIPFamily(
+	cluster ClusterIndex,
+	selectorName string,
+	port int32,
+	ipFamily *corev1.IPFamily,
+) *corev1.Service {
 	tcpService := f.NewService("test-svc-"+selectorName, "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel: selectorName}, false)
+		map[string]string{TestAppLabel: selectorName}, false, ipFamily)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)
@@ -72,7 +81,7 @@ func (f *Framework) CreateTCPService(cluster ClusterIndex, selectorName string, 
 
 func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
 	tcpService := f.NewService("test-svc"+selectorName, "tcp", port, corev1.ProtocolTCP,
-		map[string]string{TestAppLabel: selectorName}, true)
+		map[string]string{TestAppLabel: selectorName}, true, nil)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, tcpService)
@@ -125,7 +134,7 @@ func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
 }
 
 func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int32) *corev1.Service {
-	serviceSpec := f.NewService(svcName, portName, port, corev1.ProtocolTCP, nil, false)
+	serviceSpec := f.NewService(svcName, portName, port, corev1.ProtocolTCP, nil, false, nil)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
 	return f.CreateService(sc, serviceSpec)

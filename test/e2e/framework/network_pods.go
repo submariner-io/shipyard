@@ -33,6 +33,7 @@ import (
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
+	k8snet "k8s.io/utils/net"
 )
 
 type NetworkingType bool
@@ -68,13 +69,14 @@ type NetworkPodConfig struct {
 	Type               NetworkPodType
 	Cluster            ClusterIndex
 	Scheduling         NetworkPodScheduling
-	Data               string
 	NumOfDataBufs      uint
-	RemoteIP           string
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
 	Port               int32
 	Networking         NetworkingType
+	IsIPv6             bool
+	Data               string
+	RemoteIP           string
 	ContainerName      string
 	ImageName          string
 	Command            []string
@@ -139,6 +141,20 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 	return networkPod
 }
 
+func (np *NetworkPod) GetIP() string {
+	for _, podIP := range np.Pod.Status.PodIPs {
+		if k8snet.IsIPv6String(podIP.IP) && np.Config.IsIPv6 {
+			return podIP.IP
+		}
+
+		if k8snet.IsIPv4String(podIP.IP) && !np.Config.IsIPv6 {
+			return podIP.IP
+		}
+	}
+
+	return ""
+}
+
 func (np *NetworkPod) AwaitReady() {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
@@ -197,7 +213,13 @@ func (np *NetworkPod) CheckSuccessfulFinish() {
 }
 
 func (np *NetworkPod) CreateService() *v1.Service {
-	return np.framework.CreateTCPService(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port)
+	ipFamily := v1.IPv4Protocol
+
+	if np.Config.IsIPv6 {
+		ipFamily = v1.IPv6Protocol
+	}
+
+	return np.framework.CreateTCPServiceWithIPFamily(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port, &ipFamily)
 }
 
 // RunCommand run the specified command in this NetworkPod.
@@ -256,6 +278,17 @@ func (np *NetworkPod) GetLog() string {
 // The pod will listen on TestPort over TCP, send sendString over the connection,
 // and write the network response in the pod  termination log, then exit with 0 status.
 func (np *NetworkPod) buildTCPCheckListenerPod() {
+	listenAddress := "0.0.0.0"
+	if np.Config.IsIPv6 {
+		listenAddress = "::"
+	}
+
+	listenerCmd := fmt.Sprintf(
+		"for i in $(seq 1 $BUFS_NUM); do echo [dataplane] listener says $SEND_STRING; done | "+
+			"nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s %s >/dev/termination-log 2>&1",
+		listenAddress,
+	)
+
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-listener",
@@ -275,10 +308,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 					Command: []string{
 						"sh",
 						"-c",
-						"for i in $(seq 1 $BUFS_NUM);" +
-							" do echo [dataplane] listener says $SEND_STRING;" +
-							" done" +
-							" | nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s 0.0.0.0 >/dev/termination-log 2>&1",
+						listenerCmd,
 					},
 					Env: []v1.EnvVar{
 						{Name: "LISTEN_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
@@ -305,6 +335,18 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 // connection, and write the network response in the pod termination log, then
 // exit with 0 status.
 func (np *NetworkPod) buildTCPCheckConnectorPod() {
+	ncCmd := "nc -v"
+	if np.Config.IsIPv6 {
+		ncCmd = "nc -6 -v"
+	}
+
+	connCmd := fmt.Sprintf(
+		"for i in $(seq $BUFS_NUM); do echo [dataplane] connector says $SEND_STRING; done | "+
+			"for i in $(seq $CONN_TRIES); do if %s $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT; "+
+			"then break; else sleep $RETRY_SLEEP; fi; done >/dev/termination-log 2>&1",
+		ncCmd,
+	)
+
 	tcpCheckConnectorPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "tcp-check-pod",
@@ -325,13 +367,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 					Command: []string{
 						"sh",
 						"-c",
-						"for i in $(seq $BUFS_NUM);" +
-							" do echo [dataplane] connector says $SEND_STRING; done" +
-							" | for i in $(seq $CONN_TRIES);" +
-							" do if nc -v $REMOTE_IP $REMOTE_PORT -w $CONN_TIMEOUT;" +
-							" then break;" +
-							" else sleep $RETRY_SLEEP;" +
-							" fi; done >/dev/termination-log 2>&1",
+						connCmd,
 					},
 					Env: []v1.EnvVar{
 						{Name: "REMOTE_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},

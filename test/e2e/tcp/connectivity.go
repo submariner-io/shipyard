@@ -25,6 +25,7 @@ import (
 	. "github.com/onsi/gomega"
 	"github.com/submariner-io/shipyard/test/e2e/framework"
 	v1 "k8s.io/api/core/v1"
+	k8snet "k8s.io/utils/net"
 )
 
 type EndpointType int
@@ -40,17 +41,26 @@ const (
 
 type ConnectivityTestParams struct {
 	Framework             *framework.Framework
-	Networking            framework.NetworkingType
 	ConnectionTimeout     uint
 	ConnectionAttempts    uint
+	Networking            framework.NetworkingType
 	FromCluster           framework.ClusterIndex
 	FromClusterScheduling framework.NetworkPodScheduling
 	ToCluster             framework.ClusterIndex
 	ToClusterScheduling   framework.NetworkPodScheduling
 	ToEndpointType        EndpointType
+	IPFamily              k8snet.IPFamily
 }
 
-func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
+func (p *ConnectivityTestParams) GetIPFamily() k8snet.IPFamily {
+	if p.IPFamily == "" {
+		return k8snet.IPv4
+	}
+
+	return p.IPFamily
+}
+
+func RunConnectivityTest(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
 	if p.ConnectionTimeout == 0 {
 		p.ConnectionTimeout = framework.TestContext.ConnectionTimeout
 	}
@@ -59,7 +69,7 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 		p.ConnectionAttempts = framework.TestContext.ConnectionAttempts
 	}
 
-	listenerPod, connectorPod := createPods(&p)
+	listenerPod, connectorPod := createPods(p)
 	listenerPod.CheckSuccessfulFinish()
 	connectorPod.CheckSuccessfulFinish()
 
@@ -69,14 +79,14 @@ func RunConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fram
 
 	if p.Networking == framework.PodNetworking {
 		framework.By("Verifying the output of listener pod which must contain the source IP")
-		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Pod.Status.PodIP))
+		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.GetIP()))
 	}
 
 	// Return the pods in case further verification is needed
 	return listenerPod, connectorPod
 }
 
-func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
+func RunNoConnectivityTest(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
 	if p.ConnectionTimeout == 0 {
 		p.ConnectionTimeout = 5
 	}
@@ -85,7 +95,7 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 		p.ConnectionAttempts = 1
 	}
 
-	listenerPod, connectorPod := createPods(&p)
+	listenerPod, connectorPod := createPods(p)
 
 	framework.By("Verifying that listener pod exits with non-zero code and timed out message")
 	Expect(listenerPod.TerminationMessage).To(ContainSubstring("nc: timeout"))
@@ -100,8 +110,10 @@ func RunNoConnectivityTest(p ConnectivityTestParams) (*framework.NetworkPod, *fr
 }
 
 func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.NetworkPod) {
-	framework.By(fmt.Sprintf("Creating a listener pod in cluster %q, which will wait for a handshake over TCP",
-		framework.TestContext.ClusterIDs[p.ToCluster]))
+	ipFamily := p.GetIPFamily()
+
+	framework.By(fmt.Sprintf("Creating a IPv%v listener pod in cluster %q, which will wait for a handshake over TCP",
+		ipFamily, framework.TestContext.ClusterIDs[p.ToCluster]))
 
 	listenerPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ListenerPod,
@@ -109,9 +121,15 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		Scheduling:         p.ToClusterScheduling,
 		ConnectionTimeout:  p.ConnectionTimeout,
 		ConnectionAttempts: p.ConnectionAttempts,
+		IsIPv6:             (ipFamily == k8snet.IPv6),
 	})
 
-	remoteIP := listenerPod.Pod.Status.PodIP
+	remoteIP := listenerPod.GetIP()
+
+	if remoteIP == "" {
+		framework.Failf("Failed to find matching IP address for IPv%v family on listener pod", p.GetIPFamily())
+	}
+
 	var service *v1.Service
 
 	if p.ToEndpointType == ServiceIP {
@@ -124,8 +142,8 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 
 	framework.Logf("Will send traffic to IP: %v", remoteIP)
 
-	framework.By(fmt.Sprintf("Creating a connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
-		framework.TestContext.ClusterIDs[p.FromCluster]))
+	framework.By(fmt.Sprintf("Creating a IPv%v connector pod in cluster %q, which will attempt the specific UUID handshake over TCP",
+		ipFamily, framework.TestContext.ClusterIDs[p.FromCluster]))
 
 	connectorPod := p.Framework.NewNetworkPod(&framework.NetworkPodConfig{
 		Type:               framework.ConnectorPod,
@@ -135,6 +153,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 		ConnectionTimeout:  p.ConnectionTimeout,
 		ConnectionAttempts: p.ConnectionAttempts,
 		Networking:         p.Networking,
+		IsIPv6:             (ipFamily == k8snet.IPv6),
 	})
 
 	framework.By(fmt.Sprintf("Waiting for the connector pod %q to exit, returning what connector sent", connectorPod.Pod.Name))
@@ -143,7 +162,7 @@ func createPods(p *ConnectivityTestParams) (*framework.NetworkPod, *framework.Ne
 	framework.By(fmt.Sprintf("Waiting for the listener pod %q to exit, returning what listener sent", listenerPod.Pod.Name))
 	listenerPod.AwaitFinish()
 
-	framework.Logf("Connector pod has IP: %s", connectorPod.Pod.Status.PodIP)
+	framework.Logf("Connector pod has IP: %s", connectorPod.GetIP())
 
 	return listenerPod, connectorPod
 }

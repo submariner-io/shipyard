@@ -30,7 +30,7 @@ var _ = Describe("[dataplane] Basic TCP connectivity test", func() {
 
 	When("a pod connects to another pod via TCP in the same cluster", func() {
 		It("should send the expected data to the other pod", func() {
-			tcp.RunConnectivityTest(tcp.ConnectivityTestParams{
+			tcp.RunConnectivityTest(&tcp.ConnectivityTestParams{
 				Framework:             f,
 				ToEndpointType:        tcp.PodIP,
 				Networking:            framework.HostNetworking,
