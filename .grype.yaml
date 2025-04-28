@@ -18,3 +18,8 @@ ignore:
   - vulnerability: GHSA-5xqw-8hwv-wg92
     package:
       name: helm.sh/helm/v3
+  # Update requires K8s major version update. Low severity doesn't justify an update for stable branches.
+  # https://github.com/submariner-io/shipyard/pull/1943#discussion_r2064226633
+  - vulnerability: GHSA-m4gq-fm9h-8q75
+    package:
+      name: github.com/docker/buildx
