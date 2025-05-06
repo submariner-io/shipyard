@@ -3,5 +3,6 @@ set -e
 
 while true
 do
-    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | /usr/bin/ncat -l 8080
+    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | /usr/bin/ncat -l -p 8080 --keep-open --allow 0.0.0.0 &
+    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | /usr/bin/ncat -6 -l -p 8080 --keep-open --allow ::
 done
