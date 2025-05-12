@@ -24,7 +24,7 @@ package tools
 
 import (
 	_ "github.com/docker/buildx/cmd/buildx"
-	_ "github.com/golangci/golangci-lint/cmd/golangci-lint"
+	_ "github.com/golangci/golangci-lint/v2/cmd/golangci-lint"
 	_ "github.com/psampaz/go-mod-outdated"
 	_ "helm.sh/helm/v3/cmd/helm"
 	_ "sigs.k8s.io/kind/cmd/kind"
