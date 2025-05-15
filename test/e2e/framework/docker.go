@@ -67,20 +67,6 @@ func (d *Docker) GetLog() (string, string) {
 	return stdout.String(), stderr.String()
 }
 
-func (d *Docker) runCommand(command ...string) (string, string, error) {
-	var stdout, stderr bytes.Buffer
-
-	cmdargs := []string{"exec", "-i", d.Name}
-	cmdargs = append(cmdargs, command...)
-	cmd := exec.Command("docker", cmdargs...)
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-
-	return stdout.String(), stderr.String(), err
-}
-
 func (d *Docker) RunCommand(command ...string) (string, string) {
 	stdout, stderr, err := d.runCommand(command...)
 	Expect(err).NotTo(HaveOccurred())
@@ -100,4 +86,18 @@ func (d *Docker) RunCommandUntil(command ...string) (string, string) {
 		"Error attempting to run %v", append([]string{}, command...))
 
 	return stdout, stderr
+}
+
+func (d *Docker) runCommand(command ...string) (string, string, error) {
+	var stdout, stderr bytes.Buffer
+
+	cmdargs := []string{"exec", "-i", d.Name}
+	cmdargs = append(cmdargs, command...)
+	cmd := exec.Command("docker", cmdargs...)
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+
+	return stdout.String(), stderr.String(), err
 }

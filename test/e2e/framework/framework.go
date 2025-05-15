@@ -457,27 +457,6 @@ func (f *Framework) AfterEach() {
 	}
 }
 
-func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
-	var errs []error
-
-	for i, clientSet := range KubeClients {
-		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
-
-		if err := deleteNamespace(clientSet, ns); err != nil {
-			switch {
-			case apierrors.IsNotFound(err):
-				Logf("Namespace %q was already deleted", ns)
-			case apierrors.IsConflict(err):
-				Logf("Namespace %v scheduled for deletion, resources being purged", ns)
-			default:
-				errs = append(errs, errors.WithMessagef(err, "Failed to delete namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
-			}
-		}
-	}
-
-	return k8serrors.NewAggregate(errs)
-}
-
 // CreateNamespace creates a namespace for e2e testing.
 func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
 	baseName string, labels map[string]string,
@@ -534,6 +513,27 @@ func (f *Framework) DetermineIPFamilyType(cluster ClusterIndex) IPFamilyType {
 	Expect(err).NotTo(HaveOccurred())
 
 	return ipFamilyType
+}
+
+func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
+	var errs []error
+
+	for i, clientSet := range KubeClients {
+		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+
+		if err := deleteNamespace(clientSet, ns); err != nil {
+			switch {
+			case apierrors.IsNotFound(err):
+				Logf("Namespace %q was already deleted", ns)
+			case apierrors.IsConflict(err):
+				Logf("Namespace %v scheduled for deletion, resources being purged", ns)
+			default:
+				errs = append(errs, errors.WithMessagef(err, "Failed to delete namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
+			}
+		}
+	}
+
+	return k8serrors.NewAggregate(errs)
 }
 
 func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
