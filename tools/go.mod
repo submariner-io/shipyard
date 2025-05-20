@@ -7,7 +7,7 @@ toolchain go1.24.1
 require (
 	github.com/golangci/golangci-lint/v2 v2.1.6
 	github.com/psampaz/go-mod-outdated v0.9.0
-	sigs.k8s.io/kind v0.27.0
+	sigs.k8s.io/kind v0.29.0
 )
 
 require (
@@ -87,7 +87,6 @@ require (
 	github.com/golangci/revgrep v0.8.0 // indirect
 	github.com/golangci/unconvert v0.0.0-20250410112200-a129a6e6413e // indirect
 	github.com/google/go-cmp v0.7.0 // indirect
-	github.com/google/safetext v0.0.0-20220905092116-b49f7bc46da2 // indirect
 	github.com/gordonklaus/ineffassign v0.1.0 // indirect
 	github.com/gostaticanalysis/analysisutil v0.7.1 // indirect
 	github.com/gostaticanalysis/comment v1.5.0 // indirect
