@@ -168,13 +168,13 @@ function set_cluster_cidrs() {
     local val=$1
     local idx=$2
 
+    cluster_IPv6_CIDRs[$idx]="fc00:$((val+1000))::/48"
+    service_IPv6_CIDRs[$idx]="fc00:$((val+2000))::/112"
+
     [[ "$OVERLAPPING" != "true" ]] || val="0"
 
     cluster_CIDRs[$idx]="10.$((val+129)).0.0/16"
     service_CIDRs[$idx]="100.$((val+65)).0.0/16"
-
-    cluster_IPv6_CIDRs[$idx]="fc00:$((val+1000))::/48"
-    service_IPv6_CIDRs[$idx]="fc00:$((val+2000))::/112"
 }
 
 function declare_cidrs() {

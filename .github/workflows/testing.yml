@@ -121,6 +121,8 @@ jobs:
           - extra-toggles: 'air-gap, lighthouse'
           - extra-toggles: 'air-gap, ovn'
           - extra-toggles: dual-stack
+          - extra-toggles: dual-stack
+            globalnet: globalnet
           - extra-toggles: ipv6-stack
           - extra-toggles: ovn
           - extra-toggles: ovn-ic
