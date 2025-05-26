@@ -21,6 +21,7 @@ package framework
 import (
 	"context"
 	"encoding/json"
+	goerrors "errors"
 	"fmt"
 	"os"
 	"strconv"
@@ -36,7 +37,6 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/apimachinery/pkg/types"
-	k8serrors "k8s.io/apimachinery/pkg/util/errors"
 	"k8s.io/apimachinery/pkg/util/intstr"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/apimachinery/pkg/util/wait"
@@ -453,7 +453,7 @@ func (f *Framework) AfterEach() {
 
 	// if we had errors deleting, report them now.
 	if len(nsDeletionErrors) != 0 {
-		Errorf(k8serrors.NewAggregate(nsDeletionErrors).Error())
+		Errorf(goerrors.Join(nsDeletionErrors...).Error())
 	}
 }
 
@@ -533,7 +533,7 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 		}
 	}
 
-	return k8serrors.NewAggregate(errs)
+	return goerrors.Join(errs...)
 }
 
 func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
