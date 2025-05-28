@@ -11,6 +11,11 @@ regex-style-search=true
 regex=^Signed-off-by: dependabot\[bot\](.*)
 ignore=all
 
+[ignore-by-author-name]
+# Konflux doesn't follow our conventions, unfortunately
+regex=red-hat-konflux
+ignore=all
+
 [ignore-body-lines]
 # Allow long URLs in commit messages
 regex=^https?://[^ ]*$
