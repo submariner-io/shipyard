@@ -14,12 +14,14 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # Component          | Usage
 # -------------------------------------------------------------
 # curl               | download other tools
+# docker-buildx      | multi-arch image construction
 # file               | file identification (in compile/test.sh)
 # findutils          | make unit (find unit test dirs)
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # gh                 | backport, releases
 # git-core           | find the workspace root, git clones
 # golang             | build
+# helm               | Helm package construction
 # jq                 | JSON processing (GitHub API)
 # kubernetes-client  | kubectl, used in e2e tests
 # make               | builds
@@ -42,6 +44,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - Any unnecessary packages and executables
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    curl \
+                   docker-buildx \
                    file \
                    findutils \
                    gcc \
@@ -49,6 +52,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    git-core \
                    gitlint \
                    golang \
+                   helm \
                    jq \
                    kubernetes-client \
                    make \
@@ -76,15 +80,9 @@ COPY tools/go.mod /tools.mod
 # This layer's versioning is determined by us, and thus could be rebuilt more frequently to test different versions
 RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
     curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin -d ${LINT_VERSION} && \
-    HELM_VERSION=$(awk '/helm.sh/ { print $2 }' /tools.mod) && \
-    i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
-    mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
     KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \
-    BUILDX_VERSION=$(awk '/docker.buildx/ { print $2 }' /tools.mod) && \
-    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
-    chmod 755 /usr/local/libexec/docker/cli-plugins/docker-buildx && \
     curl -L https://raw.githubusercontent.com/jonmosco/kube-ps1/1b8fe913b25ba857b84a94c3b1dbf7bb34f7caef/kube-ps1.sh -o /etc/profile.d/kube-ps1.sh && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
