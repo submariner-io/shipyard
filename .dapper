@@ -89,6 +89,13 @@ DAPPER_SOURCE="$(extract_var "${container}" DAPPER_SOURCE)"
 DAPPER_DOCKER_SOCKET="$(extract_var "${container}" DAPPER_DOCKER_SOCKET)"
 DAPPER_RUN_ARGS="$(extract_var "${container}" DAPPER_RUN_ARGS)"
 
+echo Extracted parameters:
+printf 'DAPPER_CP="%s"\n' "$DAPPER_CP"
+printf 'DAPPER_ENV="%s"\n' "$DAPPER_ENV"
+printf 'DAPPER_SOURCE="%s"\n' "$DAPPER_SOURCE"
+printf 'DAPPER_DOCKER_SOCKET="%s"\n' "$DAPPER_DOCKER_SOCKET"
+printf 'DAPPER_RUN_ARGS="%s"\n' "$DAPPER_RUN_ARGS"
+
 if [ "${socket}" = true ] || [ "${DAPPER_DOCKER_SOCKET}" = true ]
 then
     if [ -S /var/run/docker.sock ]; then
