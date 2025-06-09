@@ -199,12 +199,32 @@ EOF
 
 function deploy_kind_ovn(){
     export K8S_VERSION
-    export NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
-    export SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
+    export SVC_CIDR_IPV4
+    export NET_CIDR_IPV4
+    export SVC_CIDR_IPV6
+    export NET_CIDR_IPV6
     export KIND_CLUSTER_NAME="${cluster}"
 
     local ovn_flags=()
     [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
+
+    if [[ "$IPV6_STACK" ]]; then
+        ovn_flags+=( -n4 -i6 -sw)
+        SVC_CIDR_IPV6="${service_IPv6_CIDRs[${cluster}]}"
+        NET_CIDR_IPV6="${cluster_IPv6_CIDRs[${cluster}]}"
+
+    elif [[ "$DUAL_STACK" ]]; then
+        ovn_flags+=(-i6 -sw)
+        SVC_CIDR_IPV6="${service_IPv6_CIDRs[${cluster}]}"
+        NET_CIDR_IPV6="${cluster_IPv6_CIDRs[${cluster}]}"
+        NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
+        SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
+
+    else
+        NET_CIDR_IPV4="${cluster_CIDRs[${cluster}]}"
+        SVC_CIDR_IPV4="${service_CIDRs[${cluster}]}"
+    fi
+
     delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric "${ovn_flags[@]}" -lr -dd "${KIND_CLUSTER_NAME}.local" --disable-ovnkube-identity
 
     [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
