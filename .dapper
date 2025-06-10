@@ -89,6 +89,13 @@ DAPPER_SOURCE="$(extract_var "${container}" DAPPER_SOURCE)"
 DAPPER_DOCKER_SOCKET="$(extract_var "${container}" DAPPER_DOCKER_SOCKET)"
 DAPPER_RUN_ARGS="$(extract_var "${container}" DAPPER_RUN_ARGS)"
 
+echo Extracted parameters:
+printf 'DAPPER_CP="%s"\n' "$DAPPER_CP"
+printf 'DAPPER_ENV="%s"\n' "$DAPPER_ENV"
+printf 'DAPPER_SOURCE="%s"\n' "$DAPPER_SOURCE"
+printf 'DAPPER_DOCKER_SOCKET="%s"\n' "$DAPPER_DOCKER_SOCKET"
+printf 'DAPPER_RUN_ARGS="%s"\n' "$DAPPER_RUN_ARGS"
+
 if [ "${socket}" = true ] || [ "${DAPPER_DOCKER_SOCKET}" = true ]
 then
     if [ -S /var/run/docker.sock ]; then
@@ -130,11 +137,7 @@ while read -a replace; do
     mount_volume "${replace[1]}" "${mount_root}${replace[1]}"
 done < <(grep -o -E '=>[ ]*(\.\.?)?/[^ ]+' go.mod)
 
-# seccomp is unconfined to avoid problems with clone3 in Fedora 35
-# See https://pascalroeleven.nl/2021/09/09/ubuntu-21-10-and-fedora-35-in-docker/
-# Remove "--security-opt seccomp=unconfined" once all supported container runtimes
-# handle clone3
-docker run -i --rm --security-opt seccomp=unconfined \
+docker run -i --rm \
        $(printf -- " -e %s" $DAPPER_ENV) -e "DAPPER_UID=$DAPPER_UID" -e "DAPPER_GID=$DAPPER_GID" \
        -v "${DAPPER_CP}:${DAPPER_SOURCE}${suffix}" \
        ${dockerargs} \
