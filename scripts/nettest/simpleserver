@@ -1,8 +1,9 @@
 #!/bin/bash
 set -e
 
+# By default, ncat fails if it can't use an IPv4 connection; this tries an unspecified connection first
+# (listening on IPv4 and optionally IPv6), and if that fails, an IPv6-only connection
 while true
 do
-    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | /usr/bin/ncat -l -p 8080 --keep-open --allow 0.0.0.0 &
-    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | /usr/bin/ncat -6 -l -p 8080 --keep-open --allow ::
+    echo -e "HTTP/1.1 200 OK\r\n\r\nHello World" | (/usr/bin/ncat -l -p 8080 || /usr/bin/ncat -6 -l -p 8080)
 done
