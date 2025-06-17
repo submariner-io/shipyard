@@ -77,7 +77,7 @@ func RunConnectivityTest(p *ConnectivityTestParams) (*framework.NetworkPod, *fra
 	Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.Config.Data))
 	Expect(connectorPod.TerminationMessage).To(ContainSubstring(listenerPod.Config.Data))
 
-	if p.Networking == framework.PodNetworking {
+	if p.Networking == framework.PodNetworking && !framework.TestContext.SkipConnectorSrcIPCheck {
 		framework.By("Verifying the output of listener pod which must contain the source IP")
 		Expect(listenerPod.TerminationMessage).To(ContainSubstring(connectorPod.GetIP()))
 	}
