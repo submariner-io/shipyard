@@ -216,7 +216,7 @@ func BeforeSuite() {
 
 	fetchClusterIDs()
 
-	err := mcsv1a1.AddToScheme(scheme.Scheme)
+	err := mcsv1a1.Install(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	for _, beforeSuite := range beforeSuiteFuncs {
