@@ -9,7 +9,7 @@ inputs:
   k8s_version:
     description: 'Version of Kubernetes to use for clusters'
     required: false
-    default: '1.33'
+    default: 'k8s-latest'
   using:
     description: 'Various options to pass via using="..."'
     required: false
@@ -78,7 +78,10 @@ runs:
     - name: Run E2E deployment and tests
       shell: bash
       run: |
-        k8s_version=${{ inputs.k8s_version }} &&
+        k8s_version=${{ inputs.k8s_version }};
+        if [ "$k8s_version" = k8s-latest ]; then k8s_version=1.33; fi; \
+        if [ "$k8s_version" = k8s-oldest-working ]; then k8s_version=1.19; fi; \
+        if [ "$k8s_version" = k8s-oldest-supported ]; then k8s_version=1.31; fi; \
         make "${{ inputs.target }}" \
             using="${{ inputs.using }}" \
             ${k8s_version:+K8S_VERSION="$k8s_version"} \
