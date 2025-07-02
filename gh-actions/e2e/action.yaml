@@ -73,7 +73,6 @@ runs:
       uses: submariner-io/shipyard/gh-actions/restore-images@devel
       with:
         cache: ${{ inputs.cache }}
-        working-directory: ${{ inputs.working-directory }}
 
     - name: Run E2E deployment and tests
       shell: bash
