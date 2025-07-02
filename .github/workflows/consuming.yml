@@ -21,7 +21,7 @@ jobs:
         project: ['admiral', 'lighthouse', 'subctl', 'submariner', 'submariner-operator']
         cabledriver: ['libreswan']
         # Run most tests against the latest K8s version
-        k8s_version: ['1.32']
+        k8s_version: ['k8s-latest']
         include:
           # Test the same set of cable driver combinations as the consuming projects do in their CI
           - project: submariner
@@ -29,7 +29,7 @@ jobs:
           # Test multiple K8s versions only in submariner-operator, balancing coverage and jobs
           - project: submariner-operator
             # Bottom of supported K8s version range
-            k8s_version: '1.26'
+            k8s_version: 'k8s-oldest-supported'
     steps:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683
