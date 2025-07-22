@@ -3,15 +3,14 @@ ARG BASE_BRANCH=release-0.21
 FROM --platform=${TARGETPLATFORM} registry.redhat.io/ubi9:latest
 ARG BASE_BRANCH
 
+# TODO: Add netperf if we can find it in an approve repo
 RUN dnf -y update && \
-    dnf -y install --nodocs 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm' && \
     dnf -y install --nodocs --allowerasing \
         bind-utils \
         curl \
         iperf3 \
         iproute \
         iputils \
-        netperf \
         nmap-ncat \
         tcpdump && \
     dnf clean all && \
