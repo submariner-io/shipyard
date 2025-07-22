@@ -1,0 +1,37 @@
+ARG BASE_BRANCH=release-0.21
+
+FROM --platform=${TARGETPLATFORM} registry.redhat.io/ubi9:latest
+ARG BASE_BRANCH
+
+RUN dnf -y update && \
+    dnf -y install --nodocs 'https://dl.fedoraproject.org/pub/epel/epel-release-latest-9.noarch.rpm' && \
+    dnf -y install --nodocs --allowerasing \
+        bind-utils \
+        curl \
+        iperf3 \
+        iproute \
+        iputils \
+        netperf \
+        nmap-ncat \
+        tcpdump && \
+    dnf clean all && \
+    rm -f /usr/bin/nc
+
+WORKDIR /app
+
+COPY scripts/nettest/nc /usr/bin/
+COPY scripts/nettest/* /app/
+
+CMD ["/bin/bash","-l"]
+
+LABEL com.redhat.component="nettest-container" \
+      name="rhacm2/nettest-rhel9" \
+      version="${BASE_BRANCH}" \
+      summary="A container with networking test and troubleshooting tools" \
+      description="Provides common networking utilities (ping, iperf3, curl, etc.) for testing and troubleshooting Submariner." \
+      io.k8s.display-name="Submariner Network Test Tools" \
+      io.k8s.description="Provides common networking utilities (ping, iperf3, curl, etc.) for testing and troubleshooting Submariner." \
+      io.openshift.tags="submariner, nettest, rhacm" \
+      maintainer="multi-cluster-networking@redhat.com" \
+      com.github.url="https://github.com/submariner-io/shipyard" \
+      com.github.commit="${BASE_BRANCH}"
