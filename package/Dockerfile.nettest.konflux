@@ -19,7 +19,10 @@ RUN dnf -y update && \
 WORKDIR /app
 
 COPY scripts/nettest/nc /usr/bin/
-COPY scripts/nettest/* /app/
+COPY scripts/nettest/simpleserver /app/
+COPY scripts/nettest/metricsproxy.konflux /app/metricsproxy
+# TODO: I think nc script not needed in app dir but matching current version
+COPY scripts/nettest/nc /app/
 
 COPY LICENSE /licenses/LICENSE
 
