@@ -5,7 +5,7 @@ go 1.24.0
 require (
 	github.com/golangci/golangci-lint/v2 v2.4.0
 	github.com/psampaz/go-mod-outdated v0.9.0
-	sigs.k8s.io/kind v0.29.0
+	sigs.k8s.io/kind v0.30.0
 )
 
 require (
@@ -202,6 +202,7 @@ require (
 	go.uber.org/automaxprocs v1.6.0 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.uber.org/zap v1.27.0 // indirect
+	go.yaml.in/yaml/v3 v3.0.4 // indirect
 	golang.org/x/exp v0.0.0-20250408133849-7e4ce0ab07d0 // indirect
 	golang.org/x/exp/typeparams v0.0.0-20250620022241-b7579e27df2b // indirect
 	golang.org/x/mod v0.27.0 // indirect
