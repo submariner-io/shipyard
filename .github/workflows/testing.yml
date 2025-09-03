@@ -125,6 +125,7 @@ jobs:
             globalnet: globalnet
           - extra-toggles: ipv6-stack
           - extra-toggles: ovn
+          - extra-toggles: 'ovn, intra-cluster-disabled'
           - extra-toggles: ovn-ic
           - deploytool: operator
             extra-toggles: lighthouse
@@ -133,7 +134,7 @@ jobs:
           - extra-toggles: load-balancer
           - extra-toggles: prometheus
           - deploytool: operator
-            extra-toggles: lighthouse clusterset-ip
+            extra-toggles: 'lighthouse, clusterset-ip'
     steps:
       - name: Reclaim space on GHA host (if the job needs it)
         if: ${{ contains('ovn', matrix.extra-toggles) }}
