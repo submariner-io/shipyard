@@ -31,6 +31,7 @@ function test_with_e2e_tests {
     cd "${DAPPER_SOURCE}/${TESTDIR}"
 
     [[ "$AIR_GAPPED" = true ]] && extra_flags+=(-nettest-image "${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}")
+    [[ "$INTRA_CLUSTER_DISABLED" = true ]] && extra_flags+=(--skip-intra-cluster-connectivity-tests)
 
     # shellcheck disable=SC2086 # TEST_ARGS is split on purpose
     "${GO:-go}" test -v -timeout 30m -args -test.timeout 15m \
@@ -42,7 +43,11 @@ function test_with_e2e_tests {
 }
 
 function test_with_subctl {
-    subctl verify --only "${SUBCTL_VERIFICATIONS}" --context "${clusters[0]}" --tocontext "${clusters[1]}"
+    local extra_flags=()
+
+    [[ "$INTRA_CLUSTER_DISABLED" = true ]] && extra_flags+=(--skip-intra-cluster-connectivity-tests)
+
+    subctl verify --only "${SUBCTL_VERIFICATIONS}" --context "${clusters[0]}" --tocontext "${clusters[1]}" "${extra_flags[@]}"
 }
 
 function count_nodes() {
