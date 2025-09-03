@@ -62,7 +62,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - name: Run golangci-lint
-        run: make golangci-lint
+        run: make golangci-lint UPX_LEVEL=-0
 
   markdown-link-check:
     name: Markdown Links (modified files)
@@ -94,7 +94,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@08c6903cd8c0fde910a37f88322edcfb5dd907a8
       - name: Run packagedoc-lint
-        run: make packagedoc-lint
+        run: make packagedoc-lint UPX_LEVEL=-0
 
   shellcheck:
     name: Shell

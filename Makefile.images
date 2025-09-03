@@ -12,6 +12,7 @@ export REPO ?= quay.io/submariner
 
 # Specific to `build_images.sh`
 export USE_CACHE ?= true
+export UPX_LEVEL
 
 # Specific to `images`
 export OCIFILE PLATFORM
