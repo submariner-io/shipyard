@@ -3,7 +3,7 @@ module github.com/submariner-io/shipyard
 go 1.24.0
 
 require (
-	github.com/onsi/ginkgo/v2 v2.25.2
+	github.com/onsi/ginkgo/v2 v2.25.3
 	github.com/onsi/gomega v1.38.2
 	github.com/pkg/errors v0.9.1
 	k8s.io/api v0.33.4
