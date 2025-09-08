@@ -1,0 +1,18 @@
+---
+context:
+  containerfile: ../../package/Dockerfile.nettest.konflux
+
+contentOrigin:
+  repofiles:
+    - submariner-rhel-9.repo
+packages:
+  - bind-utils
+  - curl
+  - iperf3
+  - iproute
+  - iputils
+  - nmap-ncat
+  - tcpdump
+arches:
+  - x86_64
+  - aarch64
