@@ -79,6 +79,7 @@ function subctl_install_subm() {
     [[ "$LOAD_BALANCER" = true ]] && extra_flags+=(--load-balancer)
     [[ "$AIR_GAPPED" = true ]] && extra_flags+=(--air-gapped)
     [[ "$INTRA_CLUSTER_DISABLED" = true ]] && extra_flags+=(--disable-intra-cluster-connectivity)
+    [[ "$FORCE_UDP_ENCAPS" = true ]] && extra_flags+=(--force-udp-encaps)
     if [ "${PASS_CIDR_ARGS}" == "true" ];then
         extra_flags+=(--clustercidr "${cluster_CIDRs[${cluster}]}" --servicecidr "${service_CIDRs[${cluster}]}")
     fi
