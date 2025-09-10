@@ -232,6 +232,9 @@ function load_settings() {
 
         # Determine broker, default to first declared cluster
         broker=$(_yq ".clusters[] | select(. | has(\"broker\")) | path | .[-1] // \"${clusters[0]}\"")
+        if [ -z "$broker" ]; then
+            broker="${clusters[0]}"
+        fi
     fi
 
     # Determine per cluster settings, default to global if not defined
