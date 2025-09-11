@@ -10,3 +10,7 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+
+exclude:
+  # Exclude git-ignored ovn-kubernetes directory
+  - "./ovn-kubernetes/**"
