@@ -75,21 +75,18 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercc /proc -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube
 
-COPY tools/go.mod /tools.mod
+COPY tools /tools
 
 # This layer's versioning is determined by us,
 # and thus could be rebuilt more frequently to test different versions.
 # golangci-lint must be built with a version of Go equal to or newer
 # than the version used to analyse the code, so this rebuilds it.
-RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
-    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${LINT_VERSION} && \
-    KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
-    curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
-    mkdir -p /usr/local/libexec/docker/cli-plugins && \
+RUN go -C /tools install github.com/golangci/golangci-lint/v2/cmd/golangci-lint && \
+    go -C /tools install sigs.k8s.io/kind && \
     curl -L https://raw.githubusercontent.com/jonmosco/kube-ps1/1b8fe913b25ba857b84a94c3b1dbf7bb34f7caef/kube-ps1.sh -o /etc/profile.d/kube-ps1.sh && \
-    find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
-    find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
-    go clean -cache -modcache && rm -f /tools.mod
+    find /go/bin -type f -executable -newercc /proc -exec strip {} + && \
+    find /go/bin -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
+    go clean -cache -modcache && rm -rf /tools
 
 # Link get-subctl script so it can be easily run inside a shell
 RUN mkdir -p /root/.local/bin && ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
