@@ -29,6 +29,7 @@ COPY LICENSE /licenses/LICENSE
 CMD ["/bin/bash","-l"]
 
 LABEL com.redhat.component="nettest-container" \
+      cpe="cpe:/a:redhat:acm:2.14::el9" \
       name="rhacm2/nettest-rhel9" \
       version="${BASE_BRANCH}" \
       summary="A container with networking test and troubleshooting tools" \
