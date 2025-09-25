@@ -55,7 +55,7 @@ func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, a
 }
 
 func createEndpoints(ec typedv1.EndpointsInterface, endpointsSpec *corev1.Endpoints) *corev1.Endpoints {
-	return AwaitUntil("create endpoints", func() (interface{}, error) {
+	return AwaitUntil("create endpoints", func() (*corev1.Endpoints, error) {
 		ep, err := ec.Create(context.TODO(), endpointsSpec, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
 			err = ec.Delete(context.TODO(), endpointsSpec.Name, metav1.DeleteOptions{})
@@ -67,12 +67,12 @@ func createEndpoints(ec typedv1.EndpointsInterface, endpointsSpec *corev1.Endpoi
 		}
 
 		return ep, err
-	}, NoopCheckResult).(*corev1.Endpoints)
+	}, NoopCheckResult)
 }
 
 func (f *Framework) DeleteEndpoints(cluster ClusterIndex, endpointsName string) {
 	By(fmt.Sprintf("Deleting endpoints %q on %q", endpointsName, TestContext.ClusterIDs[cluster]))
-	AwaitUntil("delete endpoints", func() (interface{}, error) {
+	AwaitUntil("delete endpoints", func() (any, error) {
 		return nil, KubeClients[cluster].CoreV1().Endpoints(f.Namespace).Delete(context.TODO(), endpointsName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }

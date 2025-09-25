@@ -93,8 +93,8 @@ type PatchUInt32Value struct {
 }
 
 type (
-	DoOperationFunc func() (interface{}, error)
-	CheckResultFunc func(result interface{}) (bool, string, error)
+	DoOperationFunc[T any] func() (T, error)
+	CheckResultFunc[T any] func(result T) (bool, string, error)
 )
 
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
@@ -298,15 +298,14 @@ func DetectGlobalnet() {
 		Resource: "clusters",
 	}).Namespace(TestContext.SubmarinerNamespace)
 
-	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (interface{}, error) {
+	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (*unstructured.UnstructuredList, error) {
 		return clusters.List(context.TODO(), metav1.ListOptions{})
-	}, func(result interface{}) (bool, string, error) {
-		clusterList := result.(*unstructured.UnstructuredList)
-		if clusterList == nil || len(clusterList.Items) == 0 {
+	}, func(result *unstructured.UnstructuredList) (bool, string, error) {
+		if result == nil || len(result.Items) == 0 {
 			return false, "No Cluster found", nil
 		}
 
-		for _, cluster := range clusterList.Items {
+		for _, cluster := range result.Items {
 			cidrs, found, err := unstructured.NestedSlice(cluster.Object, "spec", "global_cidr")
 			if err != nil {
 				return false, "", err
@@ -344,20 +343,20 @@ func fetchClusterIDs() {
 		}
 
 		name := "submariner-gateway"
-		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (interface{}, error) {
+		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (*appsv1.DaemonSet, error) {
 			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
 
 			return ds, err
-		}, func(result interface{}) (bool, string, error) {
+		}, func(result *appsv1.DaemonSet) (bool, string, error) {
 			if result == nil {
 				return false, "No DaemonSet found", nil
 			}
 
 			return true, "", nil
-		}).(*appsv1.DaemonSet)
+		})
 
 		const envVarName = "SUBMARINER_CLUSTERID"
 		found := false
@@ -595,26 +594,26 @@ func doPatchOperation(payload interface{}, patchFunc PatchFunc) {
 	payloadBytes, err := json.Marshal(payload)
 	Expect(err).NotTo(HaveOccurred())
 
-	AwaitUntil("perform patch operation", func() (interface{}, error) {
+	AwaitUntil("perform patch operation", func() (*unstructured.Unstructured, error) {
 		return nil, patchFunc(types.JSONPatchType, payloadBytes)
 	}, NoopCheckResult)
 }
 
-func NoopCheckResult(interface{}) (bool, string, error) {
+func NoopCheckResult[T any](T) (bool, string, error) {
 	return true, "", nil
 }
 
 // AwaitUntil periodically performs the given operation until the given CheckResultFunc returns true, an error, or a
 // timeout is reached.
-func AwaitUntil(opMsg string, doOperation DoOperationFunc, checkResult CheckResultFunc) interface{} {
+func AwaitUntil[T any](opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T]) T {
 	result, errMsg, err := AwaitResultOrError(opMsg, doOperation, checkResult)
 	Expect(err).NotTo(HaveOccurred(), errMsg)
 
 	return result
 }
 
-func AwaitResultOrError(opMsg string, doOperation DoOperationFunc, checkResult CheckResultFunc) (interface{}, string, error) {
-	var finalResult interface{}
+func AwaitResultOrError[T any](opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T]) (T, string, error) {
+	var finalResult T
 	var lastMsg string
 	err := wait.PollUntilContextTimeout(context.Background(), 500*time.Millisecond, TestContext.OperationTimeoutToDuration(), true,
 		func(_ context.Context) (bool, error) {

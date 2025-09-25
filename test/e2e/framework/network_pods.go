@@ -158,10 +158,9 @@ func (np *NetworkPod) GetIP() string {
 func (np *NetworkPod) AwaitReady() {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
-	np.Pod = AwaitUntil("await pod ready", func() (interface{}, error) {
+	np.Pod = AwaitUntil("await pod ready", func() (*v1.Pod, error) {
 		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
-	}, func(result interface{}) (bool, string, error) {
-		pod := result.(*v1.Pod)
+	}, func(pod *v1.Pod) (bool, string, error) {
 		if pod.Status.Phase != v1.PodRunning {
 			if pod.Status.Phase != v1.PodPending {
 				return false, "", fmt.Errorf("unexpected pod phase %v - expected %v or %v", pod.Status.Phase, v1.PodPending, v1.PodRunning)
@@ -173,7 +172,7 @@ func (np *NetworkPod) AwaitReady() {
 		}
 
 		return true, "", nil // pod is running
-	}).(*v1.Pod)
+	})
 }
 
 func (np *NetworkPod) AwaitFinish() {
@@ -640,13 +639,13 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 
 func (np *NetworkPod) activeGatewayHostname() string {
 	smGWPodList := AwaitUntil("await active gateway Pod",
-		func() (interface{}, error) {
+		func() (*v1.PodList, error) {
 			return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
 				metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
 		},
-		func(result interface{}) (bool, string, error) {
-			return len(result.(*v1.PodList).Items) == 1, "", nil
-		}).(*v1.PodList)
+		func(result *v1.PodList) (bool, string, error) {
+			return len(result.Items) == 1, "", nil
+		})
 
 	hostname := smGWPodList.Items[0].Labels["gateway.submariner.io/node"]
 	Expect(hostname).NotTo(BeEmpty())
