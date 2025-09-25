@@ -141,7 +141,7 @@ func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcNam
 }
 
 func (f *Framework) CreateService(sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
-	return AwaitUntil("create service", func() (interface{}, error) {
+	return AwaitUntil("create service", func() (*corev1.Service, error) {
 		service, err := sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
 		if apierrors.IsAlreadyExists(err) {
 			err = sc.Delete(context.TODO(), serviceSpec.Name, metav1.DeleteOptions{})
@@ -153,12 +153,12 @@ func (f *Framework) CreateService(sc typedv1.ServiceInterface, serviceSpec *core
 		}
 
 		return service, err
-	}, NoopCheckResult).(*corev1.Service)
+	}, NoopCheckResult)
 }
 
 func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
 	By(fmt.Sprintf("Deleting service %q on %q", serviceName, TestContext.ClusterIDs[cluster]))
-	AwaitUntil("delete service", func() (interface{}, error) {
+	AwaitUntil("delete service", func() (any, error) {
 		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }

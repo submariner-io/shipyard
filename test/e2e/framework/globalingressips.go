@@ -39,7 +39,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 	if TestContext.GlobalnetEnabled {
 		gipClient := globalIngressIPClient(cluster, namespace)
 		obj := AwaitUntil(fmt.Sprintf("await GlobalIngressIP %s/%s", namespace, name),
-			func() (interface{}, error) {
+			func() (*unstructured.Unstructured, error) {
 				resGip, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
 				if apierrors.IsNotFound(err) {
 					return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
@@ -47,12 +47,12 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 
 				return resGip, err
 			},
-			func(result interface{}) (bool, string, error) {
+			func(result *unstructured.Unstructured) (bool, string, error) {
 				if result == nil {
 					return false, fmt.Sprintf("GlobalEgressIP %s not found yet", name), nil
 				}
 
-				globalIP := getGlobalIP(result.(*unstructured.Unstructured))
+				globalIP := getGlobalIP(result)
 				if globalIP == "" {
 					return false, fmt.Sprintf("GlobalIngress %q exists but allocatedIP not available yet",
 						name), nil
@@ -61,7 +61,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 				return true, "", nil
 			})
 
-		return getGlobalIP(obj.(*unstructured.Unstructured))
+		return getGlobalIP(obj)
 	}
 
 	return ""
@@ -70,7 +70,7 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 func (f *Framework) AwaitGlobalIngressIPRemoved(cluster ClusterIndex, name, namespace string) {
 	gipClient := globalIngressIPClient(cluster, namespace)
 	AwaitUntil(fmt.Sprintf("await GlobalIngressIP %s/%s removed", namespace, name),
-		func() (interface{}, error) {
+		func() (bool, error) {
 			_, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return true, nil
@@ -78,9 +78,8 @@ func (f *Framework) AwaitGlobalIngressIPRemoved(cluster ClusterIndex, name, name
 
 			return false, err
 		},
-		func(result interface{}) (bool, string, error) {
-			gone := result.(bool)
-			return gone, "", nil
+		func(result bool) (bool, string, error) {
+			return result, "", nil
 		})
 }
 

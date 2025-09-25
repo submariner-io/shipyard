@@ -41,7 +41,7 @@ func globalEgressIPClient(cluster ClusterIndex, namespace string) dynamic.Resour
 func CreateGlobalEgressIP(cluster ClusterIndex, obj *unstructured.Unstructured) error {
 	geipClient := globalEgressIPClient(cluster, obj.GetNamespace())
 
-	AwaitUntil("create GlobalEgressIP", func() (interface{}, error) {
+	AwaitUntil("create GlobalEgressIP", func() (*unstructured.Unstructured, error) {
 		egressIP, err := geipClient.Create(context.TODO(), obj, metav1.CreateOptions{})
 		if apierrors.IsAlreadyExists(err) {
 			err = nil

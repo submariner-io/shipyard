@@ -42,17 +42,18 @@ func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 
 	svcExs := DynClients[cluster].Resource(gvr).Namespace(f.Namespace)
 
-	_ = AwaitUntil("create service export", func() (interface{}, error) {
+	_ = AwaitUntil("create service export", func() (*unstructured.Unstructured, error) {
 		result, err := svcExs.Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
 			err = nil
 		}
+
 		return result, err
-	}, NoopCheckResult).(*unstructured.Unstructured)
+	}, NoopCheckResult)
 }
 
 func (f *Framework) DeleteServiceExport(cluster ClusterIndex, name string) {
-	AwaitUntil("delete service export", func() (interface{}, error) {
+	AwaitUntil("delete service export", func() (any, error) {
 		return nil, DynClients[cluster].Resource(gvr).Namespace(f.Namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
