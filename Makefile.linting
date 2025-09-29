@@ -17,7 +17,7 @@ gitlint:
 
 # [golangci-lint] validates Go code in the project
 golangci-lint:
-ifneq (,$(shell find . -name '*.go'))
+ifneq (,$(shell find . -name 'go.mod'))
 	golangci-lint version
 	golangci-lint linters
 # Set up a workspace to include all modules, if necessary
