@@ -124,6 +124,7 @@ linters:
     - ineffassign
     # - interfacebloat # We track complexity elsewhere
     - intrange
+    - iotamixing
     # - ireturn # The argument to always "Return Concrete Types" doesn't seem compelling. It is perfectly valid to return
     #             an interface to avoid exposing the entire underlying struct
     - lll

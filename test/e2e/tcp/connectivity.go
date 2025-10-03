@@ -33,10 +33,8 @@ type EndpointType int
 const (
 	PodIP EndpointType = iota
 	ServiceIP
-	// TODO: Remove GlobalIP once all consumer code switches to GlobalServiceIP.
-	GlobalIP
+	GlobalServiceIP
 	GlobalPodIP
-	GlobalServiceIP = GlobalIP
 )
 
 type ConnectivityTestParams struct {

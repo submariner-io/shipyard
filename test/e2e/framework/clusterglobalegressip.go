@@ -44,7 +44,7 @@ func (f *Framework) AwaitClusterGlobalEgressIPs(cluster ClusterIndex, name strin
 
 func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []string {
 	obj := AwaitUntil("await allocated egress IPs for "+name,
-		func() (interface{}, error) {
+		func() (*unstructured.Unstructured, error) {
 			resGip, err := client.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
@@ -52,12 +52,12 @@ func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []st
 
 			return resGip, err
 		},
-		func(result interface{}) (bool, string, error) {
+		func(result *unstructured.Unstructured) (bool, string, error) {
 			if result == nil {
 				return false, fmt.Sprintf("Egress IP resource %q not found yet", name), nil
 			}
 
-			globalIPs := getGlobalIPs(result.(*unstructured.Unstructured))
+			globalIPs := getGlobalIPs(result)
 			if len(globalIPs) == 0 {
 				return false, fmt.Sprintf("Egress IP resource %q exists but allocatedIPs not available yet", name), nil
 			}
@@ -65,7 +65,7 @@ func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []st
 			return true, "", nil
 		})
 
-	return getGlobalIPs(obj.(*unstructured.Unstructured))
+	return getGlobalIPs(obj)
 }
 
 func clusterGlobalEgressIPClient(cluster ClusterIndex) dynamic.ResourceInterface {

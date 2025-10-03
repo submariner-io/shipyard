@@ -50,21 +50,20 @@ func findGateway(cluster ClusterIndex, name string) (*unstructured.Unstructured,
 }
 
 func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
-	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
-		func() (interface{}, error) {
+	return AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
+		func() (*unstructured.Unstructured, error) {
 			gw, err := findGateway(cluster, name)
 			if apierrors.IsNotFound(err) {
-				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil
 			}
 
 			return gw, err
 		},
-		func(result interface{}) (bool, string, error) {
-			if result == nil {
+		func(gw *unstructured.Unstructured) (bool, string, error) {
+			if gw == nil {
 				return false, "gateway not found yet", nil
 			}
 
-			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 
 			if haStatus != status {
@@ -73,8 +72,6 @@ func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status st
 
 			return true, "", nil
 		})
-
-	return obj.(*unstructured.Unstructured)
 }
 
 func gatewayClient(cluster ClusterIndex) dynamic.ResourceInterface {
@@ -82,27 +79,24 @@ func gatewayClient(cluster ClusterIndex) dynamic.ResourceInterface {
 }
 
 func (f *Framework) AwaitGatewaysWithStatus(cluster ClusterIndex, status string) []unstructured.Unstructured {
-	gwList := AwaitUntil(fmt.Sprintf("await Gateways with status %q", status),
-		func() (interface{}, error) {
+	return AwaitUntil(fmt.Sprintf("await Gateways with status %q", status),
+		func() ([]unstructured.Unstructured, error) {
 			return f.GetGatewaysWithHAStatus(cluster, status), nil
 		},
-		func(result interface{}) (bool, string, error) {
-			gateways := result.([]unstructured.Unstructured)
+		func(gateways []unstructured.Unstructured) (bool, string, error) {
 			if len(gateways) == 0 {
 				return false, "no gateway found yet", nil
 			}
 
 			return true, "", nil
 		})
-
-	return gwList.([]unstructured.Unstructured)
 }
 
 func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 	gwClient := gatewayClient(cluster)
 
 	AwaitUntil(fmt.Sprintf("await Gateway on %q removed", name),
-		func() (interface{}, error) {
+		func() (bool, error) {
 			_, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return true, nil
@@ -110,28 +104,26 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 
 			return false, err
 		},
-		func(result interface{}) (bool, string, error) {
-			gone := result.(bool)
-			return gone, "", nil
+		func(result bool) (bool, string, error) {
+			return result, "", nil
 		})
 }
 
 func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string) *unstructured.Unstructured {
-	obj := AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
-		func() (interface{}, error) {
+	return AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
+		func() (*unstructured.Unstructured, error) {
 			gw, err := findGateway(cluster, name)
 			if apierrors.IsNotFound(err) {
-				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
+				return nil, nil
 			}
 
 			return gw, err
 		},
-		func(result interface{}) (bool, string, error) {
-			if result == nil {
+		func(gw *unstructured.Unstructured) (bool, string, error) {
+			if gw == nil {
 				return false, "gateway not found yet", nil
 			}
 
-			gw := result.(*unstructured.Unstructured)
 			haStatus := NestedString(gw.Object, "status", "haStatus")
 
 			if haStatus != "active" {
@@ -156,8 +148,6 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 
 			return true, "", nil
 		})
-
-	return obj.(*unstructured.Unstructured)
 }
 
 func (f *Framework) GetGatewaysWithHAStatus(
@@ -186,7 +176,7 @@ func (f *Framework) GetGatewaysWithHAStatus(
 }
 
 func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
-	AwaitUntil("delete gateway", func() (interface{}, error) {
+	AwaitUntil("delete gateway", func() (any, error) {
 		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
