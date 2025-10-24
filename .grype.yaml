@@ -1,4 +1,9 @@
 ---
+exclude:
+  # ovn-kubernetes is a gitignored directory containing a separate repository
+  # CVEs in ovn-kubernetes should be fixed in the upstream ovn-org/ovn-kubernetes project
+  - "**/ovn-kubernetes/**"
+
 ignore:
   # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
   # https://github.com/anchore/grype/issues/558
