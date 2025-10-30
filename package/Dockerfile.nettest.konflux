@@ -2,6 +2,7 @@ ARG BASE_BRANCH=release-0.20
 
 FROM --platform=${TARGETPLATFORM} registry.redhat.io/ubi9:latest
 ARG BASE_BRANCH
+ARG SOURCE_DATE_EPOCH
 
 # TODO: Add netperf if we can find it in an approve repo
 RUN dnf -y update && \
@@ -38,4 +39,6 @@ LABEL com.redhat.component="nettest-container" \
       io.openshift.tags="submariner, nettest, rhacm" \
       maintainer="multi-cluster-networking@redhat.com" \
       com.github.url="https://github.com/submariner-io/shipyard" \
-      com.github.commit="${BASE_BRANCH}"
+      com.github.commit="${BASE_BRANCH}" \
+      cpe="cpe:/a:redhat:acm:2.13::el9" \
+      org.opencontainers.image.created="${SOURCE_DATE_EPOCH}"
