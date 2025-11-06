@@ -54,6 +54,9 @@ ifneq (,$(filter nftables,$(_using)))
 NFTABLES = true
 endif
 
+ifneq (,$(filter force-udp-encaps,$(_using)))
+FORCE_UDP_ENCAPS = true
+endif
 ### TARGETS ###
 
 # [clean-clusters] removes running clusters
