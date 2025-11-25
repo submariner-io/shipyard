@@ -9,6 +9,7 @@ rules:
     ignore: '.github/workflows/*.yml'
 
 ignore: |
+  /.rpm-lockfiles
   /vendor
   /scripts/shared/resources/cluster*-config.yaml
   /scripts/shared/resources/prometheus/bundle.yaml
