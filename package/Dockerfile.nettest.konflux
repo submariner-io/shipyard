@@ -1,0 +1,44 @@
+ARG BASE_BRANCH=release-0.22
+
+FROM --platform=${TARGETPLATFORM} registry.redhat.io/ubi9:latest
+ARG BASE_BRANCH
+ARG SOURCE_DATE_EPOCH
+
+# TODO: Add netperf if we can find it in an approve repo
+RUN dnf -y update && \
+    dnf -y install --nodocs --allowerasing \
+        bind-utils \
+        curl \
+        iperf3 \
+        iproute \
+        iputils \
+        nmap-ncat \
+        tcpdump && \
+    dnf clean all && \
+    rm -f /usr/bin/nc
+
+WORKDIR /app
+
+COPY scripts/nettest/nc /usr/bin/
+COPY scripts/nettest/simpleserver /app/
+COPY scripts/nettest/metricsproxy.konflux /app/metricsproxy
+# TODO: I think nc script not needed in app dir but matching current version
+COPY scripts/nettest/nc /app/
+
+COPY LICENSE /licenses/LICENSE
+
+CMD ["/bin/bash","-l"]
+
+LABEL com.redhat.component="nettest-container" \
+      name="rhacm2/nettest-rhel9" \
+      version="${BASE_BRANCH}" \
+      summary="A container with networking test and troubleshooting tools" \
+      description="Provides common networking utilities (ping, iperf3, curl, etc.) for testing and troubleshooting Submariner." \
+      io.k8s.display-name="Submariner Network Test Tools" \
+      io.k8s.description="Provides common networking utilities (ping, iperf3, curl, etc.) for testing and troubleshooting Submariner." \
+      io.openshift.tags="submariner, nettest, rhacm" \
+      maintainer="multi-cluster-networking@redhat.com" \
+      com.github.url="https://github.com/submariner-io/shipyard" \
+      com.github.commit="${BASE_BRANCH}" \
+      cpe="cpe:/a:redhat:acm:2.15::el9" \
+      org.opencontainers.image.created="${SOURCE_DATE_EPOCH}"
