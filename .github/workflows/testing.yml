@@ -126,7 +126,6 @@ jobs:
           - extra-toggles: ipv6-stack
           - extra-toggles: ovn
           - extra-toggles: 'ovn, intra-cluster-disabled'
-          - extra-toggles: ovn-ic
           - deploytool: operator
             extra-toggles: lighthouse
           - deploytool: helm

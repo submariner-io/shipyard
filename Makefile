@@ -22,10 +22,6 @@ else
 SETTINGS ?= $(DAPPER_SOURCE)/.shipyard.e2e.yml
 endif
 
-ifneq (,$(filter ovn-ic,$(USING)))
-export OVN_IC = true
-endif
-
 export LAZY_DEPLOY = false
 
 scale: SETTINGS = $(DAPPER_SOURCE)/.shipyard.scale.yml

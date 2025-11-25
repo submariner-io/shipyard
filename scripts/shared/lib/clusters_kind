@@ -210,7 +210,6 @@ function deploy_kind_ovn(){
     export KIND_CLUSTER_NAME="${cluster}"
 
     local ovn_flags=()
-    [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
 
     if [[ "$IPV6_STACK" ]]; then
         ovn_flags+=( -n4 -i6 -sw)
