@@ -90,7 +90,8 @@ update_component_lockfile() {
 
   podman run --rm -v "${REPO_ROOT}:/workspace:z" \
          -v "${entitlements_dir}:/etc/pki/entitlement:ro,Z" \
-         -v "${HOME}/.docker/config.json:/run/containers/0/auth.json:ro,Z" \
+         -v "${HOME}/.docker/config.json:/tmp/auth.json:ro,z" \
+         -e REGISTRY_AUTH_FILE=/tmp/auth.json \
          registry.access.redhat.com/ubi9/ubi:latest \
          /bin/bash -c "
            set -x

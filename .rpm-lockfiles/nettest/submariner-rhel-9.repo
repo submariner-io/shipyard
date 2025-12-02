@@ -1,19 +1,94 @@
-[rhel-9-for-$basearch-baseos-rpms]
-name = Red Hat Enterprise Linux 9 for $basearch - BaseOS (RPMs)
-baseurl = https://cdn.redhat.com/content/dist/rhel9/9/$basearch/baseos/os
-enabled = 1
-gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
-gpgcheck = 1
-sslverify = 0
-sslclientcert = /etc/pki/entitlement/2713869142313201886.pem
-sslclientkey = /etc/pki/entitlement/2713869142313201886-key.pem
+# RHEL 9 Multi-Architecture Repository Configuration
+#
+# This file configures RHEL 9 repositories for x86_64, aarch64, and s390x.
+#
+# ARCHITECTURE NOTES:
+# - x86_64, aarch64: GA (dist) repositories - standard RHEL 9 releases
+# - s390x: EUS 9.4 repositories - Extended Update Support required
+# - ppc64le: NOT in this file - uses centos-stream-9-ppc64le.repo instead
+#             (RHEL 9 ppc64le repos return HTTP 403 with standard subscriptions)
+#
+# AUTHENTICATION:
+# Uses Red Hat entitlement certificates for authentication.
+# Certificate IDs (e.g., 3643047256752658648) must match files in
+# /etc/pki/entitlement/. Run update-lockfile.sh to regenerate if needed.
 
-[rhel-9-for-$basearch-appstream-rpms]
-name = Red Hat Enterprise Linux 9 for $basearch - AppStream (RPMs)
-baseurl = https://cdn.redhat.com/content/dist/rhel9/9/$basearch/appstream/os
+[rhel-9-for-x86_64-baseos-rpms]
+name = Red Hat Enterprise Linux 9 for x86_64 - BaseOS (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os
 enabled = 1
 gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
 gpgcheck = 1
 sslverify = 0
-sslclientcert = /etc/pki/entitlement/2713869142313201886.pem
-sslclientkey = /etc/pki/entitlement/2713869142313201886-key.pem
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-x86_64-appstream-rpms]
+name = Red Hat Enterprise Linux 9 for x86_64 - AppStream (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-aarch64-baseos-rpms]
+name = Red Hat Enterprise Linux 9 for aarch64 - BaseOS (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-aarch64-appstream-rpms]
+name = Red Hat Enterprise Linux 9 for aarch64 - AppStream (RPMs)
+baseurl = https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-ppc64le-baseos-rpms]
+name = Red Hat Enterprise Linux 9 for ppc64le - BaseOS (RPMs)
+baseurl = https://cdn.redhat.com/content/beta/rhel9/9/ppc64le/baseos/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-ppc64le-appstream-rpms]
+name = Red Hat Enterprise Linux 9 for ppc64le - AppStream (RPMs)
+baseurl = https://cdn.redhat.com/content/beta/rhel9/9/ppc64le/appstream/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-s390x-baseos-rpms]
+name = Red Hat Enterprise Linux 9 for s390x - BaseOS (RPMs)
+baseurl = https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem
+
+[rhel-9-for-s390x-appstream-rpms]
+name = Red Hat Enterprise Linux 9 for s390x - AppStream (RPMs)
+baseurl = https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os
+enabled = 1
+gpgkey = file:///etc/pki/rpm-gpg/RPM-GPG-KEY-redhat-release
+gpgcheck = 1
+sslverify = 0
+sslclientcert = /etc/pki/entitlement/3643047256752658648.pem
+sslclientkey = /etc/pki/entitlement/3643047256752658648-key.pem

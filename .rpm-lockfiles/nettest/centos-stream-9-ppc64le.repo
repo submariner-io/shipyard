@@ -1,0 +1,37 @@
+# CentOS Stream 9 repositories for ppc64le
+#
+# PROBLEM: RHEL 9 ppc64le repositories return HTTP 403 with standard Red Hat
+# subscriptions. All repository paths tested (GA dist, beta, EUS) either deny
+# access or contain zero packages.
+#
+# SOLUTION: Use CentOS Stream 9 as RHEL 9-compatible alternative.
+# CentOS Stream 9 is the upstream for RHEL 9 and publicly accessible.
+#
+# TRADE-OFFS:
+# 1. Version drift: CentOS Stream packages may be newer than RHEL 9
+#    Example: bind-utils-9.16.23-35.el9 (CentOS) vs 9.16.23-34.el9_7.1 (RHEL)
+# 2. Mixed sources: Other arches use RHEL repos, ppc64le uses CentOS Stream
+# 3. Binary compatibility maintained but versions may differ across arches
+# 4. GPG signatures: CentOS Stream packages signed with CentOS GPG key (not Red Hat)
+#
+# ALTERNATIVES INVESTIGATED:
+# - RHEL 9 ppc64le GA (dist): HTTP 403
+# - RHEL 9 ppc64le beta: HTTP 200, 0 packages
+# - RHEL 9 ppc64le EUS: HTTP 403
+# - OCP Tools repo: HTTP 200, 4 packages (missing required packages)
+# - Service Interconnect: HTTP 403
+# See test-ppc-repos.sh for validation
+
+[centos-stream-9-baseos-ppc64le]
+name = CentOS Stream 9 - BaseOS (ppc64le)
+baseurl = https://mirror.stream.centos.org/9-stream/BaseOS/ppc64le/os
+enabled = 1
+gpgcheck = 1
+gpgkey = https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official
+
+[centos-stream-9-appstream-ppc64le]
+name = CentOS Stream 9 - AppStream (ppc64le)
+baseurl = https://mirror.stream.centos.org/9-stream/AppStream/ppc64le/os
+enabled = 1
+gpgcheck = 1
+gpgkey = https://www.centos.org/keys/RPM-GPG-KEY-CentOS-Official

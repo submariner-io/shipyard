@@ -28,6 +28,8 @@ spec:
     value:
     - linux/x86_64
     - linux/arm64
+    - linux/s390x
+    - linux/ppc64le
   - name: dockerfile
     value: package/Dockerfile.nettest.konflux
   - name: prefetch-input

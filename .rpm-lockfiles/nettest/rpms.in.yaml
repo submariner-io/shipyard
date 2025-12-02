@@ -1,10 +1,24 @@
 ---
+# RPM Lockfile Input Configuration for nettest
+#
+# This file defines package requirements and repository sources for generating
+# rpm-lockfile-prototype lockfiles used in Konflux hermetic builds.
+#
+# REPOSITORY SOURCES:
+# - submariner-rhel-9.repo: RHEL 9 repos for x86_64, aarch64, s390x
+# - centos-stream-9-ppc64le.repo: CentOS Stream 9 for ppc64le
+#   (RHEL 9 ppc64le not accessible with standard subscriptions)
+#
+# IMPORTANT: Mixed sources (RHEL + CentOS Stream) may cause version drift.
+# See centos-stream-9-ppc64le.repo for trade-offs and alternatives investigated.
+
 context:
   containerfile: ../../package/Dockerfile.nettest.konflux
 
 contentOrigin:
   repofiles:
     - submariner-rhel-9.repo
+    - centos-stream-9-ppc64le.repo
 packages:
   - bind-utils
   - curl
@@ -16,3 +30,5 @@ packages:
 arches:
   - x86_64
   - aarch64
+  - s390x
+  - ppc64le
