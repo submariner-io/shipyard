@@ -96,6 +96,5 @@ func ValidateFlags(t *TestContextType) {
 }
 
 func (t *TestContextType) OperationTimeoutToDuration() time.Duration {
-	//nolint:gosec // Ignore G115: integer overflow conversion uint -> int64
 	return time.Duration(TestContext.OperationTimeout) * time.Second
 }
