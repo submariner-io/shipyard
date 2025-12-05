@@ -31,7 +31,7 @@ CMD ["/bin/bash","-l"]
 
 LABEL com.redhat.component="nettest-container" \
       name="rhacm2/nettest-rhel9" \
-      version="${BASE_BRANCH}" \
+      version="v0.20.2" \
       summary="A container with networking test and troubleshooting tools" \
       description="Provides common networking utilities (ping, iperf3, curl, etc.) for testing and troubleshooting Submariner." \
       io.k8s.display-name="Submariner Network Test Tools" \
