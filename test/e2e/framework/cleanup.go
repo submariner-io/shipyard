@@ -47,6 +47,7 @@ func AddCleanupAction(fn func()) CleanupActionHandle {
 func RemoveCleanupAction(p CleanupActionHandle) {
 	cleanupActionsLock.Lock()
 	defer cleanupActionsLock.Unlock()
+
 	delete(cleanupActions, p)
 }
 
