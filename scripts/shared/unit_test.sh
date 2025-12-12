@@ -33,7 +33,9 @@ for module in "${modules[@]}"; do
         cd "$module"
 
         # Exclude any directories containing e2e tests
-        for dir in $(git grep -w -l e2e | grep _test.go | sed 's#\(.*/.*\)/.*$#\1#' | sort -u); do
+        readarray -d '' e2e_test_files < <(git grep -z -w -l RunE2ETests -- '*_test.go' || true)
+        for file in "${e2e_test_files[@]}"; do
+            dir="$(dirname -- "$file")"
             exclude_args+=(-path "./${dir}" -prune -o)
         done
 
