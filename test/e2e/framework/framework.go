@@ -489,10 +489,8 @@ func (f *Framework) DetermineIPFamilyType(cluster ClusterIndex) IPFamilyType {
 			IPFamilyPolicy: ptr.To(corev1.IPFamilyPolicyPreferDualStack),
 			Ports: []corev1.ServicePort{
 				{
-					Port: 9000,
-					TargetPort: intstr.IntOrString{
-						IntVal: 9000,
-					},
+					Port:       9000,
+					TargetPort: intstr.FromInt32(9000),
 				},
 			},
 		},
