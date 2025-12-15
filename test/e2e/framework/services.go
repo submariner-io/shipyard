@@ -100,22 +100,16 @@ func (f *Framework) NewNginxServiceWithIPFamilyPolicy(cluster ClusterIndex, ipFa
 			IPFamilyPolicy: ipFamilyPolicy,
 			Ports: []corev1.ServicePort{
 				{
-					Port:     80,
-					Name:     "http",
-					Protocol: corev1.ProtocolTCP,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 8080,
-					},
+					Port:       80,
+					Name:       "http",
+					Protocol:   corev1.ProtocolTCP,
+					TargetPort: intstr.FromInt32(8080),
 				},
 				{
-					Port:     8183,
-					Name:     "metrics",
-					Protocol: corev1.ProtocolTCP,
-					TargetPort: intstr.IntOrString{
-						Type:   intstr.Int,
-						IntVal: 8082,
-					},
+					Port:       8183,
+					Name:       "metrics",
+					Protocol:   corev1.ProtocolTCP,
+					TargetPort: intstr.FromInt32(8082),
 				},
 			},
 			Selector: map[string]string{
