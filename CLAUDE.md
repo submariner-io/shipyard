@@ -24,4 +24,4 @@ make markdownlint
 
 ### Konflux Builds
 
-(future - planned for separate effort)
+On `devel`, `.rpm-lockfiles/` has documentation (`README.md`) and diagnostic scripts (`check-repo-access.sh`, `verify-packages.sh`).
