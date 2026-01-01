@@ -4,27 +4,27 @@ lockfileVendor: redhat
 arches:
 - arch: aarch64
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-libs-9.16.23-29.el9_6.aarch64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-libs-9.16.23-34.el9_7.1.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 1252053
-    checksum: sha256:377f4365d2ef6f0f9b6aff76896b612f3c6bce97bdb4b867a1209cb9d13d7314
+    size: 1252147
+    checksum: sha256:911e2e51ccb0ba25a2adf07de7bfb0031edd0c127a5b44e39ae89743b9a3f187
     name: bind-libs
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-license-9.16.23-29.el9_6.noarch.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-license-9.16.23-34.el9_7.1.noarch.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 13505
-    checksum: sha256:56f8b7c42b6a16bbfabc69754fd8a1547e1c79bbca46b9e5717ed4ea218a7efc
+    size: 12809
+    checksum: sha256:546e909d1318b611512c07418ffc94b128cb46320b515ca5bc1010e38f376a27
     name: bind-license
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-utils-9.16.23-29.el9_6.aarch64.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-utils-9.16.23-34.el9_7.1.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 212079
-    checksum: sha256:ae91b67eb72afda804b528411b0c5a4c9fa1f529b721d6b8d3f3b51d8703362b
+    size: 211613
+    checksum: sha256:c18967e7d1b18abfca1f2bbbc7e14bffd29194966896be0cd3285284471d4cda
     name: bind-utils
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/f/fstrm-0.6.1-3.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
     size: 29476
@@ -67,27 +67,27 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/c/curl-7.76.1-31.el9.aarch64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/c/curl-7.76.1-34.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
-    size: 301167
-    checksum: sha256:fc7fccc1530f3d0a5b0d7feb122bbe0410de9b5ed8de7bb2d0f5441828671daa
+    size: 295790
+    checksum: sha256:b8013357c5936b3900dd48f383508e73637ff519c65a83e262d5927be7f7bc84
     name: curl
-    evr: 7.76.1-31.el9
-    sourcerpm: curl-7.76.1-31.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/i/iputils-20210202-11.el9_6.1.aarch64.rpm
+    evr: 7.76.1-34.el9
+    sourcerpm: curl-7.76.1-34.el9.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/i/iputils-20210202-15.el9_7.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
-    size: 178556
-    checksum: sha256:9a92187f9c43ae5e5be824466b1c79c4e1852b1ac9529e68eb681db709c4ea0b
+    size: 178424
+    checksum: sha256:8222a701f1debf48726c8675183a890a8a82626903ac31f2b48a1718505dcc5b
     name: iputils
-    evr: 20210202-11.el9_6.1
-    sourcerpm: iputils-20210202-11.el9_6.1.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/l/libibverbs-54.0-1.el9.aarch64.rpm
+    evr: 20210202-15.el9_7
+    sourcerpm: iputils-20210202-15.el9_7.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/l/libibverbs-57.0-2.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
-    size: 459278
-    checksum: sha256:e64d3c31cf547cee1ad95c144483f71082716f5ee659cdd7f06d0bcde590c3b2
+    size: 458077
+    checksum: sha256:cff5c03177285b39d0e35584862488c441f15429f6396d9c6da264634c2cb400
     name: libibverbs
-    evr: 54.0-1.el9
-    sourcerpm: rdma-core-54.0-1.el9.src.rpm
+    evr: 57.0-2.el9
+    sourcerpm: rdma-core-57.0-2.el9.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/l/libnl3-3.11.0-1.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
     size: 363241
@@ -125,29 +125,152 @@ arches:
     sourcerpm: protobuf-c-1.3.3-13.el9.src.rpm
   source: []
   module_metadata: []
+- arch: s390x
+  packages:
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/b/bind-libs-9.16.23-18.el9_4.10.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 1233213
+    checksum: sha256:e9ab976b9960063e2450cb802d87255385c47b82030dc8b6deb84f5d199306a7
+    name: bind-libs
+    evr: 32:9.16.23-18.el9_4.10
+    sourcerpm: bind-9.16.23-18.el9_4.10.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/b/bind-license-9.16.23-18.el9_4.10.noarch.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 11778
+    checksum: sha256:7f5161e506b24e0ce1df74a198c5fa8b6a8ff0351c1be55c6755a4ad685242f7
+    name: bind-license
+    evr: 32:9.16.23-18.el9_4.10
+    sourcerpm: bind-9.16.23-18.el9_4.10.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/b/bind-utils-9.16.23-18.el9_4.10.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 209602
+    checksum: sha256:62429b7b5d30bca82ab56812f4f504d28312f73037b991c68218be47d5140f79
+    name: bind-utils
+    evr: 32:9.16.23-18.el9_4.10
+    sourcerpm: bind-9.16.23-18.el9_4.10.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/f/fstrm-0.6.1-3.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 29853
+    checksum: sha256:aab9775d0f1ef189c82069a4af4c540c669d61efdc285696fb3bde3c6a9fe9ea
+    name: fstrm
+    evr: 0.6.1-3.el9
+    sourcerpm: fstrm-0.6.1-3.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/i/iperf3-3.9-11.el9_4.1.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 108095
+    checksum: sha256:1752008fbf0a27ba061816d0593fde82906dff572715809f01e336bbbdb9381e
+    name: iperf3
+    evr: 3.9-11.el9_4.1
+    sourcerpm: iperf3-3.9-11.el9_4.1.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/l/libmaxminddb-1.5.2-3.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 36596
+    checksum: sha256:e1ccafd790c887c4503ed0958ac6070041b0f86630754b9acbe651accf49dc38
+    name: libmaxminddb
+    evr: 1.5.2-3.el9
+    sourcerpm: libmaxminddb-1.5.2-3.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/l/libuv-1.42.0-2.el9_4.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 150561
+    checksum: sha256:7badf8ffee70ff4eabd9b96701d8926752c961e395dd79ecd70460056b88024f
+    name: libuv
+    evr: 1:1.42.0-2.el9_4
+    sourcerpm: libuv-1.42.0-2.el9_4.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/n/nmap-ncat-7.92-1.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 228274
+    checksum: sha256:a6b33e568ea35a14bdd1ba1d37bfeb42686740a046312e6140d63af7753ab739
+    name: nmap-ncat
+    evr: 3:7.92-1.el9
+    sourcerpm: nmap-7.92-1.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/appstream/os/Packages/t/tcpdump-4.99.0-9.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-appstream-eus-rpms
+    size: 527514
+    checksum: sha256:40044b25178326f2d4a8b277a2b3123532626a0d39a7d6f6e8a01e502b6a2a74
+    name: tcpdump
+    evr: 14:4.99.0-9.el9
+    sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/c/curl-7.76.1-29.el9_4.3.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 297065
+    checksum: sha256:3785c2a14e7b3dd63d1348647e3dc5a2a83630de1eca2ea4a214726c7f1dbcce
+    name: curl
+    evr: 7.76.1-29.el9_4.3
+    sourcerpm: curl-7.76.1-29.el9_4.3.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/i/iputils-20210202-9.el9_4.5.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 177026
+    checksum: sha256:8e7249e4819c683f4f9f17b4d278441584a3daed545b6368fdb832a93643db76
+    name: iputils
+    evr: 20210202-9.el9_4.5
+    sourcerpm: iputils-20210202-9.el9_4.5.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/l/libibverbs-48.0-2.el9_4.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 392239
+    checksum: sha256:52a99a10bd2de3438115ec40673cfe4fad0b0d0c71830ac2899df14fdc254baa
+    name: libibverbs
+    evr: 48.0-2.el9_4
+    sourcerpm: rdma-core-48.0-2.el9_4.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/l/libnl3-3.9.0-1.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 353430
+    checksum: sha256:090a144acf174dbfe0c1b3379269fab71eab205041158713f0860930aee001e5
+    name: libnl3
+    evr: 3.9.0-1.el9
+    sourcerpm: libnl3-3.9.0-1.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/l/libpcap-1.10.0-4.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 172787
+    checksum: sha256:8eeed3015f2ea273202e6ae622a208a88758ee07dfa9a237fe7e2447646645a8
+    name: libpcap
+    evr: 14:1.10.0-4.el9
+    sourcerpm: libpcap-1.10.0-4.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/l/lksctp-tools-1.0.19-3.el9_4.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 103290
+    checksum: sha256:f9e9b208e6fd5e6bab5d6a30b56aeae7dce6d89bbdc218eec250e6df14d3dfe7
+    name: lksctp-tools
+    evr: 1.0.19-3.el9_4
+    sourcerpm: lksctp-tools-1.0.19-3.el9_4.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/l/lmdb-libs-0.9.29-3.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 65252
+    checksum: sha256:208717c21c3c8aee802a9437642dc4853368d268c4bd45ca8b0b781d409bb33c
+    name: lmdb-libs
+    evr: 0.9.29-3.el9
+    sourcerpm: lmdb-0.9.29-3.el9.src.rpm
+  - url: https://cdn.redhat.com/content/eus/rhel9/9.4/s390x/baseos/os/Packages/p/protobuf-c-1.3.3-13.el9.s390x.rpm
+    repoid: rhel-9-for-s390x-baseos-eus-rpms
+    size: 38450
+    checksum: sha256:0ba1d0bcbc80c2dc53fdac3eecf2606aab133ca22ba7cf857d720c78cb120782
+    name: protobuf-c
+    evr: 1.3.3-13.el9
+    sourcerpm: protobuf-c-1.3.3-13.el9.src.rpm
+  source: []
+  module_metadata: []
 - arch: x86_64
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-libs-9.16.23-29.el9_6.x86_64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-libs-9.16.23-34.el9_7.1.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 1301327
-    checksum: sha256:739fd2ba2892bfe139101ccd6ba7d90ed91cb9a0980a9c466b9e1082daa0e62a
+    size: 1301214
+    checksum: sha256:a8a735281125cae93c6c6067ba8ea473132f5ebdd81e6e898d1fe91d317c39b1
     name: bind-libs
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-license-9.16.23-29.el9_6.noarch.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-license-9.16.23-34.el9_7.1.noarch.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 13505
-    checksum: sha256:56f8b7c42b6a16bbfabc69754fd8a1547e1c79bbca46b9e5717ed4ea218a7efc
+    size: 12809
+    checksum: sha256:546e909d1318b611512c07418ffc94b128cb46320b515ca5bc1010e38f376a27
     name: bind-license
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-utils-9.16.23-29.el9_6.x86_64.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-utils-9.16.23-34.el9_7.1.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 211260
-    checksum: sha256:12ea325a2d760ed9711b4f48acc98172e391070a353cde6cba363801f0b7249f
+    size: 211124
+    checksum: sha256:b61003436687afb2eae9e6301e10efc202c072fb45c4b88dfb95022db9fbc541
     name: bind-utils
-    evr: 32:9.16.23-29.el9_6
-    sourcerpm: bind-9.16.23-29.el9_6.src.rpm
+    evr: 32:9.16.23-34.el9_7.1
+    sourcerpm: bind-9.16.23-34.el9_7.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/f/fstrm-0.6.1-3.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
     size: 30777
@@ -190,27 +313,27 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/c/curl-7.76.1-31.el9.x86_64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/c/curl-7.76.1-34.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 304406
-    checksum: sha256:a5a9185a6295ef7880a50d58fcc8fb83392fbc52dc1406175091e87cf193097c
+    size: 298881
+    checksum: sha256:a971ea7851e0b7a2a1a660560a9fdafb7e226dcfe5796c8534b17e9dc74c7aa7
     name: curl
-    evr: 7.76.1-31.el9
-    sourcerpm: curl-7.76.1-31.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/i/iputils-20210202-11.el9_6.1.x86_64.rpm
+    evr: 7.76.1-34.el9
+    sourcerpm: curl-7.76.1-34.el9.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/i/iputils-20210202-15.el9_7.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 178195
-    checksum: sha256:2760d3b457614fd29d24f6ceff4cd5354fb099193237ba9914dbeee5e69e67d3
+    size: 177748
+    checksum: sha256:f099fdfcdfce422719ca0b7335101ad0a6c2b4c55ac015796d00e675bc02fc11
     name: iputils
-    evr: 20210202-11.el9_6.1
-    sourcerpm: iputils-20210202-11.el9_6.1.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/l/libibverbs-54.0-1.el9.x86_64.rpm
+    evr: 20210202-15.el9_7
+    sourcerpm: iputils-20210202-15.el9_7.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/l/libibverbs-57.0-2.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 466434
-    checksum: sha256:fc593dc18f73c296df4fa808341cb2dbee7e5082fb872b79e7984c3b24279d3b
+    size: 463544
+    checksum: sha256:d96bbefb46683bd3ddfffd0668898c591f253dfca25e5ac2ddf90f812512e5b7
     name: libibverbs
-    evr: 54.0-1.el9
-    sourcerpm: rdma-core-54.0-1.el9.src.rpm
+    evr: 57.0-2.el9
+    sourcerpm: rdma-core-57.0-2.el9.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/l/libnl3-3.11.0-1.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
     size: 376137
