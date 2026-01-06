@@ -259,10 +259,6 @@ func initPodSecurityContext() {
 }
 
 func (f *Framework) BeforeEach() {
-	// workaround for a bug in ginkgo.
-	// https://github.com/onsi/ginkgo/issues/222
-	f.cleanupHandle = AddCleanupAction(f.AfterEach)
-
 	if !f.SkipNamespaceCreation {
 		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
