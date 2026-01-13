@@ -206,8 +206,8 @@ func BeforeSuite() {
 		}
 	}
 
-	KubeClients = nil
-	DynClients = nil
+	KubeClients = make([]*kubeclientset.Clientset, 0, len(RestConfigs))
+	DynClients = make([]dynamic.Interface, 0, len(RestConfigs))
 
 	for _, restConfig := range RestConfigs {
 		KubeClients = append(KubeClients, createKubernetesClient(restConfig))

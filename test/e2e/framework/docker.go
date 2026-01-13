@@ -92,8 +92,12 @@ func (d *Docker) RunCommandUntil(command ...string) (string, string) {
 func (d *Docker) runCommand(command ...string) (string, string, error) {
 	var stdout, stderr bytes.Buffer
 
-	cmdargs := []string{"exec", "-i", d.Name}
-	cmdargs = append(cmdargs, command...)
+	cmdargs := make([]string, 3+len(command))
+	cmdargs[0] = "exec"
+	cmdargs[1] = "-i"
+	cmdargs[2] = d.Name
+	copy(cmdargs[3:], command)
+
 	cmd := exec.Command("docker", cmdargs...)
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
