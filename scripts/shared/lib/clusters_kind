@@ -281,6 +281,12 @@ data:
 EOF
 }
 
+function provider_succeeded() {
+    # At this stage we no longer need ovn-kubernetes,
+    # remove it to reclaim storage
+    rm -rf ovn-kubernetes
+}
+
 function provider_failed() {
     if [[ "$(cat /proc/sys/fs/inotify/max_user_instances)" -lt 512 ]]; then
         echo "Your inotify settings are lower than our recommendation."
