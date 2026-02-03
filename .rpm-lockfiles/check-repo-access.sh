@@ -68,4 +68,3 @@ echo
 echo -e "${B}Legend:${N} ${G}OK${N}=accessible  ${R}403${N}=subscription lacks this arch"
 echo
 echo -e "${B}Note:${N} iperf3 and tcpdump are NOT in UBI - only in RHEL AppStream."
-echo "      s390x: EUS repos are accessible (see README). ppc64le: blocked."
