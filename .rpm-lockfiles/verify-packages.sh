@@ -109,9 +109,10 @@ podman run --rm \
                 (
                     # Get pkg@repo format, simplify repo names (remove arch, -rpms suffix)
                     # Use --arch to filter by target architecture (avoids false positives from cross-arch repos)
+                    # Use awk to keep only first repo per package (handles packages in multiple repos like standard+EUS)
                     dnf -q repoquery --forcearch="$arch" --arch="$arch,noarch" --queryformat="%{name}@%{repoid}\n" $pkgs 2>/dev/null |
                         sed "s/-for-rhel-9-[^-]*//; s/-for-ubi-9-[^-]*//; s/-9-for-[^-]*//; s/-rpms$//" |
-                        sort -u | grep . > "$tmpdir/$arch" || true
+                        sort -u | awk -F@ '\''!seen[$1]++'\'' | grep . > "$tmpdir/$arch" || true
                     # Also check bash to detect repo access issues
                     dnf -q repoquery --forcearch="$arch" --arch="$arch" bash 2>/dev/null | grep -q . && echo "1" > "$tmpdir/${arch}_access" || true
                 ) &
@@ -157,5 +158,4 @@ podman run --rm \
         done
 
         echo -e "${B}Note:${N} iperf3 and tcpdump are NOT in UBI repos - only in RHEL AppStream."
-        echo "      RHEL repos require entitlements that currently lack ppc64le/s390x."
     '
