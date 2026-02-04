@@ -43,13 +43,13 @@ for module in "${modules[@]}"; do
         [ "${#packages[@]}" -gt 0 ] || exit 0
 
         echo "Running tests in ${packages[*]}"
-        [ "${ARCH}" == "amd64" ] && race=-race
-        # It's important that the `go test` command's exit status is reported from this () block.
+        [ "${ARCH}" == "amd64" ] && race=--race
+        # It's important that the test command's exit status is reported from this () block.
         # Can't be one command (with -cover). Need detailed -coverprofile for Sonar and summary to console.
         # shellcheck disable=SC2086 # Split `$TEST_ARGS` on purpose
-        "${GO:-go}" test -v ${race} -coverprofile unit.coverprofile "${packages[@]}" \
-            --ginkgo.v --ginkgo.trace --ginkgo.junit-report junit.xml $TEST_ARGS && \
-        go tool cover -func unit.coverprofile
+        "${GO:-go}" run github.com/onsi/ginkgo/v2/ginkgo -v -p --trace ${race} \
+            --coverprofile=unit.coverprofile --junit-report=junit.xml --fail-fast "${packages[@]}" $TEST_ARGS && \
+        "${GO:-go}" tool cover -func unit.coverprofile
     ) || result=1
 done
 
