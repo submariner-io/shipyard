@@ -1,0 +1,13 @@
+{
+  "name": "shipyard",
+  "description": "Shared development tools for Submariner repositories",
+  "version": "1.0.0",
+  "author": {
+    "name": "Submariner Contributors",
+    "url": "https://github.com/submariner-io"
+  },
+  "homepage": "https://submariner.io",
+  "repository": "https://github.com/submariner-io/shipyard",
+  "license": "Apache-2.0",
+  "keywords": ["submariner", "cve", "security", "go", "kubernetes"]
+}
