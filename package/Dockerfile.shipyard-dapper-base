@@ -28,6 +28,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # moby-engine        | Docker (for Dapper)
 # moreutils          | sponge (for system tests)
 # pip                | Python package installation
+# pipx               | install jinjanator (required by OVN-K latest versions)
 # procps-ng          | watch (for installing ACM)
 # protobuf-compiler  | protobuf compilation
 # python3-jinja2-cli | Jinja2 template engine (used by OVN's kind setup script)
@@ -62,6 +63,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    moby-engine \
                    moreutils \
                    pip \
+                   pipx \
                    procps-ng \
                    protobuf-compiler \
                    python3-jinja2-cli \
@@ -70,6 +72,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    unzip \
                    upx \
                    yq && \
+    pipx install jinjanator[yaml] && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
