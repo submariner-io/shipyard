@@ -39,7 +39,6 @@ import (
 // accepting the byte array.
 var _ = SynchronizedBeforeSuite(func() []byte {
 	// Run only on Ginkgo node 1
-
 	framework.BeforeSuite()
 	return nil
 }, func(_ []byte) {
