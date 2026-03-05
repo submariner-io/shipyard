@@ -307,8 +307,9 @@ function prepare_ovn() {
     pushd ovn-kubernetes || exit
 
     # When updating commit, Update the OVN_SRC_IMAGE to the corressponding commit
-    git checkout 5115ef4c932eb689274d4e83bd065278d1b53e22
-    local OVN_SRC_IMAGE="ghcr.io/ovn-kubernetes/ovn-kubernetes/ovn-kube-fedora:master@sha256:5db832b848904ab984e1f2a868b60d1f89b7df33abf7be93cc483758d5d4a9b1"
+    # Using commit with Fedora 42 (nftables 1.1.1)
+    git checkout b7ae82c95105b4a4db2e67c8fe4ed565d07c8c78
+    local OVN_SRC_IMAGE="ghcr.io/ovn-kubernetes/ovn-kubernetes/ovn-kube-fedora:master@sha256:bc854cec93537e37fdc83e3a164cb7dda794b5e12b0873a3be87fa5460a027b5"
 
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
