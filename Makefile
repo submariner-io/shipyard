@@ -26,6 +26,10 @@ ifneq (,$(filter ovn-ic,$(USING)))
 export OVN_IC = true
 endif
 
+ifneq (,$(filter ovn-lgw,$(USING)))
+export OVN_LOCAL_GW = true
+endif
+
 export LAZY_DEPLOY = false
 
 scale: SETTINGS = $(DAPPER_SOURCE)/.shipyard.scale.yml

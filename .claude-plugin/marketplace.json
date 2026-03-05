@@ -1,0 +1,24 @@
+{
+  "name": "submariner",
+  "owner": {
+    "name": "Submariner Project",
+    "url": "https://submariner.io"
+  },
+  "metadata": {
+    "description": "Shared development tools and workflows for Submariner repositories"
+  },
+  "plugins": [
+    {
+      "name": "shipyard",
+      "description": "Shared development tools for Submariner repositories",
+      "version": "1.0.0",
+      "author": {
+        "name": "Submariner Contributors",
+        "url": "https://github.com/submariner-io"
+      },
+      "source": "./",
+      "category": "productivity",
+      "homepage": "https://submariner.io"
+    }
+  ]
+}

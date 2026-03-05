@@ -1,0 +1,13 @@
+{
+  "extraKnownMarketplaces": {
+    "submariner": {
+      "source": {
+        "source": "git",
+        "url": "https://github.com/submariner-io/shipyard.git"
+      }
+    }
+  },
+  "enabledPlugins": {
+    "shipyard@submariner": true
+  }
+}

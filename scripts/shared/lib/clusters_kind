@@ -211,6 +211,7 @@ function deploy_kind_ovn(){
 
     local ovn_flags=()
     [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
+    [[ "$OVN_LOCAL_GW" != true ]] || ovn_flags+=( -gm local )
 
     if [[ "$IPV6_STACK" ]]; then
         ovn_flags+=( -n4 -i6 -sw)
