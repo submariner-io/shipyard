@@ -14,24 +14,23 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # Component          | Usage
 # -------------------------------------------------------------
 # curl               | download other tools
+# docker-buildx      | multi-arch image construction
 # file               | file identification (in compile/test.sh)
 # findutils          | make unit (find unit test dirs)
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # gh                 | backport, releases
-# git                | find the workspace root
+# git-core           | find the workspace root, git clones
 # golang             | build
-# golangci-lint      | code linting
-# helm               | e2e tests
+# helm               | Helm package construction
 # jq                 | JSON processing (GitHub API)
-# kind               | e2e tests
-# kube-ps1           | print out kube context in dapper shell
-# kubectl            | e2e tests (in kubernetes-client)
-# make               | OLM installation
+# kubernetes-client  | kubectl, used in e2e tests
+# make               | builds
 # moby-engine        | Docker (for Dapper)
 # moreutils          | sponge (for system tests)
+# pip                | Python package installation
 # procps-ng          | watch (for installing ACM)
 # python3-jinja2-cli | Jinja2 template engine (used by OVN's kind setup script)
-# qemu-user-static   | Emulation (for multiarch builds)
+# qemu-user-static-* | Emulation (for multiarch builds)
 # skopeo             | container image manipulation
 # unzip              | ZIP extraction
 # upx                | binary compression
@@ -43,10 +42,29 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - DNF cache
 # - Any unnecessary packages and executables
 RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
-                   gcc git-core curl moby-engine make golang kubernetes-client \
-                   findutils moreutils upx jq gitlint procps-ng pip \
+                   curl \
+                   docker-buildx \
+                   file \
+                   findutils \
+                   gcc \
+                   gh \
+                   git-core \
+                   gitlint \
+                   golang \
+                   helm \
+                   jq \
+                   kubernetes-client \
+                   make \
+                   moby-engine \
+                   moreutils \
+                   pip \
+                   procps-ng \
+                   python3-jinja2-cli \
                    qemu-user-static-aarch64 qemu-user-static-x86 \
-                   python3-jinja2-cli skopeo file unzip gh yq && \
+                   skopeo \
+                   unzip \
+                   upx \
+                   yq && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
@@ -62,16 +80,10 @@ COPY tools/go.mod /tools.mod
 # golangci-lint must be built with a version of Go equal to or newer
 # than the version used to analyse the code, so this rebuilds it.
 RUN LINT_VERSION=$(awk '/golangci-lint/ { print $2 }' /tools.mod) && \
-    go install github.com/golangci/golangci-lint/cmd/golangci-lint@${LINT_VERSION} && \
-    HELM_VERSION=$(awk '/helm.sh/ { print $2 }' /tools.mod) && \
-    i=0; until curl "https://get.helm.sh/helm-${HELM_VERSION}-linux-${ARCH}.tar.gz" | tar -xzf -; do if ((++i > 5)); then break; fi; sleep 1; done && \
-    mv linux-${ARCH}/helm /go/bin/ && chmod a+x /go/bin/helm && rm -rf linux-${ARCH} && \
+    go install github.com/golangci/golangci-lint/v2/cmd/golangci-lint@${LINT_VERSION} && \
     KIND_VERSION=$(awk '/sigs.k8s.io.kind/ { print $2 }' /tools.mod) && \
     curl -Lo /go/bin/kind "https://github.com/kubernetes-sigs/kind/releases/download/${KIND_VERSION}/kind-linux-${ARCH}" && chmod a+x /go/bin/kind && \
     mkdir -p /usr/local/libexec/docker/cli-plugins && \
-    BUILDX_VERSION=$(awk '/docker.buildx/ { print $2 }' /tools.mod) && \
-    curl -L "https://github.com/docker/buildx/releases/download/${BUILDX_VERSION}/buildx-${BUILDX_VERSION}.linux-${ARCH}" -o /usr/local/libexec/docker/cli-plugins/docker-buildx && \
-    chmod 755 /usr/local/libexec/docker/cli-plugins/docker-buildx && \
     curl -L https://raw.githubusercontent.com/jonmosco/kube-ps1/1b8fe913b25ba857b84a94c3b1dbf7bb34f7caef/kube-ps1.sh -o /etc/profile.d/kube-ps1.sh && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc -exec strip {} + && \
     find /go/bin /usr/local/libexec/docker/cli-plugins -type f -executable -newercc /proc \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
