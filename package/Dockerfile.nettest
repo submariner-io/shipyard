@@ -1,4 +1,4 @@
-ARG FEDORA_VERSION=43
+ARG FEDORA_VERSION=44
 
 FROM --platform=${BUILDPLATFORM} fedora:${FEDORA_VERSION} AS base
 ARG VERSION
@@ -8,8 +8,10 @@ ARG TARGETPLATFORM
 COPY scripts/shared/dnf_install /
 
 RUN /dnf_install -a ${TARGETPLATFORM} -v ${FEDORA_VERSION} -r /output/nettest \
-    glibc bash glibc-minimal-langpack coreutils-single libcurl-minimal \
-    bind-utils busybox curl-minimal iperf3 iproute iputils netperf nmap-ncat tcpdump
+    bash coreutils-single libcurl-minimal \
+    bind-utils busybox-shared curl iperf3 iproute iputils netperf nmap-ncat tcpdump
+
+RUN ln /output/nettest/usr/bin/busybox.shared /output/nettest/usr/bin/busybox
 
 FROM scratch
 ARG TARGETPLATFORM
