@@ -1,4 +1,4 @@
-FROM fedora:43
+FROM fedora:44
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
@@ -21,7 +21,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # gh                 | backport, releases
 # git-core           | find the workspace root, git clones
 # golang             | build
-# helm               | Helm package construction
+# helm3              | Helm package construction
 # jq                 | JSON processing (GitHub API)
 # kubernetes-client  | kubectl, used in e2e tests
 # make               | builds
@@ -56,7 +56,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    git-core \
                    gitlint \
                    golang \
-                   helm \
+                   helm3 \
                    jq \
                    kubernetes-client \
                    make \
@@ -79,7 +79,8 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/10/lto1 && \
     find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
-    ln -f /usr/bin/kubectl /usr/bin/hyperkube
+    ln -f /usr/bin/kubectl /usr/bin/hyperkube && \
+    ln -f /usr/bin/helm3 /usr/bin/helm
 
 COPY tools /tools
 
