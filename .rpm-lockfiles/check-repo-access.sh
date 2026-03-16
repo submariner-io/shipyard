@@ -33,8 +33,8 @@ check_public() {
 }
 
 # Repo URLs
-RHEL="https://cdn.redhat.com/content/dist/rhel9/9"
-UBI="https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi9/9"
+RHEL="https://cdn.redhat.com/content/dist/rhel10/10"
+UBI="https://cdn-ubi.redhat.com/content/public/ubi/dist/ubi10/10"
 
 echo -e "${B}Shipyard RPM Dependency Status${N}"
 echo "==============================="
@@ -43,7 +43,7 @@ echo -e "${B}Component  Packages                        Repository        x86_64
 echo "---------  ------------------------------  ----------------  ------  ------- ------- -----"
 
 # nettest: packages from RHEL AppStream (iperf3, tcpdump not in UBI)
-printf "nettest    iperf3,tcpdump                  RHEL 9 AppStream  "
+printf "nettest    iperf3,tcpdump                  RHEL 10 AppStream "
 for arch in x86_64 aarch64 ppc64le s390x; do
     if check "$RHEL/$arch/appstream/os/repodata/repomd.xml"; then
         printf "${G}%-8s${N}" "OK"

@@ -27,7 +27,7 @@ and add something like `yourname-yourproject-randomstring`.
 
 ### 3. Add Repos to Activation Key
 
-RHEL 9 BaseOS and AppStream are auto-enabled - these are all that nettest requires.
+RHEL 10 BaseOS and AppStream are auto-enabled - these are all that nettest requires.
 
 **Note:** UBI repos are public and don't require activation keys, but nettest
 needs `iperf3` and `tcpdump` which are only available in RHEL AppStream.
@@ -68,7 +68,7 @@ Shipyard RPM Dependency Status
 
 Component  Packages                        Repository        x86_64  aarch64 ppc64le s390x
 ---------  ------------------------------  ----------------  ------  ------- ------- -----
-nettest    iperf3,tcpdump                  RHEL 9 AppStream  OK      OK      OK      OK
+nettest    iperf3,tcpdump                  RHEL 10 AppStream OK      OK      OK      OK
 nettest    bind-utils,curl,iproute,...     UBI (public)      OK      OK      OK      OK
 
 Legend: OK=accessible  403=subscription lacks this arch
@@ -86,7 +86,7 @@ Branch is required since component configs live on release branches, not devel.
 Expected output:
 
 ```text
-nettest (repos: rhel-9-for-appstream-rpms rhel-9-for-baseos-rpms)
+nettest (repos: rhel-10-for-appstream-rpms rhel-10-for-baseos-rpms)
   x86_64   OK: bind-utils@rhel-appstream curl@rhel-baseos iperf3@rhel-appstream iproute@rhel-baseos iputils@rhel-baseos nmap-ncat@rhel-appstream tcpdump@rhel-appstream
   aarch64  OK: bind-utils@rhel-appstream curl@rhel-baseos iperf3@rhel-appstream iproute@rhel-baseos iputils@rhel-baseos nmap-ncat@rhel-appstream tcpdump@rhel-appstream
   ppc64le  OK: bind-utils@rhel-appstream curl@rhel-baseos iperf3@rhel-appstream iproute@rhel-baseos iputils@rhel-baseos nmap-ncat@rhel-appstream tcpdump@rhel-appstream
@@ -170,8 +170,8 @@ See [Konflux activation key docs](https://konflux-ci.dev/docs/building/activatio
 
 | Package | Source |
 |---------|--------|
-| iperf3, tcpdump | RHEL 9 AppStream |
-| bind-utils, curl, iproute, iputils, nmap-ncat | RHEL 9 BaseOS |
+| iperf3, tcpdump | RHEL 10 AppStream |
+| bind-utils, curl, iproute, iputils, nmap-ncat | RHEL 10 BaseOS |
 
 **Note:** `iperf3` and `tcpdump` are NOT available in UBI repos - only in RHEL AppStream.
 This is why nettest requires RHEL subscription entitlements.
