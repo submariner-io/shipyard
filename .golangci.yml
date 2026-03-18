@@ -137,6 +137,7 @@ linters:
     - mirror
     - misspell
     # - mnd # It doesn't seem useful in general to enforce constants for all numeric values
+    - modernize
     - musttag
     - nakedret
     # - nestif # This calculates cognitive complexity but we're doing that elsewhere
