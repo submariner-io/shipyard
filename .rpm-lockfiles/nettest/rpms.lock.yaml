@@ -81,13 +81,6 @@ arches:
     name: iputils
     evr: 20210202-15.el9_7
     sourcerpm: iputils-20210202-15.el9_7.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/l/libcurl-minimal-7.76.1-35.el9_7.3.aarch64.rpm
-    repoid: rhel-9-for-aarch64-baseos-rpms
-    size: 225290
-    checksum: sha256:1c1842809017627ff3bf6b7095167e47db01f0675c6a1c7f34c39ea40d32c253
-    name: libcurl-minimal
-    evr: 7.76.1-35.el9_7.3
-    sourcerpm: curl-7.76.1-35.el9_7.3.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/l/libibverbs-57.0-2.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
     size: 458077
@@ -211,13 +204,6 @@ arches:
     name: iputils
     evr: 20210202-15.el9_7
     sourcerpm: iputils-20210202-15.el9_7.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/baseos/os/Packages/l/libcurl-minimal-7.76.1-35.el9_7.3.ppc64le.rpm
-    repoid: rhel-9-for-ppc64le-baseos-rpms
-    size: 255297
-    checksum: sha256:2cf7dbc31082911a629ea1379ebffb56d2bb58f60efda89d299257f17b3b916c
-    name: libcurl-minimal
-    evr: 7.76.1-35.el9_7.3
-    sourcerpm: curl-7.76.1-35.el9_7.3.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/baseos/os/Packages/l/libibverbs-57.0-2.el9.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-baseos-rpms
     size: 510076
@@ -341,13 +327,6 @@ arches:
     name: iputils
     evr: 20210202-15.el9_7
     sourcerpm: iputils-20210202-15.el9_7.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/baseos/os/Packages/l/libcurl-minimal-7.76.1-35.el9_7.3.s390x.rpm
-    repoid: rhel-9-for-s390x-baseos-rpms
-    size: 224781
-    checksum: sha256:d1ebd6099409746d96e6b817d4d0a1839ec4dd15dd66380d069427d652d1f831
-    name: libcurl-minimal
-    evr: 7.76.1-35.el9_7.3
-    sourcerpm: curl-7.76.1-35.el9_7.3.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/baseos/os/Packages/l/libibverbs-57.0-2.el9.s390x.rpm
     repoid: rhel-9-for-s390x-baseos-rpms
     size: 446293
@@ -471,13 +450,6 @@ arches:
     name: iputils
     evr: 20210202-15.el9_7
     sourcerpm: iputils-20210202-15.el9_7.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/l/libcurl-minimal-7.76.1-35.el9_7.3.x86_64.rpm
-    repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 229001
-    checksum: sha256:b192815df8073689a55cdcc06deff482d5eefea260270363c8824fd3c4a06bf4
-    name: libcurl-minimal
-    evr: 7.76.1-35.el9_7.3
-    sourcerpm: curl-7.76.1-35.el9_7.3.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/l/libibverbs-57.0-2.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
     size: 463544
