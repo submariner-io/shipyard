@@ -669,7 +669,7 @@ func removeDupDataplaneLines(output string) string {
 	var newLines []string
 	var lastLine string
 
-	for _, line := range strings.Split(output, "\n") {
+	for line := range strings.SplitSeq(output, "\n") {
 		if !strings.HasPrefix(line, "[dataplane]") || line != lastLine {
 			newLines = append(newLines, line)
 		}
