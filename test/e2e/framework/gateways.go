@@ -137,7 +137,7 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 			}
 
 			for _, o := range connections {
-				conn := o.(map[string]interface{})
+				conn := o.(map[string]any)
 				status, _, _ := unstructured.NestedString(conn, "status")
 
 				if status != "connected" {

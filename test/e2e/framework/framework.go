@@ -584,7 +584,7 @@ func PatchInt(path string, value uint32, patchFunc PatchFunc) {
 	doPatchOperation(payload, patchFunc)
 }
 
-func doPatchOperation(payload interface{}, patchFunc PatchFunc) {
+func doPatchOperation(payload any, patchFunc PatchFunc) {
 	payloadBytes, err := json.Marshal(payload)
 	Expect(err).NotTo(HaveOccurred())
 
@@ -646,7 +646,7 @@ func AwaitResultOrError[T any](opMsg string, doOperation DoOperationFunc[T], che
 	return finalResult, errMsg, err
 }
 
-func NestedString(obj map[string]interface{}, fields ...string) string {
+func NestedString(obj map[string]any, fields ...string) string {
 	str, _, err := unstructured.NestedString(obj, fields...)
 	Expect(err).To(Succeed())
 

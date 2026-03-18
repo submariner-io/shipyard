@@ -29,29 +29,29 @@ func nowStamp() string {
 	return time.Now().Format(time.StampMilli)
 }
 
-func log(level, format string, args ...interface{}) {
+func log(level, format string, args ...any) {
 	By(fmt.Sprintf(nowStamp()+": "+level+": "+format+"\n", args...))
 }
 
-func Errorf(format string, args ...interface{}) {
+func Errorf(format string, args ...any) {
 	log("ERROR", format, args...)
 }
 
-func Logf(format string, args ...interface{}) {
+func Logf(format string, args ...any) {
 	log("INFO", format, args...)
 }
 
-func Failf(format string, args ...interface{}) {
+func Failf(format string, args ...any) {
 	FailfWithOffset(1, format, args...)
 }
 
 // FailfWithOffset calls "Fail" and logs the error at "offset" levels above its caller
 // (for example, for call chain f -> g -> FailfWithOffset(1, ...) error would be logged for "f").
-func FailfWithOffset(offset int, format string, args ...interface{}) {
+func FailfWithOffset(offset int, format string, args ...any) {
 	Fail(nowStamp()+": "+fmt.Sprintf(format, args...), 1+offset)
 }
 
-func Skipf(format string, args ...interface{}) {
+func Skipf(format string, args ...any) {
 	msg := fmt.Sprintf(format, args...)
 	log("INFO", msg)
 	ginkgowrapper.Skip(nowStamp() + ": " + msg)

@@ -183,9 +183,9 @@ func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name),
-		func() (interface{}, error) {
+		func() (any, error) {
 			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
-		}, func(result interface{}) (bool, string, error) {
+		}, func(result any) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 
 			if np.Pod.Status.Phase == v1.PodSucceeded || np.Pod.Status.Phase == v1.PodFailed {
