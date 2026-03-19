@@ -56,6 +56,7 @@ PREV_VERSION=$((TARGET_VERSION - 1))
 ACM_VERSION=$((TARGET_VERSION - 7))
 
 git checkout origin/release-0.${PREV_VERSION} -- package/Dockerfile.nettest.konflux scripts/nettest/metricsproxy.konflux
+chmod +x scripts/nettest/metricsproxy.konflux
 sed -i "s/release-0.${PREV_VERSION}/<target-branch>/g" package/Dockerfile.nettest.konflux
 sed -i "s/cpe=\"cpe:\/a:redhat:acm:[0-9.]*::el9\"/cpe=\"cpe:\/a:redhat:acm:2.${ACM_VERSION}::el9\"/" package/Dockerfile.nettest.konflux
 
