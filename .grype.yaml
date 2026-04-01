@@ -28,3 +28,17 @@ ignore:
   - vulnerability: GHSA-m4gq-fm9h-8q75
     package:
       name: github.com/docker/buildx
+  # Update requires Go 1.25.5. High severity doesn't justify breaking changes on stable branches.
+  - vulnerability: GHSA-4vrq-3vrq-g6gg
+    package:
+      name: github.com/moby/buildkit
+  - vulnerability: GHSA-4c29-8rgm-jvjj
+    package:
+      name: github.com/moby/buildkit
+  # No fix available yet in released versions.
+  - vulnerability: GHSA-x744-4wpc-v9h2
+    package:
+      name: github.com/docker/docker
+  - vulnerability: GHSA-pxq6-2prw-chj9
+    package:
+      name: github.com/docker/docker
