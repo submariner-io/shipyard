@@ -33,8 +33,8 @@ const (
 	fipsConfigMapName = "cluster-config-v1"
 )
 
-func DetectFIPSConfig(cluster ClusterIndex) (bool, error) {
-	configMap, err := KubeClients[cluster].CoreV1().ConfigMaps(fipsNamespace).Get(context.TODO(), fipsConfigMapName, metav1.GetOptions{})
+func DetectFIPSConfig(ctx context.Context, cluster ClusterIndex) (bool, error) {
+	configMap, err := KubeClients[cluster].CoreV1().ConfigMaps(fipsNamespace).Get(ctx, fipsConfigMapName, metav1.GetOptions{})
 	if err != nil {
 		if apierrors.IsNotFound(err) {
 			return false, nil
@@ -46,9 +46,9 @@ func DetectFIPSConfig(cluster ClusterIndex) (bool, error) {
 	return strings.Contains(configMap.Data["install-config"], "fips: true"), nil
 }
 
-func (f *Framework) FindFIPSEnabledCluster() ClusterIndex {
+func (f *Framework) FindFIPSEnabledCluster(ctx context.Context) ClusterIndex {
 	for idx := range TestContext.ClusterIDs {
-		fipsEnabled, err := DetectFIPSConfig(ClusterIndex(idx))
+		fipsEnabled, err := DetectFIPSConfig(ctx, ClusterIndex(idx))
 		Expect(err).NotTo(HaveOccurred())
 
 		if fipsEnabled {
@@ -64,10 +64,9 @@ func verifyFIPSOutput(data string) bool {
 		strings.Contains(strings.ToLower(data), "fips mode enabled for pluto daemon")
 }
 
-func (f *Framework) TestGatewayNodeFIPSMode(cluster ClusterIndex, gwPod string) {
+func (f *Framework) TestGatewayNodeFIPSMode(ctx context.Context, cluster ClusterIndex, gwPod string) {
 	By(fmt.Sprintf("Verify FIPS mode is enabled on gateway pod %q", gwPod))
 
-	ctx := context.TODO()
 	cmd := []string{"ipsec", "pluto", "--selftest"}
 
 	stdOut, stdErr, err := f.ExecWithOptions(ctx, &ExecOptions{

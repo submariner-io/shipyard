@@ -35,12 +35,12 @@ var globalIngressIPGVR = &schema.GroupVersionResource{
 	Resource: "globalingressips",
 }
 
-func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace string) string {
+func (f *Framework) AwaitGlobalIngressIP(ctx context.Context, cluster ClusterIndex, name, namespace string) string {
 	if TestContext.GlobalnetEnabled {
 		gipClient := globalIngressIPClient(cluster, namespace)
-		obj := AwaitUntil(fmt.Sprintf("await GlobalIngressIP %s/%s", namespace, name),
-			func() (*unstructured.Unstructured, error) {
-				resGip, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
+		obj := AwaitUntil(ctx, fmt.Sprintf("await GlobalIngressIP %s/%s", namespace, name),
+			func(ctx context.Context) (*unstructured.Unstructured, error) {
+				resGip, err := gipClient.Get(ctx, name, metav1.GetOptions{})
 				if apierrors.IsNotFound(err) {
 					return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 				}
@@ -67,11 +67,11 @@ func (f *Framework) AwaitGlobalIngressIP(cluster ClusterIndex, name, namespace s
 	return ""
 }
 
-func (f *Framework) AwaitGlobalIngressIPRemoved(cluster ClusterIndex, name, namespace string) {
+func (f *Framework) AwaitGlobalIngressIPRemoved(ctx context.Context, cluster ClusterIndex, name, namespace string) {
 	gipClient := globalIngressIPClient(cluster, namespace)
-	AwaitUntil(fmt.Sprintf("await GlobalIngressIP %s/%s removed", namespace, name),
-		func() (bool, error) {
-			_, err := gipClient.Get(context.TODO(), name, metav1.GetOptions{})
+	AwaitUntil(ctx, fmt.Sprintf("await GlobalIngressIP %s/%s removed", namespace, name),
+		func(ctx context.Context) (bool, error) {
+			_, err := gipClient.Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return true, nil
 			}

@@ -78,7 +78,7 @@ const (
 	DualStack       IPFamilyType = "DualStack"
 )
 
-type PatchFunc func(pt types.PatchType, payload []byte) error
+type PatchFunc func(ctx context.Context, pt types.PatchType, payload []byte) error
 
 type PatchStringValue struct {
 	Op    string `json:"op"`
@@ -93,7 +93,7 @@ type PatchUInt32Value struct {
 }
 
 type (
-	DoOperationFunc[T any] func() (T, error)
+	DoOperationFunc[T any] func(context.Context) (T, error)
 	CheckResultFunc[T any] func(result T) (bool, string, error)
 )
 
@@ -178,7 +178,7 @@ func init() {
 	}
 }
 
-func BeforeSuite() {
+func BeforeSuite(ctx context.Context) {
 	By("Creating kubernetes clients")
 
 	if len(RestConfigs) == 0 {
@@ -214,7 +214,7 @@ func BeforeSuite() {
 		DynClients = append(DynClients, createDynamicClient(restConfig))
 	}
 
-	fetchClusterIDs()
+	fetchClusterIDs(ctx)
 
 	err := mcsv1a1.Install(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
@@ -258,7 +258,7 @@ func initPodSecurityContext() {
 	}
 }
 
-func (f *Framework) BeforeEach() {
+func (f *Framework) BeforeEach(ctx context.Context) {
 	if !f.SkipNamespaceCreation {
 		By(fmt.Sprintf("Creating namespace objects with basename %q", f.BaseName))
 
@@ -271,7 +271,7 @@ func (f *Framework) BeforeEach() {
 		for idx, clientSet := range KubeClients {
 			if ClusterIndex(idx) == ClusterA {
 				// On the first cluster we let k8s generate a name for the namespace
-				namespace := generateNamespace(clientSet, f.BaseName, namespaceLabels)
+				namespace := generateNamespace(ctx, clientSet, f.BaseName, namespaceLabels)
 				f.Namespace = namespace.GetName()
 				f.UniqueName = namespace.GetName()
 				f.AddNamespacesToDelete(namespace)
@@ -279,7 +279,7 @@ func (f *Framework) BeforeEach() {
 			} else {
 				// On the other clusters we use the same name to make tracing easier
 				By(fmt.Sprintf("Creating namespace %q in cluster %q", f.Namespace, TestContext.ClusterIDs[idx]))
-				f.CreateNamespace(clientSet, f.Namespace, namespaceLabels)
+				f.CreateNamespace(ctx, clientSet, f.Namespace, namespaceLabels)
 			}
 		}
 	} else {
@@ -287,15 +287,15 @@ func (f *Framework) BeforeEach() {
 	}
 }
 
-func DetectGlobalnet() {
+func DetectGlobalnet(ctx context.Context) {
 	clusters := DynClients[ClusterA].Resource(schema.GroupVersionResource{
 		Group:    "submariner.io",
 		Version:  "v1",
 		Resource: "clusters",
 	}).Namespace(TestContext.SubmarinerNamespace)
 
-	AwaitUntil("find Clusters to detect if Globalnet is enabled", func() (*unstructured.UnstructuredList, error) {
-		return clusters.List(context.TODO(), metav1.ListOptions{})
+	AwaitUntil(ctx, "find Clusters to detect if Globalnet is enabled", func(ctx context.Context) (*unstructured.UnstructuredList, error) {
+		return clusters.List(ctx, metav1.ListOptions{})
 	}, func(result *unstructured.UnstructuredList) (bool, string, error) {
 		if result == nil || len(result.Items) == 0 {
 			return false, "No Cluster found", nil
@@ -316,11 +316,11 @@ func DetectGlobalnet() {
 	})
 }
 
-func InitNumClusterNodes() error {
+func InitNumClusterNodes(ctx context.Context) error {
 	TestContext.NumNodesInCluster = map[ClusterIndex]int{}
 
 	for i := range KubeClients {
-		nodes, err := KubeClients[i].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{})
+		nodes, err := KubeClients[i].CoreV1().Nodes().List(ctx, metav1.ListOptions{})
 		if err != nil {
 			return err
 		}
@@ -331,16 +331,17 @@ func InitNumClusterNodes() error {
 	return nil
 }
 
-func fetchClusterIDs() {
+func fetchClusterIDs(ctx context.Context) {
 	for i := range KubeClients {
-		gatewayNodes := FindGatewayNodes(ClusterIndex(i))
+		gatewayNodes := FindGatewayNodes(ctx, ClusterIndex(i))
 		if len(gatewayNodes) == 0 {
 			continue
 		}
 
 		name := "submariner-gateway"
-		daemonSet := AwaitUntil(fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func() (*appsv1.DaemonSet, error) {
-			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(context.TODO(), name, metav1.GetOptions{})
+		daemonSet := AwaitUntil(ctx, fmt.Sprintf("find %s DaemonSet for %q", name, TestContext.ClusterIDs[i]), func(ctx context.Context,
+		) (*appsv1.DaemonSet, error) {
+			ds, err := KubeClients[i].AppsV1().DaemonSets(TestContext.SubmarinerNamespace).Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}
@@ -421,12 +422,12 @@ func createRestConfig(kubeConfig, kubeContext string) *rest.Config {
 	return restConfig
 }
 
-func deleteNamespace(client kubeclientset.Interface, namespaceName string) error {
-	return client.CoreV1().Namespaces().Delete(context.TODO(), namespaceName, metav1.DeleteOptions{})
+func deleteNamespace(ctx context.Context, client kubeclientset.Interface, namespaceName string) error {
+	return client.CoreV1().Namespaces().Delete(ctx, namespaceName, metav1.DeleteOptions{})
 }
 
 // AfterEach deletes the namespace, after reading its events.
-func (f *Framework) AfterEach() {
+func (f *Framework) AfterEach(ctx context.Context) {
 	f.stopped = true
 	RemoveCleanupAction(f.cleanupHandle)
 
@@ -436,7 +437,7 @@ func (f *Framework) AfterEach() {
 	// if delete-namespace set to false, namespace will always be preserved.
 	// if delete-namespace is true and delete-namespace-on-failure is false, namespace will be preserved if test failed.
 	for ns := range f.namespacesToDelete {
-		if err := f.deleteNamespaceFromAllClusters(ns); err != nil {
+		if err := f.deleteNamespaceFromAllClusters(ctx, ns); err != nil {
 			nsDeletionErrors = append(nsDeletionErrors, err)
 		}
 
@@ -453,10 +454,10 @@ func (f *Framework) AfterEach() {
 }
 
 // CreateNamespace creates a namespace for e2e testing.
-func (f *Framework) CreateNamespace(clientSet *kubeclientset.Clientset,
+func (f *Framework) CreateNamespace(ctx context.Context, clientSet *kubeclientset.Clientset,
 	baseName string, labels map[string]string,
 ) *corev1.Namespace {
-	ns := createTestNamespace(clientSet, baseName, labels)
+	ns := createTestNamespace(ctx, clientSet, baseName, labels)
 	f.AddNamespacesToDelete(ns)
 
 	return ns
@@ -472,13 +473,13 @@ func (f *Framework) AddNamespacesToDelete(namespaces ...*corev1.Namespace) {
 	}
 }
 
-func (f *Framework) DetermineIPFamilyType(cluster ClusterIndex) IPFamilyType {
+func (f *Framework) DetermineIPFamilyType(ctx context.Context, cluster ClusterIndex) IPFamilyType {
 	ipFamilyType, ok := f.ipFamilyTypes[cluster]
 	if ok {
 		return ipFamilyType
 	}
 
-	svc, err := KubeClients[cluster].CoreV1().Services(f.Namespace).Create(context.TODO(), &corev1.Service{
+	svc, err := KubeClients[cluster].CoreV1().Services(f.Namespace).Create(ctx, &corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{Name: "test-ip-families"},
 		Spec: corev1.ServiceSpec{
 			Type:           corev1.ServiceTypeClusterIP,
@@ -502,19 +503,19 @@ func (f *Framework) DetermineIPFamilyType(cluster ClusterIndex) IPFamilyType {
 
 	f.ipFamilyTypes[cluster] = ipFamilyType
 
-	err = KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), svc.Name, metav1.DeleteOptions{})
+	err = KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(ctx, svc.Name, metav1.DeleteOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
 	return ipFamilyType
 }
 
-func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
+func (f *Framework) deleteNamespaceFromAllClusters(ctx context.Context, ns string) error {
 	var errs []error
 
 	for i, clientSet := range KubeClients {
 		By(fmt.Sprintf("Deleting namespace %q on cluster %q", ns, TestContext.ClusterIDs[i]))
 
-		if err := deleteNamespace(clientSet, ns); err != nil {
+		if err := deleteNamespace(ctx, clientSet, ns); err != nil {
 			switch {
 			case apierrors.IsNotFound(err):
 				Logf("Namespace %q was already deleted", ns)
@@ -529,7 +530,7 @@ func (f *Framework) deleteNamespaceFromAllClusters(ns string) error {
 	return goerrors.Join(errs...)
 }
 
-func generateNamespace(client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
+func generateNamespace(ctx context.Context, client kubeclientset.Interface, baseName string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: fmt.Sprintf("e2e-tests-%v-", baseName),
@@ -537,18 +538,18 @@ func generateNamespace(client kubeclientset.Interface, baseName string, labels m
 		},
 	}
 
-	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
+	namespace, err := client.CoreV1().Namespaces().Create(ctx, namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error generating namespace %v", namespaceObj)
 
 	return namespace
 }
 
-func createTestNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
-	namespace := createNamespace(client, name, labels)
+func createTestNamespace(ctx context.Context, client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
+	namespace := createNamespace(ctx, client, name, labels)
 	return namespace
 }
 
-func createNamespace(client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
+func createNamespace(ctx context.Context, client kubeclientset.Interface, name string, labels map[string]string) *corev1.Namespace {
 	namespaceObj := &corev1.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
@@ -556,40 +557,40 @@ func createNamespace(client kubeclientset.Interface, name string, labels map[str
 		},
 	}
 
-	namespace, err := client.CoreV1().Namespaces().Create(context.TODO(), namespaceObj, metav1.CreateOptions{})
+	namespace, err := client.CoreV1().Namespaces().Create(ctx, namespaceObj, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred(), "Error creating namespace %v", namespaceObj)
 
 	return namespace
 }
 
 // PatchString performs a REST patch operation for the given path and string value.
-func PatchString(path, value string, patchFunc PatchFunc) {
+func PatchString(ctx context.Context, path, value string, patchFunc PatchFunc) {
 	payload := []PatchStringValue{{
 		Op:    "add",
 		Path:  path,
 		Value: value,
 	}}
 
-	doPatchOperation(payload, patchFunc)
+	doPatchOperation(ctx, payload, patchFunc)
 }
 
 // PatchInt performs a REST patch operation for the given path and int value.
-func PatchInt(path string, value uint32, patchFunc PatchFunc) {
+func PatchInt(ctx context.Context, path string, value uint32, patchFunc PatchFunc) {
 	payload := []PatchUInt32Value{{
 		Op:    "add",
 		Path:  path,
 		Value: value,
 	}}
 
-	doPatchOperation(payload, patchFunc)
+	doPatchOperation(ctx, payload, patchFunc)
 }
 
-func doPatchOperation(payload any, patchFunc PatchFunc) {
+func doPatchOperation(ctx context.Context, payload any, patchFunc PatchFunc) {
 	payloadBytes, err := json.Marshal(payload)
 	Expect(err).NotTo(HaveOccurred())
 
-	AwaitUntil("perform patch operation", func() (*unstructured.Unstructured, error) {
-		return nil, patchFunc(types.JSONPatchType, payloadBytes)
+	AwaitUntil(ctx, "perform patch operation", func(ctx context.Context) (any, error) {
+		return nil, patchFunc(ctx, types.JSONPatchType, payloadBytes)
 	}, NoopCheckResult)
 }
 
@@ -599,19 +600,20 @@ func NoopCheckResult[T any](T) (bool, string, error) {
 
 // AwaitUntil periodically performs the given operation until the given CheckResultFunc returns true, an error, or a
 // timeout is reached.
-func AwaitUntil[T any](opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T]) T {
-	result, errMsg, err := AwaitResultOrError(opMsg, doOperation, checkResult)
+func AwaitUntil[T any](ctx context.Context, opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T]) T {
+	result, errMsg, err := AwaitResultOrError(ctx, opMsg, doOperation, checkResult)
 	Expect(err).NotTo(HaveOccurred(), errMsg)
 
 	return result
 }
 
-func AwaitResultOrError[T any](opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T]) (T, string, error) {
+func AwaitResultOrError[T any](ctx context.Context, opMsg string, doOperation DoOperationFunc[T], checkResult CheckResultFunc[T],
+) (T, string, error) {
 	var finalResult T
 	var lastMsg string
-	err := wait.PollUntilContextTimeout(context.Background(), 500*time.Millisecond, TestContext.OperationTimeoutToDuration(), true,
-		func(_ context.Context) (bool, error) {
-			result, err := doOperation()
+	err := wait.PollUntilContextTimeout(ctx, 500*time.Millisecond, TestContext.OperationTimeoutToDuration(), true,
+		func(ctx context.Context) (bool, error) {
+			result, err := doOperation(ctx)
 			if err != nil {
 				if IsTransientError(err, opMsg) {
 					return false, nil
