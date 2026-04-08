@@ -44,7 +44,6 @@ import (
 	kubeclientset "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
-	"k8s.io/utils/ptr"
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
 	mcsv1b1 "sigs.k8s.io/mcs-api/pkg/apis/v1beta1"
 )
@@ -229,14 +228,14 @@ func BeforeSuite(ctx context.Context) {
 
 func initPodSecurityContext() {
 	podSecurityContext = &corev1.SecurityContext{
-		AllowPrivilegeEscalation: ptr.To(false),
+		AllowPrivilegeEscalation: new(false),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{
 				"ALL",
 			},
 		},
-		RunAsNonRoot: ptr.To(true),
-		RunAsUser:    ptr.To(int64(10000)), // We need to set some user ID other than 0.
+		RunAsNonRoot: new(true),
+		RunAsUser:    new(int64(10000)), // We need to set some user ID other than 0.
 	}
 
 	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
@@ -484,7 +483,7 @@ func (f *Framework) DetermineIPFamilyType(ctx context.Context, cluster ClusterIn
 		ObjectMeta: metav1.ObjectMeta{Name: "test-ip-families"},
 		Spec: corev1.ServiceSpec{
 			Type:           corev1.ServiceTypeClusterIP,
-			IPFamilyPolicy: ptr.To(corev1.IPFamilyPolicyPreferDualStack),
+			IPFamilyPolicy: new(corev1.IPFamilyPolicyPreferDualStack),
 			Ports: []corev1.ServicePort{
 				{
 					Port:       9000,
