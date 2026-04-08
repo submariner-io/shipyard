@@ -31,9 +31,10 @@ import (
 
 // AwaitPodsByLabelSelector finds pods in a given cluster whose labels match a specified label selector. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
-func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector, namespace string, expectedCount int) *v1.PodList {
-	return AwaitUntil("find pods for label "+labelSelector, func() (*v1.PodList, error) {
-		return KubeClients[cluster].CoreV1().Pods(namespace).List(context.TODO(), metav1.ListOptions{
+func (f *Framework) AwaitPodsByLabelSelector(ctx context.Context, cluster ClusterIndex, labelSelector, namespace string, expectedCount int,
+) *v1.PodList {
+	return AwaitUntil(ctx, "find pods for label "+labelSelector, func(ctx context.Context) (*v1.PodList, error) {
+		return KubeClients[cluster].CoreV1().Pods(namespace).List(ctx, metav1.ListOptions{
 			LabelSelector: labelSelector,
 		})
 	}, func(pods *v1.PodList) (bool, string, error) {
@@ -53,22 +54,23 @@ func (f *Framework) AwaitPodsByLabelSelector(cluster ClusterIndex, labelSelector
 
 // AwaitPodsByAppLabel finds pods in a given cluster whose 'app' label value matches a specified value. If the specified
 // expectedCount >= 0, the function waits until the number of pods equals the expectedCount.
-func (f *Framework) AwaitPodsByAppLabel(cluster ClusterIndex, appName, namespace string, expectedCount int) *v1.PodList {
-	return f.AwaitPodsByLabelSelector(cluster, "app="+appName, namespace, expectedCount)
+func (f *Framework) AwaitPodsByAppLabel(ctx context.Context, cluster ClusterIndex, appName, namespace string, expectedCount int,
+) *v1.PodList {
+	return f.AwaitPodsByLabelSelector(ctx, cluster, "app="+appName, namespace, expectedCount)
 }
 
 // AwaitSubmarinerGatewayPod finds the submariner gateway pod in a given cluster, waiting if necessary for a period of time
 // for the pod to materialize.
-func (f *Framework) AwaitSubmarinerGatewayPod(cluster ClusterIndex) *v1.Pod {
-	return &f.AwaitPodsByAppLabel(cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, 1).Items[0]
+func (f *Framework) AwaitSubmarinerGatewayPod(ctx context.Context, cluster ClusterIndex) *v1.Pod {
+	return &f.AwaitPodsByAppLabel(ctx, cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, 1).Items[0]
 }
 
 // AwaitActiveGatewayPod looks for active gateway pod.
 // Returns pod object or nil.
-func (f *Framework) AwaitActiveGatewayPod(cluster ClusterIndex, checkPod func(*v1.Pod) bool) *v1.Pod {
+func (f *Framework) AwaitActiveGatewayPod(ctx context.Context, cluster ClusterIndex, checkPod func(*v1.Pod) bool) *v1.Pod {
 	for retries := 1; retries <= 30; retries++ {
 		var activePod, retPod *v1.Pod
-		gwPods := f.AwaitPodsByAppLabel(cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, -1)
+		gwPods := f.AwaitPodsByAppLabel(ctx, cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, -1)
 
 		for i := range gwPods.Items {
 			pod := &gwPods.Items[i]
@@ -93,23 +95,27 @@ func (f *Framework) AwaitActiveGatewayPod(cluster ClusterIndex, checkPod func(*v
 			return retPod
 		}
 
-		time.Sleep(5 * time.Second)
+		select {
+		case <-ctx.Done():
+			return nil
+		case <-time.After(5 * time.Second):
+		}
 	}
 
 	return nil
 }
 
 // DeletePod deletes the pod for the given name and namespace.
-func (f *Framework) DeletePod(cluster ClusterIndex, podName, namespace string) {
-	AwaitUntil("delete pod", func() (any, error) {
-		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(context.TODO(), podName, metav1.DeleteOptions{})
+func (f *Framework) DeletePod(ctx context.Context, cluster ClusterIndex, podName, namespace string) {
+	AwaitUntil(ctx, "delete pod", func(ctx context.Context) (any, error) {
+		return nil, KubeClients[cluster].CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
 
 // AwaitUntilAnnotationOnPod queries the Pod and looks for the presence of annotation.
-func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation, podName, namespace string) *v1.Pod {
-	return AwaitUntil("get "+annotation+" annotation for pod "+podName, func() (*v1.Pod, error) {
-		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+func (f *Framework) AwaitUntilAnnotationOnPod(ctx context.Context, cluster ClusterIndex, annotation, podName, namespace string) *v1.Pod {
+	return AwaitUntil(ctx, "get "+annotation+" annotation for pod "+podName, func(ctx context.Context) (*v1.Pod, error) {
+		pod, err := KubeClients[cluster].CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil
 		}
@@ -130,11 +136,11 @@ func (f *Framework) AwaitUntilAnnotationOnPod(cluster ClusterIndex, annotation, 
 
 // AwaitRouteAgentPodOnNode finds the route agent pod on a given node in a cluster, waiting if necessary for a period of time
 // for the pod to materialize. If prevPodUID is non-empty, the found pod's UID must not match it.
-func (f *Framework) AwaitRouteAgentPodOnNode(cluster ClusterIndex, nodeName string, prevPodUID types.UID) *v1.Pod {
+func (f *Framework) AwaitRouteAgentPodOnNode(ctx context.Context, cluster ClusterIndex, nodeName string, prevPodUID types.UID) *v1.Pod {
 	var found *v1.Pod
 
-	AwaitUntil(fmt.Sprintf("find route agent pod on node %q", nodeName), func() (*v1.PodList, error) {
-		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(), metav1.ListOptions{
+	AwaitUntil(ctx, fmt.Sprintf("find route agent pod on node %q", nodeName), func(ctx context.Context) (*v1.PodList, error) {
+		return KubeClients[cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(ctx, metav1.ListOptions{
 			LabelSelector: "app=" + RouteAgent,
 		})
 	}, func(pods *v1.PodList) (bool, string, error) {

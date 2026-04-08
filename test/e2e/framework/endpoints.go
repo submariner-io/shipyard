@@ -28,7 +28,8 @@ import (
 	typedv1 "k8s.io/client-go/kubernetes/typed/core/v1"
 )
 
-func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, address string, port int32) *corev1.Endpoints {
+func (f *Framework) CreateTCPEndpoints(ctx context.Context, cluster ClusterIndex, epName, portName, address string, port int32,
+) *corev1.Endpoints {
 	endpointsSpec := corev1.Endpoints{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: epName,
@@ -51,28 +52,28 @@ func (f *Framework) CreateTCPEndpoints(cluster ClusterIndex, epName, portName, a
 
 	ec := KubeClients[cluster].CoreV1().Endpoints(f.Namespace)
 
-	return createEndpoints(ec, &endpointsSpec)
+	return createEndpoints(ctx, ec, &endpointsSpec)
 }
 
-func createEndpoints(ec typedv1.EndpointsInterface, endpointsSpec *corev1.Endpoints) *corev1.Endpoints {
-	return AwaitUntil("create endpoints", func() (*corev1.Endpoints, error) {
-		ep, err := ec.Create(context.TODO(), endpointsSpec, metav1.CreateOptions{})
+func createEndpoints(ctx context.Context, ec typedv1.EndpointsInterface, endpointsSpec *corev1.Endpoints) *corev1.Endpoints {
+	return AwaitUntil(ctx, "create endpoints", func(ctx context.Context) (*corev1.Endpoints, error) {
+		ep, err := ec.Create(ctx, endpointsSpec, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
-			err = ec.Delete(context.TODO(), endpointsSpec.Name, metav1.DeleteOptions{})
+			err = ec.Delete(ctx, endpointsSpec.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return nil, err
 			}
 
-			ep, err = ec.Create(context.TODO(), endpointsSpec, metav1.CreateOptions{})
+			ep, err = ec.Create(ctx, endpointsSpec, metav1.CreateOptions{})
 		}
 
 		return ep, err
 	}, NoopCheckResult)
 }
 
-func (f *Framework) DeleteEndpoints(cluster ClusterIndex, endpointsName string) {
+func (f *Framework) DeleteEndpoints(ctx context.Context, cluster ClusterIndex, endpointsName string) {
 	By(fmt.Sprintf("Deleting endpoints %q on %q", endpointsName, TestContext.ClusterIDs[cluster]))
-	AwaitUntil("delete endpoints", func() (any, error) {
-		return nil, KubeClients[cluster].CoreV1().Endpoints(f.Namespace).Delete(context.TODO(), endpointsName, metav1.DeleteOptions{})
+	AwaitUntil(ctx, "delete endpoints", func(ctx context.Context) (any, error) {
+		return nil, KubeClients[cluster].CoreV1().Endpoints(f.Namespace).Delete(ctx, endpointsName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }

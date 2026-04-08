@@ -36,16 +36,16 @@ var clusterGlobalEgressIPGVR = &schema.GroupVersionResource{
 	Resource: "clusterglobalegressips",
 }
 
-func (f *Framework) AwaitClusterGlobalEgressIPs(cluster ClusterIndex, name string) []string {
+func (f *Framework) AwaitClusterGlobalEgressIPs(ctx context.Context, cluster ClusterIndex, name string) []string {
 	gipClient := clusterGlobalEgressIPClient(cluster)
 
-	return AwaitAllocatedEgressIPs(gipClient, name)
+	return awaitAllocatedEgressIPs(ctx, gipClient, name)
 }
 
-func AwaitAllocatedEgressIPs(client dynamic.ResourceInterface, name string) []string {
-	obj := AwaitUntil("await allocated egress IPs for "+name,
-		func() (*unstructured.Unstructured, error) {
-			resGip, err := client.Get(context.TODO(), name, metav1.GetOptions{})
+func awaitAllocatedEgressIPs(ctx context.Context, client dynamic.ResourceInterface, name string) []string {
+	obj := AwaitUntil(ctx, "await allocated egress IPs for "+name,
+		func(ctx context.Context) (*unstructured.Unstructured, error) {
+			resGip, err := client.Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 			}

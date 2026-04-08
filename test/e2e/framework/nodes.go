@@ -37,8 +37,8 @@ const (
 )
 
 // FindGatewayNodes finds nodes in a given cluster by matching 'submariner.io/gateway' value.
-func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
-	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+func FindGatewayNodes(ctx context.Context, cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(ctx, metav1.ListOptions{
 		LabelSelector: labels.Set{GatewayLabel: "true"}.String(),
 	})
 	Expect(err).NotTo(HaveOccurred())
@@ -47,8 +47,8 @@ func FindGatewayNodes(cluster ClusterIndex) []v1.Node {
 }
 
 // FindNonGatewayNodes finds nodes in a given cluster that doesn't match 'submariner.io/gateway' value.
-func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
-	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(context.TODO(), metav1.ListOptions{
+func FindNonGatewayNodes(ctx context.Context, cluster ClusterIndex) []v1.Node {
+	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(ctx, metav1.ListOptions{
 		LabelSelector: labels.NewSelector().Add(
 			NewRequirement(GatewayLabel, selection.NotEquals, []string{"true"})).String(),
 	})
@@ -59,9 +59,9 @@ func FindNonGatewayNodes(cluster ClusterIndex) []v1.Node {
 
 // FindClusterWithMultipleGateways finds the cluster with multiple GW nodes.
 // Returns cluster index.
-func (f *Framework) FindClusterWithMultipleGateways() int {
+func (f *Framework) FindClusterWithMultipleGateways(ctx context.Context) int {
 	for idx := range TestContext.ClusterIDs {
-		gatewayNodes := FindGatewayNodes(ClusterIndex(idx))
+		gatewayNodes := FindGatewayNodes(ctx, ClusterIndex(idx))
 		if len(gatewayNodes) >= 2 {
 			return idx
 		}
@@ -73,9 +73,8 @@ func (f *Framework) FindClusterWithMultipleGateways() int {
 // SetGatewayLabelOnNode sets the 'submariner.io/gateway' value for a node to the specified value.
 func (f *Framework) SetGatewayLabelOnNode(ctx context.Context, cluster ClusterIndex, nodeName string, isGateway bool) {
 	// Escape the '/' char in the label name with the special sequence "~1" so it isn't treated as part of the path
-	//nolint:contextcheck //  Function `PatchString->doPatchOperation->AwaitUntil->AwaitResultOrError` should pass the context parameter.
-	PatchString("/metadata/labels/"+strings.ReplaceAll(GatewayLabel, "/", "~1"), strconv.FormatBool(isGateway),
-		func(pt types.PatchType, payload []byte) error {
+	PatchString(ctx, "/metadata/labels/"+strings.ReplaceAll(GatewayLabel, "/", "~1"), strconv.FormatBool(isGateway),
+		func(ctx context.Context, pt types.PatchType, payload []byte) error {
 			_, err := KubeClients[cluster].CoreV1().Nodes().Patch(ctx, nodeName, pt, payload, metav1.PatchOptions{})
 			if err != nil && f.stopped {
 				Errorf("Error setting gateway label on node %q: %v", nodeName, err)

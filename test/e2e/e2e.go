@@ -19,6 +19,7 @@ limitations under the License.
 package e2e
 
 import (
+	"context"
 	"fmt"
 	"testing"
 
@@ -37,9 +38,9 @@ import (
 // This function takes two parameters: one function which runs on only the first Ginkgo node,
 // returning an opaque byte array, and then a second function which runs on all Ginkgo nodes,
 // accepting the byte array.
-var _ = SynchronizedBeforeSuite(func() []byte {
+var _ = SynchronizedBeforeSuite(func(ctx context.Context) []byte {
 	// Run only on Ginkgo node 1
-	framework.BeforeSuite()
+	framework.BeforeSuite(ctx)
 	return nil
 }, func(_ []byte) {
 	// Run on all Ginkgo nodes
@@ -49,11 +50,11 @@ var _ = SynchronizedBeforeSuite(func() []byte {
 // Here, the order of functions is reversed; first, the function which runs everywhere,
 // and then the function that only runs on the first Ginkgo node.
 
-var _ = SynchronizedAfterSuite(func() {
+var _ = SynchronizedAfterSuite(func(ctx context.Context) {
 	// Run on all Ginkgo nodes
 
 	// framework.Logf("Running AfterSuite actions on all node")
-	framework.RunCleanupActions()
+	framework.RunCleanupActions(ctx)
 }, func() {
 	// Run only Ginkgo on node 1
 })

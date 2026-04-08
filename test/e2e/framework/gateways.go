@@ -37,22 +37,22 @@ var gatewayGVR = &schema.GroupVersionResource{
 	Resource: "gateways",
 }
 
-func findGateway(cluster ClusterIndex, name string) (*unstructured.Unstructured, error) {
+func findGateway(ctx context.Context, cluster ClusterIndex, name string) (*unstructured.Unstructured, error) {
 	gwClient := gatewayClient(cluster)
-	resGw, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
+	resGw, err := gwClient.Get(ctx, name, metav1.GetOptions{})
 
 	if apierrors.IsNotFound(err) {
 		// Some environments sets a node in Gateway resource without a suffix
-		resGw, err = gwClient.Get(context.TODO(), strings.Split(name, ".")[0], metav1.GetOptions{})
+		resGw, err = gwClient.Get(ctx, strings.Split(name, ".")[0], metav1.GetOptions{})
 	}
 
 	return resGw, err
 }
 
-func (f *Framework) AwaitGatewayWithStatus(cluster ClusterIndex, name, status string) *unstructured.Unstructured {
-	return AwaitUntil(fmt.Sprintf("await Gateway on %q with status %q", name, status),
-		func() (*unstructured.Unstructured, error) {
-			gw, err := findGateway(cluster, name)
+func (f *Framework) AwaitGatewayWithStatus(ctx context.Context, cluster ClusterIndex, name, status string) *unstructured.Unstructured {
+	return AwaitUntil(ctx, fmt.Sprintf("await Gateway on %q with status %q", name, status),
+		func(ctx context.Context) (*unstructured.Unstructured, error) {
+			gw, err := findGateway(ctx, cluster, name)
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
@@ -78,10 +78,10 @@ func gatewayClient(cluster ClusterIndex) dynamic.ResourceInterface {
 	return DynClients[cluster].Resource(*gatewayGVR).Namespace(TestContext.SubmarinerNamespace)
 }
 
-func (f *Framework) AwaitGatewaysWithStatus(cluster ClusterIndex, status string) []unstructured.Unstructured {
-	return AwaitUntil(fmt.Sprintf("await Gateways with status %q", status),
-		func() ([]unstructured.Unstructured, error) {
-			return f.GetGatewaysWithHAStatus(cluster, status), nil
+func (f *Framework) AwaitGatewaysWithStatus(ctx context.Context, cluster ClusterIndex, status string) []unstructured.Unstructured {
+	return AwaitUntil(ctx, fmt.Sprintf("await Gateways with status %q", status),
+		func(ctx context.Context) ([]unstructured.Unstructured, error) {
+			return f.GetGatewaysWithHAStatus(ctx, cluster, status), nil
 		},
 		func(gateways []unstructured.Unstructured) (bool, string, error) {
 			if len(gateways) == 0 {
@@ -92,12 +92,12 @@ func (f *Framework) AwaitGatewaysWithStatus(cluster ClusterIndex, status string)
 		})
 }
 
-func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
+func (f *Framework) AwaitGatewayRemoved(ctx context.Context, cluster ClusterIndex, name string) {
 	gwClient := gatewayClient(cluster)
 
-	AwaitUntil(fmt.Sprintf("await Gateway on %q removed", name),
-		func() (bool, error) {
-			_, err := gwClient.Get(context.TODO(), name, metav1.GetOptions{})
+	AwaitUntil(ctx, fmt.Sprintf("await Gateway on %q removed", name),
+		func(ctx context.Context) (bool, error) {
+			_, err := gwClient.Get(ctx, name, metav1.GetOptions{})
 			if apierrors.IsNotFound(err) {
 				return true, nil
 			}
@@ -109,10 +109,10 @@ func (f *Framework) AwaitGatewayRemoved(cluster ClusterIndex, name string) {
 		})
 }
 
-func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string) *unstructured.Unstructured {
-	return AwaitUntil(fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
-		func() (*unstructured.Unstructured, error) {
-			gw, err := findGateway(cluster, name)
+func (f *Framework) AwaitGatewayFullyConnected(ctx context.Context, cluster ClusterIndex, name string) *unstructured.Unstructured {
+	return AwaitUntil(ctx, fmt.Sprintf("await Gateway on %q with status active and connections UP", name),
+		func(ctx context.Context) (*unstructured.Unstructured, error) {
+			gw, err := findGateway(ctx, cluster, name)
 			if apierrors.IsNotFound(err) {
 				return nil, nil
 			}
@@ -151,10 +151,10 @@ func (f *Framework) AwaitGatewayFullyConnected(cluster ClusterIndex, name string
 }
 
 func (f *Framework) GetGatewaysWithHAStatus(
-	cluster ClusterIndex, status string,
+	ctx context.Context, cluster ClusterIndex, status string,
 ) []unstructured.Unstructured {
 	gwClient := gatewayClient(cluster)
-	gwList, err := gwClient.List(context.TODO(), metav1.ListOptions{})
+	gwList, err := gwClient.List(ctx, metav1.ListOptions{})
 
 	filteredGateways := []unstructured.Unstructured{}
 
@@ -175,9 +175,9 @@ func (f *Framework) GetGatewaysWithHAStatus(
 	return filteredGateways
 }
 
-func (f *Framework) DeleteGateway(cluster ClusterIndex, name string) {
-	AwaitUntil("delete gateway", func() (any, error) {
-		err := gatewayClient(cluster).Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (f *Framework) DeleteGateway(ctx context.Context, cluster ClusterIndex, name string) {
+	AwaitUntil(ctx, "delete gateway", func(ctx context.Context) (any, error) {
+		err := gatewayClient(cluster).Delete(ctx, name, metav1.DeleteOptions{})
 		if apierrors.IsNotFound(err) {
 			return nil, nil //nolint:nilnil // We want to repeat but let the checker known that nothing was found.
 		}
@@ -193,9 +193,7 @@ func (f *Framework) SaveGatewayNode(cluster ClusterIndex, gwNode string) {
 // GatewayCleanup will be executed only on kind environment.
 // It will restore the gateway nodes to its initial state.
 // Other environments do not need any gw cleanup as MachineSet is responsible to keeping the gw nodes in active states.
-func (f *Framework) GatewayCleanup() {
-	ctx := context.TODO()
-
+func (f *Framework) GatewayCleanup(ctx context.Context) {
 	for cluster := range f.gatewayNodesToReset {
 		for _, gnode := range f.gatewayNodesToReset[cluster] {
 			By(fmt.Sprintf("Restoring gateway %q on cluster %q", gnode, TestContext.ClusterIDs[cluster]))

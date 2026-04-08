@@ -97,7 +97,7 @@ const (
 	TestPort = 1234
 )
 
-func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
+func (f *Framework) NewNetworkPod(ctx context.Context, config *NetworkPodConfig) *NetworkPod {
 	// check if all necessary details are provided
 	Expect(config.Scheduling).ShouldNot(Equal(InvalidScheduling))
 	Expect(config.Type).ShouldNot(Equal(InvalidPodType))
@@ -121,19 +121,19 @@ func (f *Framework) NewNetworkPod(config *NetworkPodConfig) *NetworkPod {
 
 	switch config.Type {
 	case ListenerPod:
-		networkPod.buildTCPCheckListenerPod()
+		networkPod.buildTCPCheckListenerPod(ctx)
 	case ConnectorPod:
-		networkPod.buildTCPCheckConnectorPod()
+		networkPod.buildTCPCheckConnectorPod(ctx)
 	case ThroughputClientPod:
-		networkPod.buildThroughputClientPod()
+		networkPod.buildThroughputClientPod(ctx)
 	case ThroughputServerPod:
-		networkPod.buildThroughputServerPod()
+		networkPod.buildThroughputServerPod(ctx)
 	case LatencyClientPod:
-		networkPod.buildLatencyClientPod()
+		networkPod.buildLatencyClientPod(ctx)
 	case LatencyServerPod:
-		networkPod.buildLatencyServerPod()
+		networkPod.buildLatencyServerPod(ctx)
 	case CustomPod:
-		networkPod.buildCustomPod()
+		networkPod.buildCustomPod(ctx)
 	case InvalidPodType:
 		panic("config.Type can't equal InvalidPodType here, we checked above")
 	}
@@ -155,11 +155,11 @@ func (np *NetworkPod) GetIP() string {
 	return ""
 }
 
-func (np *NetworkPod) AwaitReady() {
+func (np *NetworkPod) AwaitReady(ctx context.Context) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
-	np.Pod = AwaitUntil("await pod ready", func() (*v1.Pod, error) {
-		return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
+	np.Pod = AwaitUntil(ctx, "await pod ready", func(ctx context.Context) (*v1.Pod, error) {
+		return pods.Get(ctx, np.Pod.Name, metav1.GetOptions{})
 	}, func(pod *v1.Pod) (bool, string, error) {
 		if pod.Status.Phase != v1.PodRunning {
 			if pod.Status.Phase != v1.PodPending {
@@ -175,16 +175,16 @@ func (np *NetworkPod) AwaitReady() {
 	})
 }
 
-func (np *NetworkPod) AwaitFinish() {
-	np.AwaitFinishVerbose(true)
+func (np *NetworkPod) AwaitFinish(ctx context.Context) {
+	np.AwaitFinishVerbose(ctx, true)
 }
 
-func (np *NetworkPod) AwaitFinishVerbose(verbose bool) {
+func (np *NetworkPod) AwaitFinishVerbose(ctx context.Context, verbose bool) {
 	pods := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
-	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(fmt.Sprintf("await pod %q finished", np.Pod.Name),
-		func() (any, error) {
-			return pods.Get(context.TODO(), np.Pod.Name, metav1.GetOptions{})
+	_, np.TerminationErrorMsg, np.TerminationError = AwaitResultOrError(ctx, fmt.Sprintf("await pod %q finished", np.Pod.Name),
+		func(ctx context.Context) (any, error) {
+			return pods.Get(ctx, np.Pod.Name, metav1.GetOptions{})
 		}, func(result any) (bool, string, error) {
 			np.Pod = result.(*v1.Pod)
 
@@ -211,14 +211,14 @@ func (np *NetworkPod) CheckSuccessfulFinish() {
 	Expect(np.TerminationCode).To(Equal(int32(0)))
 }
 
-func (np *NetworkPod) CreateService() *v1.Service {
+func (np *NetworkPod) CreateService(ctx context.Context) *v1.Service {
 	ipFamily := v1.IPv4Protocol
 
 	if np.Config.IsIPv6 {
 		ipFamily = v1.IPv6Protocol
 	}
 
-	return np.framework.CreateTCPServiceWithIPFamily(np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port, &ipFamily)
+	return np.framework.CreateTCPServiceWithIPFamily(ctx, np.Config.Cluster, np.Pod.Labels[TestAppLabel], np.Config.Port, &ipFamily)
 }
 
 // RunCommand run the specified command in this NetworkPod.
@@ -257,10 +257,10 @@ func (np *NetworkPod) RunCommand(ctx context.Context, cmd []string) (string, str
 }
 
 // GetLog returns container log from this NetworkPod.
-func (np *NetworkPod) GetLog() string {
+func (np *NetworkPod) GetLog(ctx context.Context) string {
 	req := KubeClients[np.Config.Cluster].CoreV1().Pods(np.Pod.Namespace).GetLogs(np.Pod.Name, &v1.PodLogOptions{})
 
-	closer, err := req.Stream(context.TODO())
+	closer, err := req.Stream(ctx)
 	Expect(err).NotTo(HaveOccurred())
 
 	defer closer.Close()
@@ -276,7 +276,7 @@ func (np *NetworkPod) GetLog() string {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will listen on TestPort over TCP, send sendString over the connection,
 // and write the network response in the pod  termination log, then exit with 0 status.
-func (np *NetworkPod) buildTCPCheckListenerPod() {
+func (np *NetworkPod) buildTCPCheckListenerPod(ctx context.Context) {
 	listenAddress := "0.0.0.0"
 	if np.Config.IsIPv6 {
 		listenAddress = "::"
@@ -296,7 +296,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -324,16 +324,16 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &tcpCheckListenerPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &tcpCheckListenerPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will connect to remoteIP:TestPort over TCP, send sendString over the
 // connection, and write the network response in the pod termination log, then
 // exit with 0 status.
-func (np *NetworkPod) buildTCPCheckConnectorPod() {
+func (np *NetworkPod) buildTCPCheckConnectorPod(ctx context.Context) {
 	ncCmd := "nc -v"
 	if np.Config.IsIPv6 {
 		ncCmd = "nc -6 -v"
@@ -354,7 +354,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			HostNetwork:   bool(np.Config.Networking),
 			Containers: []v1.Container{
@@ -386,7 +386,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &tcpCheckConnectorPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &tcpCheckConnectorPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 }
 
@@ -394,7 +394,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 // The pod will initiate iperf3 throughput test to remoteIP and write the test
 // response in the pod termination log, then
 // exit with 0 status.
-func (np *NetworkPod) buildThroughputClientPod() {
+func (np *NetworkPod) buildThroughputClientPod(ctx context.Context) {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-client-pod",
@@ -403,7 +403,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -432,14 +432,14 @@ func (np *NetworkPod) buildThroughputClientPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will start iperf3 in server mode.
-func (np *NetworkPod) buildThroughputServerPod() {
+func (np *NetworkPod) buildThroughputServerPod(ctx context.Context) {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "nettest-server-pod",
@@ -448,7 +448,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -467,16 +467,16 @@ func (np *NetworkPod) buildThroughputServerPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will initiate netperf latency test to remoteIP and write the test
 // response in the pod termination log, then
 // exit with 0 status.
-func (np *NetworkPod) buildLatencyClientPod() {
+func (np *NetworkPod) buildLatencyClientPod(ctx context.Context) {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-client-pod",
@@ -485,7 +485,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -509,14 +509,14 @@ func (np *NetworkPod) buildLatencyClientPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will start netserver (server of netperf).
-func (np *NetworkPod) buildLatencyServerPod() {
+func (np *NetworkPod) buildLatencyServerPod(ctx context.Context) {
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "latency-server-pod",
@@ -525,7 +525,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy: v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
@@ -541,14 +541,14 @@ func (np *NetworkPod) buildLatencyServerPod() {
 	}
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &nettestPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &nettestPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will use the image specified and run command specified.
-func (np *NetworkPod) buildCustomPod() {
+func (np *NetworkPod) buildCustomPod(ctx context.Context) {
 	terminationGracePeriodSeconds := int64(5)
 	customPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -558,7 +558,7 @@ func (np *NetworkPod) buildCustomPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:                      np.nodeAffinity(np.Config.Scheduling),
+			Affinity:                      np.nodeAffinity(ctx, np.Config.Scheduling),
 			RestartPolicy:                 v1.RestartPolicyNever,
 			HostNetwork:                   bool(np.Config.Networking),
 			TerminationGracePeriodSeconds: &terminationGracePeriodSeconds,
@@ -578,31 +578,31 @@ func (np *NetworkPod) buildCustomPod() {
 	pc := KubeClients[np.Config.Cluster].CoreV1().Pods(np.framework.Namespace)
 
 	var err error
-	np.Pod, err = pc.Create(context.TODO(), &customPod, metav1.CreateOptions{})
+	np.Pod, err = pc.Create(ctx, &customPod, metav1.CreateOptions{})
 	Expect(err).NotTo(HaveOccurred())
 
-	np.AwaitReady()
+	np.AwaitReady(ctx)
 }
 
-func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity {
+func (np *NetworkPod) nodeAffinity(ctx context.Context, scheduling NetworkPodScheduling) *v1.Affinity {
 	Expect(scheduling).ShouldNot(Equal(InvalidScheduling))
 
 	var nodeSelTerms []v1.NodeSelectorTerm
 
 	switch scheduling {
 	case GatewayNode:
-		hostname := np.activeGatewayHostname()
+		hostname := np.activeGatewayHostname(ctx)
 		nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, []string{hostname})
 
 	case NonGatewayNode:
-		smE2eNonGWLabelledNodeList, err := KubeClients[np.Config.Cluster].CoreV1().Nodes().List(context.TODO(),
+		smE2eNonGWLabelledNodeList, err := KubeClients[np.Config.Cluster].CoreV1().Nodes().List(ctx,
 			metav1.ListOptions{LabelSelector: TestNonGWNodeLabel})
 		Expect(err).NotTo(HaveOccurred())
 
 		nonGWNodes := []string{}
 
 		if len(smE2eNonGWLabelledNodeList.Items) > 0 {
-			activeGWHostname := np.activeGatewayHostname()
+			activeGWHostname := np.activeGatewayHostname(ctx)
 
 			for i := range smE2eNonGWLabelledNodeList.Items {
 				hostname := smE2eNonGWLabelledNodeList.Items[i].GetObjectMeta().GetLabels()["kubernetes.io/hostname"]
@@ -637,10 +637,10 @@ func (np *NetworkPod) nodeAffinity(scheduling NetworkPodScheduling) *v1.Affinity
 	}
 }
 
-func (np *NetworkPod) activeGatewayHostname() string {
-	smGWPodList := AwaitUntil("await active gateway Pod",
-		func() (*v1.PodList, error) {
-			return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(context.TODO(),
+func (np *NetworkPod) activeGatewayHostname(ctx context.Context) string {
+	smGWPodList := AwaitUntil(ctx, "await active gateway Pod",
+		func(ctx context.Context) (*v1.PodList, error) {
+			return KubeClients[np.Config.Cluster].CoreV1().Pods(TestContext.SubmarinerNamespace).List(ctx,
 				metav1.ListOptions{LabelSelector: ActiveGatewayLabel})
 		},
 		func(result *v1.PodList) (bool, string, error) {

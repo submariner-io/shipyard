@@ -33,7 +33,7 @@ var gvr = schema.GroupVersionResource{
 	Resource: "serviceexports",
 }
 
-func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
+func (f *Framework) CreateServiceExport(ctx context.Context, cluster ClusterIndex, name string) {
 	resourceServiceExport := &unstructured.Unstructured{}
 	resourceServiceExport.SetName(name)
 	resourceServiceExport.SetNamespace(f.Namespace)
@@ -42,8 +42,8 @@ func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 
 	svcExs := DynClients[cluster].Resource(gvr).Namespace(f.Namespace)
 
-	_ = AwaitUntil("create service export", func() (*unstructured.Unstructured, error) {
-		result, err := svcExs.Create(context.TODO(), resourceServiceExport, metav1.CreateOptions{})
+	_ = AwaitUntil(ctx, "create service export", func(ctx context.Context) (*unstructured.Unstructured, error) {
+		result, err := svcExs.Create(ctx, resourceServiceExport, metav1.CreateOptions{})
 		if errors.IsAlreadyExists(err) {
 			err = nil
 		}
@@ -52,8 +52,8 @@ func (f *Framework) CreateServiceExport(cluster ClusterIndex, name string) {
 	}, NoopCheckResult)
 }
 
-func (f *Framework) DeleteServiceExport(cluster ClusterIndex, name string) {
-	AwaitUntil("delete service export", func() (any, error) {
-		return nil, DynClients[cluster].Resource(gvr).Namespace(f.Namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (f *Framework) DeleteServiceExport(ctx context.Context, cluster ClusterIndex, name string) {
+	AwaitUntil(ctx, "delete service export", func(ctx context.Context) (any, error) {
+		return nil, DynClients[cluster].Resource(gvr).Namespace(f.Namespace).Delete(ctx, name, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }

@@ -67,6 +67,7 @@ func (f *Framework) NewService(name, portName string, port int32, protocol corev
 }
 
 func (f *Framework) CreateTCPServiceWithIPFamily(
+	ctx context.Context,
 	cluster ClusterIndex,
 	selectorName string,
 	port int32,
@@ -76,18 +77,19 @@ func (f *Framework) CreateTCPServiceWithIPFamily(
 		map[string]string{TestAppLabel: selectorName}, false, ipFamily)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
-	return f.CreateService(sc, tcpService)
+	return f.CreateService(ctx, sc, tcpService)
 }
 
-func (f *Framework) CreateHeadlessTCPService(cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
+func (f *Framework) CreateHeadlessTCPService(ctx context.Context, cluster ClusterIndex, selectorName string, port int32) *corev1.Service {
 	tcpService := f.NewService("test-svc"+selectorName, "tcp", port, corev1.ProtocolTCP,
 		map[string]string{TestAppLabel: selectorName}, true, nil)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
-	return f.CreateService(sc, tcpService)
+	return f.CreateService(ctx, sc, tcpService)
 }
 
-func (f *Framework) NewNginxServiceWithIPFamilyPolicy(cluster ClusterIndex, ipFamilyPolicy *corev1.IPFamilyPolicy) *corev1.Service {
+func (f *Framework) NewNginxServiceWithIPFamilyPolicy(ctx context.Context, cluster ClusterIndex, ipFamilyPolicy *corev1.IPFamilyPolicy,
+) *corev1.Service {
 	nginxService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: "nginx-demo",
@@ -120,39 +122,40 @@ func (f *Framework) NewNginxServiceWithIPFamilyPolicy(cluster ClusterIndex, ipFa
 
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
-	return f.CreateService(sc, &nginxService)
+	return f.CreateService(ctx, sc, &nginxService)
 }
 
-func (f *Framework) NewNginxService(cluster ClusterIndex) *corev1.Service {
-	return f.NewNginxServiceWithIPFamilyPolicy(cluster, nil)
+func (f *Framework) NewNginxService(ctx context.Context, cluster ClusterIndex) *corev1.Service {
+	return f.NewNginxServiceWithIPFamilyPolicy(ctx, cluster, nil)
 }
 
-func (f *Framework) CreateTCPServiceWithoutSelector(cluster ClusterIndex, svcName, portName string, port int32) *corev1.Service {
+func (f *Framework) CreateTCPServiceWithoutSelector(ctx context.Context, cluster ClusterIndex, svcName, portName string, port int32,
+) *corev1.Service {
 	serviceSpec := f.NewService(svcName, portName, port, corev1.ProtocolTCP, nil, false, nil)
 	sc := KubeClients[cluster].CoreV1().Services(f.Namespace)
 
-	return f.CreateService(sc, serviceSpec)
+	return f.CreateService(ctx, sc, serviceSpec)
 }
 
-func (f *Framework) CreateService(sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
-	return AwaitUntil("create service", func() (*corev1.Service, error) {
-		service, err := sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
+func (f *Framework) CreateService(ctx context.Context, sc typedv1.ServiceInterface, serviceSpec *corev1.Service) *corev1.Service {
+	return AwaitUntil(ctx, "create service", func(ctx context.Context) (*corev1.Service, error) {
+		service, err := sc.Create(ctx, serviceSpec, metav1.CreateOptions{})
 		if apierrors.IsAlreadyExists(err) {
-			err = sc.Delete(context.TODO(), serviceSpec.Name, metav1.DeleteOptions{})
+			err = sc.Delete(ctx, serviceSpec.Name, metav1.DeleteOptions{})
 			if err != nil {
 				return nil, err
 			}
 
-			service, err = sc.Create(context.TODO(), serviceSpec, metav1.CreateOptions{})
+			service, err = sc.Create(ctx, serviceSpec, metav1.CreateOptions{})
 		}
 
 		return service, err
 	}, NoopCheckResult)
 }
 
-func (f *Framework) DeleteService(cluster ClusterIndex, serviceName string) {
+func (f *Framework) DeleteService(ctx context.Context, cluster ClusterIndex, serviceName string) {
 	By(fmt.Sprintf("Deleting service %q on %q", serviceName, TestContext.ClusterIDs[cluster]))
-	AwaitUntil("delete service", func() (any, error) {
-		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(context.TODO(), serviceName, metav1.DeleteOptions{})
+	AwaitUntil(ctx, "delete service", func(ctx context.Context) (any, error) {
+		return nil, KubeClients[cluster].CoreV1().Services(f.Namespace).Delete(ctx, serviceName, metav1.DeleteOptions{})
 	}, NoopCheckResult)
 }
