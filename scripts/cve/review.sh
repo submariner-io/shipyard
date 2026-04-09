@@ -1,0 +1,74 @@
+#!/bin/bash
+# Review CVE fix results using a Claude subagent.
+# Pre-fetches all evidence, builds prompt from template, invokes claude.
+# Usage: review.sh STATE_FILE FIX_SUMMARY
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source-path=SCRIPTDIR
+# shellcheck source=lib.sh
+source "$SCRIPT_DIR/lib.sh"
+
+STATE_FILE="${1:?Usage: review.sh STATE_FILE FIX_SUMMARY [SCAN_OUTPUT]}"
+FIX_SUMMARY="${2:?Missing FIX_SUMMARY}"
+CURRENT_SCAN="${3:-}"
+load_state "$STATE_FILE"
+
+PROMPT_TEMPLATE="$SCRIPT_DIR/review-prompt.md"
+if [[ ! -f "$PROMPT_TEMPLATE" ]]; then
+  echo "ERROR: Prompt template not found: $PROMPT_TEMPLATE" >&2
+  exit 1
+fi
+
+# --- Pre-fetch evidence ---
+
+# Use provided scan output, or run a fresh scan
+if [[ -z "$CURRENT_SCAN" ]]; then
+  echo "Running scan for review evidence..."
+  # shellcheck disable=SC2119
+  CURRENT_SCAN=$(run_grype 2>&1) || CURRENT_SCAN="(scan failed)"
+fi
+
+# Locate info for any NEEDS_REVIEW packages
+LOCATE_OUTPUT=""
+NEEDS_REVIEW_PKGS=$(echo "$FIX_SUMMARY" | grep "^NEEDS_REVIEW:" | sed 's/NEEDS_REVIEW: \([^ ]*\).*/\1/' || true)
+for PKG in $NEEDS_REVIEW_PKGS; do
+  if [[ "$PKG" != *.* ]]; then
+    LOCATE_OUTPUT+="$PKG: see fix output above (not a Go module path)."$'\n\n'
+    continue
+  fi
+  LOCATE_OUTPUT+="$(bash "$SCRIPT_DIR/locate.sh" "$STATE_FILE" "$PKG" 2>&1 || true)"
+  LOCATE_OUTPUT+=$'\n\n'
+done
+
+if [[ -z "$LOCATE_OUTPUT" ]]; then
+  LOCATE_OUTPUT="All CVEs were fixed in the deterministic phase."
+fi
+
+# --- Build prompt ---
+export REPO BRANCH FIX_SUMMARY CURRENT_SCAN LOCATE_OUTPUT SHIPYARD_GO_VERSION
+export CVE_SCRIPTS="$SCRIPT_DIR" STATE_FILE
+PROMPT=$(envsubst < "$PROMPT_TEMPLATE")
+
+# --- Invoke Claude subagent ---
+echo "Invoking Claude for review..."
+if ! command -v claude &>/dev/null; then
+  echo "WARNING: claude CLI not available, skipping agent review."
+  echo "Deterministic fix results are still valid. Review manually:"
+  echo ""
+  echo "$FIX_SUMMARY"
+  exit 0
+fi
+
+OUTPUT=$(claude -p "$PROMPT" \
+  --print \
+  --model sonnet \
+  --allowedTools "Bash" \
+  2>&1) || true
+
+echo "$OUTPUT"
+
+# Extract summary lines
+echo ""
+echo "=== Review Summary ==="
+echo "$OUTPUT" | grep -E "^(FIXED|IGNORED|UNRESOLVED):" || echo "(no structured summary from agent)"

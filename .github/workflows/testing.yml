@@ -103,6 +103,9 @@ jobs:
       - name: Test the compile.sh script
         run: make script-test SCRIPT_TEST_ARGS="test/scripts/compile/test.sh"
 
+      - name: Test the CVE fix scripts
+        run: make script-test SCRIPT_TEST_ARGS="test/scripts/cve/test.sh"
+
   deployment:
     name: Deployment
     needs: images

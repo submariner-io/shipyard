@@ -36,6 +36,10 @@ Fixes: <CVE-ID-1>, <CVE-ID-2>
 - `github.com/docker/docker` → `docker/docker`
 - `golang.org/x/oauth2` → `x/oauth2`
 - `helm.sh/helm/v3` → `helm/v3`
+- `go.opentelemetry.io/otel` → `otel`
+- `go.opentelemetry.io/otel/exporters/otlp/*/X` → `otel/X`
+- `google.golang.org/grpc` → `grpc`
+- `sigs.k8s.io/controller-runtime` → `controller-runtime`
 - Keep `k8s.io/` prefix
 
 **Examples:**
