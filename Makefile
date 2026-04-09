@@ -5,7 +5,7 @@ LOCAL_COMPONENTS := submariner-metrics-proxy
 MULTIARCH_IMAGES ?= $(IMAGES)
 EXTRA_PRELOAD_IMAGES := $(PRELOAD_IMAGES)
 PLATFORMS ?= linux/amd64,linux/arm64
-NON_DAPPER_GOALS += images multiarch-images
+NON_DAPPER_GOALS += images multiarch-images cve-fix cve-clean
 PLUGIN ?=
 
 export LOCAL_COMPONENTS
@@ -64,6 +64,13 @@ deploy deploy-latest e2e upgrade-e2e: package/.image.nettest
 # Shipyard-specific ends
 
 include Makefile.dapper
+
+# CVE fix scripts
+cve-fix:
+	./scripts/cve/fix-all.sh "$(or $(REPO),.)" "$(or $(BRANCH),$(shell git branch --show-current))"
+
+cve-clean:
+	./scripts/cve/clean.sh
 
 # Make sure linting goals have up-to-date linting image
 $(LINTING_GOALS): package/.image.shipyard-linting
