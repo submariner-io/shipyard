@@ -206,8 +206,10 @@ require (
 	golang.org/x/mod v0.34.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
+	golang.org/x/telemetry v0.0.0-20260311193753-579e4da9a98c // indirect
 	golang.org/x/text v0.34.0 // indirect
 	golang.org/x/tools v0.43.0 // indirect
+	golang.org/x/vuln v1.1.4 // indirect
 	google.golang.org/protobuf v1.36.8 // indirect
 	gopkg.in/ini.v1 v1.67.0 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -222,5 +224,6 @@ require (
 tool (
 	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
 	github.com/psampaz/go-mod-outdated
+	golang.org/x/vuln/cmd/govulncheck
 	sigs.k8s.io/kind/cmd/kind
 )
