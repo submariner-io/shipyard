@@ -3,12 +3,6 @@ module github.com/submariner-io/shipyard/tools
 go 1.25.0
 
 require (
-	github.com/golangci/golangci-lint/v2 v2.11.4
-	github.com/psampaz/go-mod-outdated v0.9.0
-	sigs.k8s.io/kind v0.30.0
-)
-
-require (
 	4d63.com/gocheckcompilerdirectives v1.3.0 // indirect
 	4d63.com/gochecknoglobals v0.2.2 // indirect
 	al.essio.dev/pkg/shellescape v1.5.1 // indirect
@@ -88,6 +82,7 @@ require (
 	github.com/golangci/dupl v0.0.0-20250308024227-f665c8d69b32 // indirect
 	github.com/golangci/go-printf-func-name v0.1.1 // indirect
 	github.com/golangci/gofmt v0.0.0-20250106114630-d62b90e6713d // indirect
+	github.com/golangci/golangci-lint/v2 v2.11.4 // indirect
 	github.com/golangci/golines v0.15.0 // indirect
 	github.com/golangci/misspell v0.8.0 // indirect
 	github.com/golangci/plugin-module-register v0.1.2 // indirect
@@ -154,6 +149,7 @@ require (
 	github.com/prometheus/client_model v0.6.1 // indirect
 	github.com/prometheus/common v0.55.0 // indirect
 	github.com/prometheus/procfs v0.15.1 // indirect
+	github.com/psampaz/go-mod-outdated v0.9.0 // indirect
 	github.com/quasilyte/go-ruleguard v0.4.5 // indirect
 	github.com/quasilyte/go-ruleguard/dsl v0.3.23 // indirect
 	github.com/quasilyte/gogrep v0.5.0 // indirect
@@ -219,5 +215,12 @@ require (
 	honnef.co/go/tools v0.7.0 // indirect
 	mvdan.cc/gofumpt v0.9.2 // indirect
 	mvdan.cc/unparam v0.0.0-20251027182757-5beb8c8f8f15 // indirect
+	sigs.k8s.io/kind v0.30.0 // indirect
 	sigs.k8s.io/yaml v1.4.0 // indirect
+)
+
+tool (
+	github.com/golangci/golangci-lint/v2/cmd/golangci-lint
+	github.com/psampaz/go-mod-outdated
+	sigs.k8s.io/kind/cmd/kind
 )
