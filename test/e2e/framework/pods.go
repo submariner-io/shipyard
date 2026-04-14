@@ -21,8 +21,8 @@ package framework
 import (
 	"context"
 	"fmt"
-	"time"
 
+	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
 	apierrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -66,43 +66,39 @@ func (f *Framework) AwaitSubmarinerGatewayPod(ctx context.Context, cluster Clust
 }
 
 // AwaitActiveGatewayPod looks for active gateway pod.
-// Returns pod object or nil.
-func (f *Framework) AwaitActiveGatewayPod(ctx context.Context, cluster ClusterIndex, checkPod func(*v1.Pod) bool) *v1.Pod {
-	for retries := 1; retries <= 30; retries++ {
-		var activePod, retPod *v1.Pod
+// Returns pod object or fails.
+func (f *Framework) AwaitActiveGatewayPod(ctx context.Context, cluster ClusterIndex, checkPod func(*v1.Pod) bool,
+	optionalDescription ...any,
+) *v1.Pod {
+	var retPod *v1.Pod
+
+	if len(optionalDescription) == 0 {
+		optionalDescription = []any{"Did not find an active gateway pod for cluster %q", TestContext.ClusterIDs[cluster]}
+	}
+
+	Eventually(func(g Gomega, ctx context.Context) {
 		gwPods := f.AwaitPodsByAppLabel(ctx, cluster, SubmarinerGateway, TestContext.SubmarinerNamespace, -1)
 
+		var activePods []*v1.Pod
+
 		for i := range gwPods.Items {
-			pod := &gwPods.Items[i]
-			if pod.Labels[gatewayStatusLabel] == gatewayStatusActive {
-				if activePod != nil {
-					Errorf("Found 2 active gateway pods: %q and %q", activePod.Name, pod.Name)
-
-					retPod = nil
-
-					break
-				}
-
-				activePod = pod
-
-				if checkPod == nil || checkPod(pod) {
-					retPod = pod
-				}
+			if gwPods.Items[i].Labels[gatewayStatusLabel] == gatewayStatusActive {
+				activePods = append(activePods, &gwPods.Items[i])
 			}
 		}
 
-		if retPod != nil {
-			return retPod
+		g.Expect(activePods).To(HaveLen(1), "Expected 1 active gateway pod on cluster %q",
+			TestContext.ClusterIDs[cluster])
+
+		pod := activePods[0]
+		if checkPod == nil || checkPod(pod) {
+			retPod = pod
 		}
 
-		select {
-		case <-ctx.Done():
-			return nil
-		case <-time.After(5 * time.Second):
-		}
-	}
+		g.Expect(retPod).ToNot(BeNil(), optionalDescription...)
+	}).WithTimeout(TestContext.OperationTimeoutToDuration()).WithContext(ctx).Should(Succeed())
 
-	return nil
+	return retPod
 }
 
 // DeletePod deletes the pod for the given name and namespace.
