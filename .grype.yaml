@@ -42,3 +42,14 @@ ignore:
   - vulnerability: GHSA-pxq6-2prw-chj9
     package:
       name: github.com/docker/docker
+  # Update requires OpenTelemetry major version update. Medium severity doesn't justify breaking changes on stable branches.
+  - vulnerability: GHSA-w8rr-5gcm-pp58
+    package:
+      name: go.opentelemetry.io/otel/exporters/otlp/otlpmetric/otlpmetrichttp
+  - vulnerability: GHSA-w8rr-5gcm-pp58
+    package:
+      name: go.opentelemetry.io/otel/exporters/otlp/otlptrace/otlptracehttp
+  # Update requires OpenTelemetry major version update. High severity doesn't justify breaking changes on stable branches.
+  - vulnerability: GHSA-hfvc-g4fc-pqhx
+    package:
+      name: go.opentelemetry.io/otel/sdk
