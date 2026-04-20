@@ -1,6 +1,6 @@
 FROM fedora:44
 
-# Unless specified otherwise, compress to a medium level which gives (from experemintation) a
+# Unless specified otherwise, compress to a medium level which gives (from experimentation) a
 # good balance between compression time and resulting image size.
 ARG UPX_LEVEL=-5
 ENV DAPPER_HOST_ARCH=amd64 SHIPYARD_DIR=/opt/shipyard SHELL=/bin/bash \
@@ -78,7 +78,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/*/lto1 && \
-    find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
+    if test ${UPX_LEVEL} != -0; then find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube && \
     ln -f /usr/bin/helm3 /usr/bin/helm
 
@@ -93,7 +93,7 @@ RUN go -C /tools install github.com/golangci/golangci-lint/v2/cmd/golangci-lint 
     go -C /tools install golang.org/x/vuln/cmd/govulncheck && \
     curl -L https://raw.githubusercontent.com/jonmosco/kube-ps1/1b8fe913b25ba857b84a94c3b1dbf7bb34f7caef/kube-ps1.sh -o /etc/profile.d/kube-ps1.sh && \
     find /go/bin -type f -executable -newercm /go -exec strip {} + && \
-    find /go/bin -type f -executable -newercm /go ! -name govulncheck \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
+    if test ${UPX_LEVEL} != -0; then find /go/bin -type f -executable -newercm /go ! -name govulncheck \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
     go clean -cache -modcache && rm -rf /tools
 
 # Link get-subctl script so it can be easily run inside a shell

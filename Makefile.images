@@ -27,6 +27,9 @@ endif
 # Specific to `release-images`
 export TAG ?= $(CUTTING_EDGE)
 
+# Compress large binaries in images
+export IMAGE_UPX ?= true
+
 # Force rebuild an image if it's not in docker
 force_image_rebuild = $(if $(shell docker image history $(REPO)/$(1):$(BASE_BRANCH)),,FORCE_IMAGE)
 
