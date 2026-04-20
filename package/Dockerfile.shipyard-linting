@@ -1,5 +1,8 @@
 FROM alpine
 
+# Unless specified otherwise, compress to a medium level which gives (from experimentation) a
+# good balance between compression time and resulting image size.
+ARG UPX_LEVEL=-5
 ENV DAPPER_HOST_ARCH=amd64 SHELL=/bin/bash \
     SHIPYARD_DIR=/opt/shipyard
 ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} \
@@ -33,7 +36,7 @@ RUN mkdir -p ${SHIPYARD_DIR} && \
     apk add --no-cache --virtual installers npm py3-pip && \
     npm install -g markdownlint-cli@${MARKDOWNLINT_VERSION} && \
     pip install --break-system-packages gitlint==${GITLINT_VERSION} && \
-    find /usr/bin/ -type f -executable -newercm ${SHIPYARD_DIR} -size +1M  \( -execdir upx {} \; -o -true \) && \
+    if test ${UPX_LEVEL} != -0; then find /usr/bin/ -type f -executable -newercm ${SHIPYARD_DIR} -size +1M \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
     find /usr/lib/ -name __pycache__ -type d -exec rm -rf {} + && \
     apk del installers
 

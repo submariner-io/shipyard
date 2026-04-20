@@ -53,7 +53,7 @@ jobs:
         with:
           fetch-depth: 0
       - name: Run gitlint
-        run: make gitlint
+        run: make IMAGE_UPX=false gitlint
 
   golangci-lint:
     name: Go
@@ -62,7 +62,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run golangci-lint
-        run: make golangci-lint
+        run: make IMAGE_UPX=false golangci-lint
 
   markdown-link-check:
     name: Markdown Links (modified files)
@@ -85,7 +85,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run markdownlint
-        run: make markdownlint
+        run: make IMAGE_UPX=false markdownlint
 
   packagedoc-lint:
     name: Package Documentation
@@ -94,7 +94,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run packagedoc-lint
-        run: make packagedoc-lint
+        run: make IMAGE_UPX=false packagedoc-lint
 
   shellcheck:
     name: Shell
@@ -103,7 +103,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run shellcheck
-        run: make shellcheck
+        run: make IMAGE_UPX=false shellcheck
 
   vulnerability-scan:
     name: Vulnerability Scanning
@@ -114,7 +114,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run govulncheck (producing a text report and failing the build if necessary)
-        run: make govulncheck
+        run: make IMAGE_UPX=false govulncheck
 
   yaml-lint:
     name: YAML
@@ -123,4 +123,4 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd
       - name: Run yamllint
-        run: make yamllint
+        run: make IMAGE_UPX=false yamllint
