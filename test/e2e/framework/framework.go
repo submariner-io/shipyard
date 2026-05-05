@@ -46,6 +46,7 @@ import (
 	"k8s.io/client-go/rest"
 	"k8s.io/utils/ptr"
 	mcsv1a1 "sigs.k8s.io/mcs-api/pkg/apis/v1alpha1"
+	mcsv1b1 "sigs.k8s.io/mcs-api/pkg/apis/v1beta1"
 )
 
 const (
@@ -216,8 +217,8 @@ func BeforeSuite(ctx context.Context) {
 
 	fetchClusterIDs(ctx)
 
-	err := mcsv1a1.Install(scheme.Scheme)
-	Expect(err).NotTo(HaveOccurred())
+	Expect(mcsv1a1.Install(scheme.Scheme)).NotTo(HaveOccurred())
+	Expect(mcsv1b1.Install(scheme.Scheme)).NotTo(HaveOccurred())
 
 	for _, beforeSuite := range beforeSuiteFuncs {
 		beforeSuite()
