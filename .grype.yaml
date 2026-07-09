@@ -11,6 +11,10 @@ ignore:
     package:
       name: google.golang.org/protobuf
 
+  # Update requires Go 1.25.0 in tools/go.mod. Low severity doesn't justify breaking release-0.23 Go version constraint.
+  - vulnerability: GO-2026-5024
+    package:
+      name: golang.org/x/sys
 exclude:
   # Exclude git-ignored ovn-kubernetes directory
   - "./ovn-kubernetes/**"
