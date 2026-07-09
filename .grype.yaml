@@ -10,6 +10,10 @@ ignore:
   - vulnerability: CVE-2021-22570
     package:
       name: google.golang.org/protobuf
+  # Update requires Go 1.25. Low severity doesn't justify breaking changes.
+  - vulnerability: GO-2026-5024
+    package:
+      name: golang.org/x/sys
 
 exclude:
   # Exclude git-ignored ovn-kubernetes directory
