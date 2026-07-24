@@ -66,6 +66,9 @@ $(error strongSwan is no longer supported)
 else ifneq (,$(filter wireguard,$(_using)))
 # Wireguard requires kernel module install on the host
 CABLE_DRIVER = wireguard
+else ifneq (,$(filter amneziawg,$(_using)))
+# AmneziaWG is userspace (embedded amneziawg-go); no host kernel module
+CABLE_DRIVER = amneziawg
 else ifneq (,$(filter vxlan,$(_using)))
 CABLE_DRIVER = vxlan
 endif
