@@ -34,8 +34,10 @@ govulncheck:
 ifneq (,$(shell find . -name go.mod))
 	vulns=0; \
 	for module in $$(find . -name go.mod -printf "%h\n"); do \
-		echo Checking for vulnerabilities in module "$$module"; \
-		(cd "$$module" && govulncheck ./...) || vulns=1; \
+		if [ -n "$$(go -C "$$module" list ./... 2>/dev/null)" ]; then \
+			echo Checking for vulnerabilities in module "$$module"; \
+			(cd "$$module" && govulncheck ./...) || vulns=1; \
+		fi; \
 	done; \
 	if [ "$$vulns" -ne 0 ]; then echo Vulnerabilities found; exit 1; fi
 else
