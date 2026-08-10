@@ -42,20 +42,19 @@ else
 	@echo 'There are no Go files to check.'
 endif
 
-# [govulncheck.sarif] checks the project for vulnerabilities
-govulncheck.sarif:
-ifneq (,$(shell find . -name go.mod))
-	printf '{"version": "2.1.0", "runs": []}' > $@
-	for module in $$(find . -name go.mod -printf "%h\n"); do \
-		echo Checking for vulnerabilities in module "$$module"; \
-		module_sarif=$$(mktemp); \
-		(cd "$$module" && govulncheck -format sarif ./...) >> "$$module_sarif"; \
-		jq -s '.[0].runs += (.[1].runs // []) | .[0]' $@ "$$module_sarif" > $@.new && mv $@.new $@; \
-		rm -f "$$module_sarif"; \
-	done
-else
-	@echo 'There are no Go files to check.'
-endif
+# [govulncheck.sarif] builds a SARIF vulnerability report for the main module
+govulncheck.sarif: govulncheck.main.sarif
+	mv $< $@
+
+# [govulncheck.%.sarif] builds a SARIF vulnerability report for the named module;
+# use "main" for the main module (.)
+govulncheck.%.sarif : module=$(patsubst main,.,$(patsubst govulncheck.%.sarif,%,$@))
+govulncheck.%.sarif:
+	if [ -n "$$(go -C "$$module" list ./... 2>/dev/null)" ]; then \
+		(cd "$(module)" && govulncheck -test -format sarif ./...) > $@; \
+	else \
+		echo 'There are no Go files to check.'; \
+	fi
 
 # [markdownlint] validates Markdown files in the project
 markdownlint:
