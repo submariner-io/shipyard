@@ -48,6 +48,7 @@ RUN dnf -y install --nodocs --setopt=install_weak_deps=False \
                    file \
                    findutils \
                    gcc \
+                   gettext-envsubst \
                    gh \
                    git-core \
                    gitlint \
