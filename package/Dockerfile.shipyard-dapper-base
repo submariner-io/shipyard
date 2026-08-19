@@ -51,6 +51,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    file \
                    findutils \
                    gcc \
+                   gettext-envsubst \
                    gh \
                    git-core \
                    gitlint \
