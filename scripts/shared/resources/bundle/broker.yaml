@@ -5,7 +5,7 @@ metadata:
   name: submariner-broker
   namespace: ${SUBM_NS}
 spec:
-  components: ["${components}"]
+  components: [$components]
   defaultGlobalnetClusterSize: 8192
   globalnetEnabled: ${OVERLAPPING}
   globalnetCIDRRange: 169.254.0.0/16
