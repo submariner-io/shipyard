@@ -28,8 +28,8 @@ runs:
         INPUT_CACHE="${INPUT_CACHE/#\~/$HOME}"
         mkdir -p "$INPUT_CACHE"
         for image in package/.image.*; do \
-          docker save quay.io/submariner/${image#package/.image.} | \
+          docker save "quay.io/submariner/${image#package/.image.}" | \
           gzip > "$INPUT_CACHE/${image#package/.image.}.tar.gz"; \
-          cp $image "$INPUT_CACHE"; \
+          cp "$image" "$INPUT_CACHE"; \
         done
         echo "::endgroup::"
