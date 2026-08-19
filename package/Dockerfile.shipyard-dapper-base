@@ -1,4 +1,4 @@
-FROM fedora:41
+FROM fedora:41@sha256:f1a3fab47bcb3c3ddf3135d5ee7ba8b7b25f2e809a47440936212a3a50957f3d
 
 # Unless specified otherwise, compress to a medium level which gives (from experemintation) a
 # good balance between compression time and resulting image size.
