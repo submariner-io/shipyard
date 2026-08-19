@@ -9,8 +9,8 @@ networking:
   ipFamily: dual
 containerdConfigPatches:
   - |-
-    [plugins.\"io.containerd.grpc.v1.cri\".registry]
-      config_path = \"/etc/containerd/certs.d\"
+    [plugins."io.containerd.grpc.v1.cri".registry]
+      config_path = "/etc/containerd/certs.d"
 kubeadmConfigPatches:
   - |
     apiVersion: kubeadm.k8s.io/v1beta2
