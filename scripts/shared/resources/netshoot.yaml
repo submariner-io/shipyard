@@ -13,15 +13,29 @@ spec:
       labels:
         app: netshoot
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: netshoot
           image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
           imagePullPolicy: IfNotPresent
           securityContext:
             allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
             capabilities:
               drop:
                 - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
           command:
             - sleep
             - 1h
