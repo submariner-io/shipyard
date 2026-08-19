@@ -172,16 +172,20 @@ EOF
 git checkout -b "${NEWBRANCHUNIQ}" "${BRANCH}"
 cleanbranch="${NEWBRANCHUNIQ}"
 
+# Download patches into a private temp dir instead of a predictable /tmp path.
+PATCHDIR=$(mktemp -d)
+declare -r PATCHDIR
+
 gitamcleanup=true
 for pull in "${PULLS[@]}"; do
-  echo "+++ Downloading patch to /tmp/${pull}.patch (in case you need to do this again)"
+  echo "+++ Downloading patch to ${PATCHDIR}/${pull}.patch (in case you need to do this again)"
 
-  curl -o "/tmp/${pull}.patch" -sSL "https://github.com/${MAIN_REPO_ORG}/${MAIN_REPO_NAME}/pull/${pull}.patch"
+  curl -o "${PATCHDIR}/${pull}.patch" -sSL "https://github.com/${MAIN_REPO_ORG}/${MAIN_REPO_NAME}/pull/${pull}.patch"
   echo
   echo "+++ About to attempt cherry pick of PR. To reattempt:"
-  echo "  $ git am -3 /tmp/${pull}.patch"
+  echo "  $ git am -3 ${PATCHDIR}/${pull}.patch"
   echo
-  git am -3 "/tmp/${pull}.patch" || {
+  git am -3 "${PATCHDIR}/${pull}.patch" || {
     conflicts=false
     while unmerged=$(git status --porcelain | grep ^U) && [[ -n ${unmerged} ]] \
       || [[ -e "${REBASEMAGIC}" ]]; do
@@ -207,13 +211,14 @@ for pull in "${PULLS[@]}"; do
   }
 
   # set the subject
-  subject=$(grep -m 1 "^Subject" "/tmp/${pull}.patch" | sed -e 's/Subject: \[PATCH//g' | sed 's/.*] //')
+  subject=$(grep -m 1 "^Subject" "${PATCHDIR}/${pull}.patch" | sed -e 's/Subject: \[PATCH//g' | sed 's/.*] //')
   SUBJECTS+=("#${pull}: ${subject}")
 
-  # remove the patch file from /tmp
-  rm -f "/tmp/${pull}.patch"
+  # remove the patch file from the temp dir
+  rm -f "${PATCHDIR}/${pull}.patch"
 done
 gitamcleanup=false
+rmdir "${PATCHDIR}" 2>/dev/null || true  # empty on the happy path
 
 if [[ -n "${DRY_RUN}" ]]; then
   echo "!!! Skipping git push and PR creation because you set DRY_RUN."
