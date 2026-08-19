@@ -17,6 +17,8 @@ jobs:
     steps:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Install an old cluster, upgrade it and check it
         uses: ./gh-actions/upgrade-e2e
