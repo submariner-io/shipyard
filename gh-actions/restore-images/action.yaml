@@ -23,8 +23,13 @@ runs:
     - name: Restore images from cache
       if: steps.image-cache.outputs.cache-hit == 'true'
       shell: bash
+      env:
+        INPUT_CACHE: ${{ inputs.cache }}
+        INPUT_WORKING_DIRECTORY: ${{ inputs.working-directory }}
       run: |
-        for archive in ${{ inputs.cache }}/*.tar*; do docker load -i $archive; done
-        if [ -d ${{ inputs.working-directory }}/package ]; then \
-          cp ${{ inputs.cache }}/.image.* ${{ inputs.working-directory }}/package/; \
+        # A leading ~ in an env value is not tilde-expanded by the shell; do it here.
+        INPUT_CACHE="${INPUT_CACHE/#\~/$HOME}"
+        for archive in "$INPUT_CACHE"/*.tar*; do docker load -i "$archive"; done
+        if [ -d "$INPUT_WORKING_DIRECTORY"/package ]; then \
+          cp "$INPUT_CACHE"/.image.* "$INPUT_WORKING_DIRECTORY"/package/; \
         fi
