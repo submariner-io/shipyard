@@ -19,13 +19,17 @@ runs:
     - name: Build the images if necessary
       if: steps.image-cache.outputs.cache-hit != 'true'
       shell: bash
+      env:
+        INPUT_CACHE: ${{ inputs.cache }}
       run: |
         echo "::group::Building images and storing them"
         make images
-        mkdir -p ${{ inputs.cache }}
+        # A leading ~ in an env value is not tilde-expanded by the shell; do it here.
+        INPUT_CACHE="${INPUT_CACHE/#\~/$HOME}"
+        mkdir -p "$INPUT_CACHE"
         for image in package/.image.*; do \
           docker save quay.io/submariner/${image#package/.image.} | \
-          gzip > ${{ inputs.cache }}/${image#package/.image.}.tar.gz; \
-          cp $image ${{ inputs.cache }}; \
+          gzip > "$INPUT_CACHE/${image#package/.image.}.tar.gz"; \
+          cp $image "$INPUT_CACHE"; \
         done
         echo "::endgroup::"
