@@ -61,6 +61,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    make \
                    moby-engine \
                    moreutils \
+                   openssl \
                    pip \
                    procps-ng \
                    protobuf-compiler \
@@ -90,6 +91,33 @@ RUN go -C /tools install github.com/golangci/golangci-lint/v2/cmd/golangci-lint 
     find /go/bin -type f -executable -newercm /go -exec strip {} + && \
     find /go/bin -type f -executable -newercm /go \( -execdir upx ${UPX_LEVEL} {} \; -o -true \) && \
     go clean -cache -modcache && rm -rf /tools
+
+# cosign for signing released community images (not packaged in Fedora dnf).
+# Verified via sigstore's documented artifact-key process
+# (https://docs.sigstore.dev/cosign/system_config/installation/#verifying-cosign-releases)
+# instead of a checksum fetched from the same GitHub release as the binary: that checksum
+# would only catch accidental truncation, not deliberate tampering, since an attacker who
+# could alter the binary could alter the checksum file too. The TUF root file is pinned by
+# hash (it's an immutable entry under root_history/, not a moving target) so this doesn't
+# just shift trust to another unpinned GitHub fetch; verify-blob --bundle below completes
+# the documented process by checking the bundle's Rekor log-inclusion proof, not just the
+# raw artifact-key signature. tuf-client is a build-time-only tool, removed after use.
+ARG COSIGN_VERSION=v3.1.3
+RUN GOBIN=/tmp/cosign-verify go install github.com/theupdateframework/go-tuf/cmd/tuf-client@v0.7.0 && \
+    cd /tmp/cosign-verify && \
+    curl -sSfL -o sigstore-root.json \
+        https://raw.githubusercontent.com/sigstore/root-signing/refs/heads/main/metadata/root_history/10.root.json && \
+    echo "836bff947925edfc23eb9ce17af66fb1e43bb5e2bdd240520985ae52b585eae9  sigstore-root.json" | sha256sum -c - && \
+    ./tuf-client init https://tuf-repo-cdn.sigstore.dev sigstore-root.json && \
+    ./tuf-client get https://tuf-repo-cdn.sigstore.dev artifact.pub > artifact.pub && \
+    curl -sSfL -o cosign-kms.sigstore.json \
+        "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-${ARCH}-kms.sigstore.json" && \
+    jq -r .messageSignature.signature cosign-kms.sigstore.json | base64 -d > cosign-kms.sig.decoded && \
+    curl -sSfL -o /usr/local/bin/cosign "https://github.com/sigstore/cosign/releases/download/${COSIGN_VERSION}/cosign-linux-${ARCH}" && \
+    openssl dgst -sha256 -verify artifact.pub -signature cosign-kms.sig.decoded /usr/local/bin/cosign && \
+    chmod +x /usr/local/bin/cosign && \
+    /usr/local/bin/cosign verify-blob --bundle cosign-kms.sigstore.json --key artifact.pub /usr/local/bin/cosign && \
+    cd / && rm -rf /tmp/cosign-verify && go clean -cache -modcache
 
 # Link get-subctl script so it can be easily run inside a shell
 RUN mkdir -p /root/.local/bin && ln -s $SCRIPTS_DIR/get-subctl.sh /root/.local/bin/subctl
