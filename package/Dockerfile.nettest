@@ -24,4 +24,6 @@ COPY scripts/nettest/* /app/
 
 RUN echo ${VERSION} >> /app/version
 
+USER 10000
+
 CMD ["/bin/bash","-l"]
