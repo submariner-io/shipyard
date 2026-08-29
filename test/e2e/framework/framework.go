@@ -227,15 +227,18 @@ func BeforeSuite(ctx context.Context) {
 }
 
 func initPodSecurityContext() {
+	readOnly, runAsNonRoot := true, true
+	runAsUser := int64(10000) // We need to set some user ID other than 0.
 	podSecurityContext = &corev1.SecurityContext{
-		AllowPrivilegeEscalation: new(false),
+		AllowPrivilegeEscalation: new(bool),
+		ReadOnlyRootFilesystem:   &readOnly,
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{
 				"ALL",
 			},
 		},
-		RunAsNonRoot: new(true),
-		RunAsUser:    new(int64(10000)), // We need to set some user ID other than 0.
+		RunAsNonRoot: &runAsNonRoot,
+		RunAsUser:    &runAsUser,
 	}
 
 	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
@@ -483,7 +486,7 @@ func (f *Framework) DetermineIPFamilyType(ctx context.Context, cluster ClusterIn
 		ObjectMeta: metav1.ObjectMeta{Name: "test-ip-families"},
 		Spec: corev1.ServiceSpec{
 			Type:           corev1.ServiceTypeClusterIP,
-			IPFamilyPolicy: new(corev1.IPFamilyPolicyPreferDualStack),
+			IPFamilyPolicy: func() *corev1.IPFamilyPolicy { v := corev1.IPFamilyPolicyPreferDualStack; return &v }(),
 			Ports: []corev1.ServicePort{
 				{
 					Port:       9000,
