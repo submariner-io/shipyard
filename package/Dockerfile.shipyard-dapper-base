@@ -72,7 +72,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    unzip \
                    upx \
                    yq && \
-    pipx install jinjanator[yaml] && \
+    pipx install jinjanator[yaml]==25.3.1 && \
     rpm -e --nodeps containerd && \
     rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
