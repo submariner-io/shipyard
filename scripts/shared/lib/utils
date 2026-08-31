@@ -52,7 +52,26 @@ function render_template() {
         local SUBM_IMAGE_REPO="${REPO}"
     fi
 
-    eval "echo \"$(cat "$1")\""
+    # Restricted allow-list -- envsubst expands ONLY these names, so an inherited
+    # Dapper secret (QUAY_PASSWORD/QUAY_USERNAME/GITHUB_TOKEN) can never leak into
+    # rendered output. NAMES is the single source of truth: it is exported for
+    # envsubst to read, and the same list (each name prefixed with '$') is
+    # envsubst's SHELL-FORMAT allow-list, so the two cannot drift out of sync.
+    local NAMES=(
+        SUBM_NS SUBM_CS SUBM_IMAGE_REPO SUBM_IMAGE_TAG
+        BROKER_NAMESPACE BROKER_K8S_API_SERVER BROKER_K8S_API_SERVER_TOKEN BROKER_K8S_CA
+        CE_IPSEC_IKEPORT CE_IPSEC_NATTPORT IPSEC_PSK
+        LIGHTHOUSE OVERLAPPING MARKETPLACE_NAMESPACE USE_CLUSTERSET_IP NFTABLES
+        cluster components cs iib ns og sub bundle mc master_ip
+        pod_cidr service_cidr pod_cidr_ipv6 service_cidr_ipv6
+        dns_domain disable_cni kube_proxy_mode nodes
+        service_CIDR cluster_CIDR global_CIDR clusterset_ip_CIDR
+    )
+    (   # subshell: export without polluting parent; envsubst only reads env vars
+        export "${NAMES[@]}" 2>/dev/null
+        # shellcheck disable=SC2016  # literal $NAME tokens are envsubst's SHELL-FORMAT, not shell vars
+        envsubst "$(printf '$%s ' "${NAMES[@]}")" < "$1"
+    )
 }
 
 # Run a command and retry it if it fails, up to the given amount of retries
