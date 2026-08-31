@@ -204,3 +204,11 @@ updates:
       tools:
         patterns:
           - "*"
+  - package-ecosystem: docker
+    directory: '/package'
+    schedule:
+      interval: monthly
+    groups:
+      docker:
+        patterns:
+          - "*"

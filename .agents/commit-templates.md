@@ -56,6 +56,35 @@ Full package: helm.sh/helm/v3
 Fixes: GHSA-f9f8-9pmf-xv68, GHSA-9h84-qmv7-982p
 ```
 
+**Append "in /tools" to the subject when only tools/ files changed.**
+
+## CVE Ignores
+
+**No fix available (auto-expires when fix is published):**
+```text
+Ignore <abbreviated-package> CVEs (no fix available)
+
+<reason>
+```
+
+**Fix exists but incompatible with this branch:**
+```text
+Ignore <abbreviated-package> CVEs incompatible with <branch>
+
+<reason>
+```
+
+## Stdlib CVE Fixes
+
+```text
+Bump Go to <version> for stdlib CVEs
+
+Updates Go requirement from <old-version> to <new-version>
+to address stdlib vulnerabilities.
+
+Fixes: <CVE-ID-1>, <CVE-ID-2>
+```
+
 ## Code Changes
 
 ```text
