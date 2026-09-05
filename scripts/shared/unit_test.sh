@@ -44,12 +44,21 @@ for module in "${modules[@]}"; do
 
         echo "Running tests in ${packages[*]}"
         [ "${ARCH}" == "amd64" ] && race=-race
+
+        # Remove stale coverage/report artifacts so a partial or corrupt profile
+        # from a prior run can never be fed to `go tool cover` below.
+        rm -f unit.coverprofile junit.xml
+
         # It's important that the `go test` command's exit status is reported from this () block.
         # Can't be one command (with -cover). Need detailed -coverprofile for Sonar and summary to console.
         # shellcheck disable=SC2086 # Split `$TEST_ARGS` on purpose
         "${GO:-go}" test -v ${race} -coverprofile unit.coverprofile "${packages[@]}" \
-            --ginkgo.v --ginkgo.trace --ginkgo.junit-report junit.xml $TEST_ARGS && \
-        go tool cover -func unit.coverprofile
+            --ginkgo.v --ginkgo.trace --ginkgo.junit-report junit.xml $TEST_ARGS || exit $?
+
+        # The coverage summary is informational (console + Sonar) only; a failure
+        # here must not mask or override the passing `go test` result above.
+        go tool cover -func unit.coverprofile || \
+            echo "WARNING: 'go tool cover' could not summarize unit.coverprofile (ignored; test result unaffected)"
     ) || result=1
 done
 

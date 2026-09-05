@@ -1,11 +1,6 @@
 ---
 ignore:
   # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
-  # https://github.com/anchore/grype/issues/558
-  - vulnerability: CVE-2015-5237
-    package:
-      name: google.golang.org/protobuf
-  # False positive, CVE is actually about the C++ project protocolbuffers/protobuf
   # https://github.com/anchore/grype/issues/633
   - vulnerability: CVE-2021-22570
     package:
@@ -14,3 +9,5 @@ ignore:
 exclude:
   # Exclude git-ignored ovn-kubernetes directory
   - "./ovn-kubernetes/**"
+  # Exclude Claude Code worktrees (temporary agent workspaces, not project code)
+  - "./.claude/worktrees/**"

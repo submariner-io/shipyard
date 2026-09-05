@@ -20,7 +20,7 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
 # gh                 | backport, releases
 # git-core           | find the workspace root, git clones
-# golang             | build
+# go (tarball)       | build (installed via go.dev tarball, not DNF)
 # helm3              | Helm package construction
 # jq                 | JSON processing (GitHub API)
 # kubernetes-client  | kubectl, used in e2e tests
@@ -55,7 +55,6 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    gh \
                    git-core \
                    gitlint \
-                   golang \
                    helm3 \
                    jq \
                    kubernetes-client \
@@ -78,7 +77,8 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
     dnf -y clean all && \
     rm -f /usr/bin/{dockerd,lto-dump} \
           /usr/libexec/gcc/x86_64-redhat-linux/*/lto1 && \
-    if test ${UPX_LEVEL} != -0; then find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
+    curl -fsSL "https://go.dev/dl/go1.25.13.linux-$(eval echo \${GOLANG_ARCH_${DAPPER_HOST_ARCH}:-${DAPPER_HOST_ARCH}}).tar.gz" | tar -C /usr/local -xz && \
+    if test ${UPX_LEVEL} != -0; then find /usr/bin /usr/local/go /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
     ln -f /usr/bin/kubectl /usr/bin/hyperkube && \
     ln -f /usr/bin/helm3 /usr/bin/helm
 
