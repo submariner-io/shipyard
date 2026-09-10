@@ -12,13 +12,17 @@ runs:
     - name: Make sure the size of each commit doesn't pass the desired size
       shell: bash
       if: ${{ !contains(github.event.pull_request.labels.*.name, 'skip-size-check') }}
+      env:
+        BASE_SHA: ${{ github.event.pull_request.base.sha }}
+        HEAD_SHA: ${{ github.event.pull_request.head.sha }}
+        MAX_SIZE: ${{ inputs.size }}
       run: |
         set -e
         # Fetch 'origin' to get all commits for size checking
         git fetch -q -n origin
 
         result=0
-        commits_range=${{ github.event.pull_request.base.sha }}..${{ github.event.pull_request.head.sha }}
+        commits_range="${BASE_SHA}..${HEAD_SHA}"
         sum_commit() { git diff --numstat ${1} ${1}^ | awk '{ sum += $1 + $2 } END { print sum }'; }
         for commit in $(git log --pretty="format:%H" ${commits_range}); do
             if [[ $(git cat-file -p "${commit}" | grep -c "^parent ") -gt 1 ]]; then
@@ -28,12 +32,12 @@ runs:
 
             size=$(sum_commit ${commit})
             printf "Size of commit %s (%d) " "${commit}" "${size}"
-            if [[ ${size} -gt ${{ inputs.size }} ]]; then
-                echo "is larger than the allowed size ${{ inputs.size }}"
+            if [[ ${size} -gt ${MAX_SIZE} ]]; then
+                echo "is larger than the allowed size ${MAX_SIZE}"
                 result=1
                 continue
             fi
 
-            echo "is within allowed size ${{ inputs.size }}"
+            echo "is within allowed size ${MAX_SIZE}"
         done
         exit $result
