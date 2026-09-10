@@ -1,4 +1,4 @@
-FROM alpine
+FROM alpine:3.24@sha256:28bd5fe8b56d1bd048e5babf5b10710ebe0bae67db86916198a6eec434943f8b
 
 # Unless specified otherwise, compress to a medium level which gives (from experimentation) a
 # good balance between compression time and resulting image size.
