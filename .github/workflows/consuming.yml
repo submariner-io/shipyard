@@ -34,6 +34,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
           # This is replaced to stable branch by auto release process
           ref: release-0.23
           repository: submariner-io/${{ matrix.project }}
@@ -43,6 +44,7 @@ jobs:
       - name: Check out the Shipyard repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
           path: shipyard
 
       - name: Build the latest Shipyard images
@@ -84,6 +86,8 @@ jobs:
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Build the latest Shipyard image
         run: make images
@@ -91,6 +95,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
           # This is replaced to stable branch by auto release process
           ref: release-0.23
           repository: submariner-io/${{ matrix.project }}
@@ -139,6 +144,8 @@ jobs:
     steps:
       - name: Check out the Shipyard repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+        with:
+          persist-credentials: false
 
       - name: Build the latest Shipyard image
         run: make images
@@ -146,6 +153,7 @@ jobs:
       - name: Check out the ${{ matrix.project }} repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
           # This is replaced to stable branch by auto release process
           ref: release-0.23
           repository: submariner-io/${{ matrix.project }}
