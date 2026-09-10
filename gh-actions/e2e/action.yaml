@@ -62,8 +62,10 @@ runs:
 
     - name: Install WireGuard specific modules
       shell: bash
+      env:
+        INPUT_USING: ${{ inputs.using }}
       run: |
-        [[ "${{ inputs.using }}" =~ "wireguard" ]] || exit 0
+        [[ "$INPUT_USING" =~ "wireguard" ]] || exit 0
         echo "::group::Installing WireGuard modules"
         sudo apt install -y linux-headers-$(uname -r) wireguard
         sudo modprobe wireguard
@@ -76,14 +78,21 @@ runs:
 
     - name: Run E2E deployment and tests
       shell: bash
+      env:
+        INPUT_K8S_VERSION: ${{ inputs.k8s_version }}
+        INPUT_TARGET: ${{ inputs.target }}
+        INPUT_USING: ${{ inputs.using }}
+        INPUT_PLUGIN: ${{ inputs.plugin }}
+        INPUT_TEST_ARGS: ${{ inputs.test_args }}
+        INPUT_TESTDIR: ${{ inputs.testdir }}
       run: |
-        k8s_version=${{ inputs.k8s_version }};
+        k8s_version="$INPUT_K8S_VERSION";
         if [ "$k8s_version" = k8s-latest ]; then k8s_version=1.30; fi; \
         if [ "$k8s_version" = k8s-oldest-working ]; then k8s_version=1.19; fi; \
         if [ "$k8s_version" = k8s-oldest-supported ]; then k8s_version=1.26; fi; \
-        make "${{ inputs.target }}" \
-            using="${{ inputs.using }}" \
+        make "$INPUT_TARGET" \
+            using="$INPUT_USING" \
             ${k8s_version:+K8S_VERSION="$k8s_version"} \
-            PLUGIN="${{ inputs.plugin }}" \
-            TEST_ARGS="${{ inputs.test_args }}" \
-            E2E_TESTDIR="${{ inputs.testdir }}"
+            PLUGIN="$INPUT_PLUGIN" \
+            TEST_ARGS="$INPUT_TEST_ARGS" \
+            E2E_TESTDIR="$INPUT_TESTDIR"
