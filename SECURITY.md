@@ -12,6 +12,23 @@ branches following the project's [backports process][backports]. The set of
 maintained branches tracks the most recent Submariner releases; see the
 [releases documentation][releases] for the current list.
 
+The following branches currently receive backported fixes, based on recent
+commit activity. This list is a best-effort snapshot rather than a formal
+policy; if it's out of date, please open an issue or pull request to correct
+it.
+
+| Branch        | Maintained |
+| ------------- | ---------- |
+| `devel`       | Yes        |
+| `release-0.24`| Yes        |
+| `release-0.23`| Yes        |
+| `release-0.22`| Yes        |
+| `release-0.21`| Yes        |
+| `release-0.20`| Yes        |
+| `release-0.19`| Yes        |
+| `release-0.18`| Yes        |
+| Earlier       | No         |
+
 ## Reporting a Vulnerability
 
 If you know of a security issue with Submariner, please report it privately
