@@ -13,10 +13,29 @@ spec:
       labels:
         app: nginx-demo
     spec:
+      automountServiceAccountToken: false
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 10000
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - name: nginx-demo
           image: ${SUBM_IMAGE_REPO}/nettest:${SUBM_IMAGE_TAG}
           command: ["/app/simpleserver"]
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: true
+            capabilities:
+              drop:
+                - ALL
+          resources:
+            requests:
+              cpu: 100m
+              memory: 128Mi
+            limits:
+              cpu: 500m
+              memory: 256Mi
           ports:
             - containerPort: 8080
 ---
