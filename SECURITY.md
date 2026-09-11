@@ -45,5 +45,5 @@ share disclosures with others as required to make and propagate fixes.
 
 [backports]: https://submariner.io/development/backports/
 [releases]: https://submariner.io/community/releases/
-[reporting]: https://submariner.io/development/security/
+[reporting]: https://submariner.io/development/security/reporting/
 [security-email]: mailto:submariner-security@googlegroups.com
