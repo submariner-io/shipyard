@@ -229,6 +229,7 @@ func BeforeSuite(ctx context.Context) {
 func initPodSecurityContext() {
 	podSecurityContext = &corev1.SecurityContext{
 		AllowPrivilegeEscalation: new(false),
+		ReadOnlyRootFilesystem:   new(true),
 		Capabilities: &corev1.Capabilities{
 			Drop: []corev1.Capability{
 				"ALL",
