@@ -8,7 +8,9 @@ on:
       - release-0.21
       - release-*
 
-permissions: {}
+permissions:
+  id-token: write   # cosign keyless via Sigstore OIDC
+  contents: read
 
 jobs:
   release:
@@ -19,6 +21,7 @@ jobs:
       - name: Check out the repository
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
         with:
+          persist-credentials: false
           submodules: true
 
       - name: Build and release new images

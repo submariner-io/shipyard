@@ -29,12 +29,29 @@ import (
 
 	. "github.com/onsi/gomega"
 	v1 "k8s.io/api/core/v1"
+	"k8s.io/apimachinery/pkg/api/resource"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/util/uuid"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 	k8snet "k8s.io/utils/net"
 )
+
+// lightResources caps the light TCP listener/connector (and CustomPod default)
+// pods. Their work is trivial, so a small hard limit is safe.
+var lightResources = v1.ResourceRequirements{
+	Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("100m"), v1.ResourceMemory: resource.MustParse("128Mi")},
+	Limits:   v1.ResourceList{v1.ResourceCPU: resource.MustParse("500m"), v1.ResourceMemory: resource.MustParse("256Mi")},
+}
+
+// throughputResources sizes the iperf3/netperf throughput and latency pods. It
+// sets requests but deliberately omits a CPU limit: iperf3 -P 10 is
+// multithreaded and a hard CPU cap would throttle it and corrupt the very
+// measurements these pods exist to take.
+var throughputResources = v1.ResourceRequirements{
+	Requests: v1.ResourceList{v1.ResourceCPU: resource.MustParse("500m"), v1.ResourceMemory: resource.MustParse("256Mi")},
+	Limits:   v1.ResourceList{v1.ResourceMemory: resource.MustParse("512Mi")},
+}
 
 type NetworkingType bool
 
@@ -75,11 +92,13 @@ type NetworkPodConfig struct {
 	Port               int32
 	Networking         NetworkingType
 	IsIPv6             bool
+	WritableRootFS     bool
 	Data               string
 	RemoteIP           string
 	ContainerName      string
 	ImageName          string
 	Command            []string
+	Resources          v1.ResourceRequirements
 	// TODO: namespace, once https://github.com/submariner-io/submariner/pull/141 is merged
 }
 
@@ -297,8 +316,9 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-listener",
@@ -317,6 +337,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod() {
 						{Name: "BUFS_NUM", Value: strconv.FormatUint(uint64(np.Config.NumOfDataBufs), 10)},
 					},
 					SecurityContext: podSecurityContext,
+					Resources:       lightResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -355,9 +376,10 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
-			HostNetwork:   bool(np.Config.Networking),
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
+			HostNetwork:                  bool(np.Config.Networking),
 			Containers: []v1.Container{
 				{
 					Name:  "tcp-check-connector",
@@ -379,6 +401,7 @@ func (np *NetworkPod) buildTCPCheckConnectorPod() {
 						{Name: "BUFS_NUM", Value: strconv.FormatUint(uint64(np.Config.NumOfDataBufs), 10)},
 					},
 					SecurityContext: podSecurityContext,
+					Resources:       lightResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -404,8 +427,9 @@ func (np *NetworkPod) buildThroughputClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:            "nettest-client-pod",
@@ -426,6 +450,7 @@ func (np *NetworkPod) buildThroughputClientPod() {
 						{Name: "CONN_TIMEOUT", Value: strconv.FormatUint(uint64(np.Config.ConnectionTimeout*1000), 10)},
 					},
 					SecurityContext: podSecurityContext,
+					Resources:       throughputResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -449,8 +474,9 @@ func (np *NetworkPod) buildThroughputServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:            "nettest-server-pod",
@@ -461,6 +487,7 @@ func (np *NetworkPod) buildThroughputServerPod() {
 						{Name: "TARGET_PORT", Value: strconv.FormatInt(int64(np.Config.Port), 10)},
 					},
 					SecurityContext: podSecurityContext,
+					Resources:       throughputResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -486,8 +513,9 @@ func (np *NetworkPod) buildLatencyClientPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:            "latency-client-pod",
@@ -503,6 +531,7 @@ func (np *NetworkPod) buildLatencyClientPod() {
 						{Name: "TARGET_IP", Value: np.Config.RemoteIP},
 					},
 					SecurityContext: podSecurityContext,
+					Resources:       throughputResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -526,8 +555,9 @@ func (np *NetworkPod) buildLatencyServerPod() {
 			},
 		},
 		Spec: v1.PodSpec{
-			Affinity:      np.nodeAffinity(np.Config.Scheduling),
-			RestartPolicy: v1.RestartPolicyNever,
+			AutomountServiceAccountToken: new(bool),
+			Affinity:                     np.nodeAffinity(np.Config.Scheduling),
+			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
 					Name:            "latency-server-pod",
@@ -535,6 +565,7 @@ func (np *NetworkPod) buildLatencyServerPod() {
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"netserver", "-D"},
 					SecurityContext: podSecurityContext,
+					Resources:       throughputResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
@@ -551,6 +582,16 @@ func (np *NetworkPod) buildLatencyServerPod() {
 // The pod will use the image specified and run command specified.
 func (np *NetworkPod) buildCustomPod() {
 	terminationGracePeriodSeconds := int64(5)
+
+	customSecurityContext := *podSecurityContext
+	if np.Config.WritableRootFS {
+		customSecurityContext.ReadOnlyRootFilesystem = new(bool)
+	}
+
+	customResources := lightResources
+	if np.Config.Resources.Requests != nil || np.Config.Resources.Limits != nil {
+		customResources = np.Config.Resources
+	}
 	customPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			GenerateName: "custom",
@@ -559,6 +600,7 @@ func (np *NetworkPod) buildCustomPod() {
 			},
 		},
 		Spec: v1.PodSpec{
+			AutomountServiceAccountToken:  new(bool),
 			Affinity:                      np.nodeAffinity(np.Config.Scheduling),
 			RestartPolicy:                 v1.RestartPolicyNever,
 			HostNetwork:                   bool(np.Config.Networking),
@@ -569,7 +611,8 @@ func (np *NetworkPod) buildCustomPod() {
 					Image:           np.Config.ImageName,
 					ImagePullPolicy: v1.PullAlways,
 					Command:         np.Config.Command,
-					SecurityContext: podSecurityContext,
+					SecurityContext: &customSecurityContext,
+					Resources:       customResources,
 				},
 			},
 			Tolerations: []v1.Toleration{{Operator: v1.TolerationOpExists}},
