@@ -90,6 +90,13 @@ function install_subm() {
 
   # Create the Submariner instance
   echo "[INFO](${cluster}) Deploy Submariner"
+  # Pre-resolve associative-array subscripts to plain scalars so render_template's
+  # envsubst (which substitutes only exported scalar vars) can expand them.
+  # shellcheck disable=SC2034
+  local service_CIDR="${service_CIDRs[$cluster]}" \
+        cluster_CIDR="${cluster_CIDRs[$cluster]}" \
+        global_CIDR="${global_CIDRs[$cluster]}" \
+        clusterset_ip_CIDR="${clusterset_ip_CIDRs[$cluster]}"
   render_template "${RESOURCES_DIR}"/bundle/submariner.yaml | kubectl apply -f -
 
 echo "[INFO](${cluster}) Submariner deployed"
