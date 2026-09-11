@@ -69,7 +69,7 @@ function render_template() {
     )
     (   # subshell: export without polluting parent; envsubst only reads env vars
         export "${NAMES[@]}" 2>/dev/null
-        envsubst "${NAMES[@]/#/$}" < "$1"
+        envsubst "${NAMES[*]/#/$}" < "$1"
     )
 }
 
