@@ -6,7 +6,7 @@ on:
   schedule:
     - cron: "17 6 * * 1"
   push:
-    branches: [devel]
+    branches: [release-0.25]
 
 permissions: {}
 

@@ -36,7 +36,7 @@ jobs:
         with:
           persist-credentials: false
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.25
           repository: submariner-io/${{ matrix.project }}
 
       # Check out Shipyard as a sub directory of the project, so that `go replace` can work.
@@ -97,7 +97,7 @@ jobs:
         with:
           persist-credentials: false
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.25
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
@@ -155,7 +155,7 @@ jobs:
         with:
           persist-credentials: false
           # This is replaced to stable branch by auto release process
-          ref: devel
+          ref: release-0.25
           repository: submariner-io/${{ matrix.project }}
           path: ${{ matrix.project }}
 
