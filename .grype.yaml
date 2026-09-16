@@ -1,10 +1,5 @@
 ---
 ignore:
-  # Update requires Go 1.25. Low severity doesn't justify breaking changes.
-  - vulnerability: GO-2026-5024
-    package:
-      name: golang.org/x/sys
-
 exclude:
   # Exclude git-ignored ovn-kubernetes directory
   - "./ovn-kubernetes/**"
