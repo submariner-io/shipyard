@@ -1,6 +1,11 @@
 ---
 name: 'Upgrades End to End'
 description: 'Runs an upgrade procedure, followed by end to end tests with multiple clusters'
+inputs:
+  image-version:
+    description: 'Explicit target operator and component image version for subctl deployment'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -33,5 +38,11 @@ runs:
         echo "::endgroup::"
 
     - shell: bash
+      env:
+        SUBCTL_IMAGE_VERSION: ${{ inputs.image-version }}
       run: |
-        make upgrade-e2e
+        make upgrade-e2e SUBCTL_IMAGE_VERSION="$SUBCTL_IMAGE_VERSION"
+        if [[ -n "$SUBCTL_IMAGE_VERSION" && ! -x output/released-subctl/bin/subctl ]]; then
+          echo 'Publish the updated Shipyard Dapper image before running explicit-image upgrade tests' >&2
+          exit 1
+        fi
