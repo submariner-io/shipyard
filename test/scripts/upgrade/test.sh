@@ -164,4 +164,115 @@ expect_failure "$scripts/check-deployed-version.sh" 0.22.2
 touch "$fixture/kube-error"
 expect_failure "$scripts/check-deployed-version.sh" 0.22.2
 
+# Exercise the real installer wrapper with a stub installer and an existing PR binary.
+cat > "$fixture/bin/curl" <<'EOF'
+#!/usr/bin/env bash
+cat <<'INSTALLER'
+set -e
+mkdir -p "$DESTDIR"
+VERSION=${STUB_SUBCTL_VERSION:-$VERSION}
+cat > "$DESTDIR/subctl" <<BIN
+#!/usr/bin/env bash
+echo 'subctl version: $VERSION'
+BIN
+chmod +x "$DESTDIR/subctl"
+INSTALLER
+EOF
+chmod +x "$fixture/bin/curl"
+mkdir -p "$fixture/local-bin"
+printf '#!/usr/bin/env bash\necho "subctl version: PR-build"\n' > "$fixture/local-bin/subctl"
+chmod +x "$fixture/local-bin/subctl"
+SUBCTL_INSTALL_DIR="$fixture/released/bin" SUBCTL_VERSION=v0.22.2 SCRIPTS_DIR="$scripts" \
+    "$scripts/get-subctl.sh"
+actual=$(PATH="$fixture/released/bin:$fixture/local-bin:$PATH" subctl version)
+[[ "$actual" == 'subctl version: v0.22.2' ]]
+[[ $("$fixture/local-bin/subctl" version) == 'subctl version: PR-build' ]]
+
+# Run the actual deployment entry point with cluster operations stubbed out.
+# This catches regressions in phase-specific PATH changes, not just installation.
+mkdir -p "$fixture/scripts/lib"
+ln -s "$scripts/get-subctl.sh" "$scripts/check-deployed-version.sh" "$fixture/scripts/"
+touch "$fixture/scripts/lib/debug_functions" "$fixture/scripts/lib/deploy_funcs"
+cat > "$fixture/scripts/lib/utils" <<'EOF'
+OUTPUT_DIR=$DAPPER_OUTPUT
+print_env() { :; }
+exit_error() { echo "$*" >&2; exit 1; }
+load_settings() {
+    clusters=(cluster1 cluster2)
+    declare -gA cluster_subm=([cluster1]=true [cluster2]=true)
+}
+declare_cidrs() { :; }
+declare_kubeconfig() { :; }
+load_library() { :; }
+run_all_clusters() { :; }
+run_if_defined() { :; }
+with_context() { "${@:2}"; }
+setup_broker() { :; }
+install_subm_all_clusters() { :; }
+verify_gw_status() { :; }
+connectivity_tests() { :; }
+print_clusters_message() { :; }
+with_retries() { "${@:2}"; }
+deploytool_prereqs() {
+    subctl version > "$FIXTURE/active-version"
+    command -v subctl > "$FIXTURE/active-path"
+}
+EOF
+rm "$fixture/kube-error"
+cp "$fixture/healthy-components.json" "$fixture/components.json"
+PATH="$fixture/local-bin:$PATH" RELEASED_SUBCTL=true SUBCTL_VERSION=v0.22.2 SUBCTL_IMAGE_VERSION=release-0.22 \
+    PROVIDER=fixture DAPPER_OUTPUT="$fixture/output" SCRIPTS_DIR="$fixture/scripts" \
+    "$scripts/deploy.sh"
+[[ $(cat "$fixture/active-version") == 'subctl version: v0.22.2' ]]
+[[ $(cat "$fixture/active-path") == "$fixture/output/released-subctl/bin/subctl" ]]
+[[ $(cat "$fixture/kubectl-args") == '--context cluster2 get deployments,daemonsets --namespace submariner-operator --output json' ]]
+
+# Reject a successful installer that produced the wrong version.
+expect_failure env PATH="$fixture/local-bin:$PATH" RELEASED_SUBCTL=true SUBCTL_VERSION=v0.22.2 \
+    STUB_SUBCTL_VERSION=v0.24.2 PROVIDER=fixture DAPPER_OUTPUT="$fixture/output" SCRIPTS_DIR="$fixture/scripts" \
+    "$scripts/deploy.sh"
+grep -q 'Expected baseline subctl v0.22.2, got v0.24.2' "$fixture/error.log"
+
+# An ordinary deployment still selects the previously built local subctl.
+PATH="$fixture/local-bin:$PATH" RELEASED_SUBCTL=false SUBCTL_VERSION=devel \
+    DESTDIR="$fixture/installed" PROVIDER=fixture DAPPER_OUTPUT="$fixture/output" SCRIPTS_DIR="$fixture/scripts" \
+    "$scripts/deploy.sh"
+[[ $(cat "$fixture/active-version") == 'subctl version: PR-build' ]]
+
+# An explicit target image version also triggers deployment image/rollout checks.
+PATH="$fixture/local-bin:$PATH" RELEASED_SUBCTL=false SUBCTL_IMAGE_VERSION=0.22.2 \
+    SUBCTL_VERSION=devel DESTDIR="$fixture/installed" PROVIDER=fixture DAPPER_OUTPUT="$fixture/output" \
+    SCRIPTS_DIR="$fixture/scripts" "$scripts/deploy.sh"
+[[ $(cat "$fixture/active-version") == 'subctl version: PR-build' ]]
+expect_failure env PATH="$fixture/local-bin:$PATH" RELEASED_SUBCTL=false SUBCTL_IMAGE_VERSION=0.24.2 \
+    SUBCTL_VERSION=devel DESTDIR="$fixture/installed" PROVIDER=fixture DAPPER_OUTPUT="$fixture/output" \
+    SCRIPTS_DIR="$fixture/scripts" "$scripts/deploy.sh"
+
+# Run the real operator helpers, checking both broker and join image flags.
+cat > "$fixture/bin/operator-subctl" <<'EOF'
+#!/usr/bin/env bash
+printf '%s\n' "$*" >> "$FIXTURE/operator-calls"
+EOF
+chmod +x "$fixture/bin/operator-subctl"
+for image_version in '' release-0.22; do
+    rm -f "$fixture/operator-calls"
+    SUBCTL="$fixture/bin/operator-subctl" SUBCTL_IMAGE_VERSION="$image_version" \
+        OUTPUT_DIR="$fixture/output" SUBM_IMAGE_TAG=subctl cluster=cluster1 \
+        bash -c '
+            source "$1"
+            declare -A cluster_subm=([cluster1]=true) global_CIDRs=([cluster1]="")
+            setup_broker
+            subctl_install_subm
+        ' _ "$scripts/lib/deploy_operator"
+    [[ $(wc -l < "$fixture/operator-calls") -eq 2 ]]
+    if [[ -n "$image_version" ]]; then
+        [[ $(grep -c -- '--version release-0.22' "$fixture/operator-calls") -eq 2 ]]
+    else
+        if grep -q -- '--version' "$fixture/operator-calls"; then
+            echo 'Ordinary deployment unexpectedly forced an image version' >&2
+            exit 1
+        fi
+    fi
+done
+
 echo 'Upgrade baseline regression tests passed'
