@@ -20,6 +20,7 @@ package framework
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"strings"
 
@@ -29,6 +30,7 @@ import (
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime/schema"
 	"k8s.io/client-go/dynamic"
+	utilexec "k8s.io/client-go/util/exec"
 )
 
 var gatewayGVR = &schema.GroupVersionResource{
@@ -214,7 +216,9 @@ func (f *Framework) DoFailover(ctx context.Context, cluster ClusterIndex, gwNode
 	} else {
 		cmd := []string{"sh", "-c", "echo 1 > /proc/sys/kernel/sysrq && echo b > /proc/sysrq-trigger"}
 
-		_, _, err := f.ExecWithOptions(ctx, &ExecOptions{
+		By(fmt.Sprintf("Crashing gateway node %q", gwNode))
+
+		_, _, err := f.ExecWithOptionsOnce(ctx, &ExecOptions{
 			Command:       cmd,
 			Namespace:     TestContext.SubmarinerNamespace,
 			PodName:       gwPod,
@@ -222,12 +226,21 @@ func (f *Framework) DoFailover(ctx context.Context, cluster ClusterIndex, gwNode
 			CaptureStdout: false,
 			CaptureStderr: true,
 		}, cluster)
+
 		if err != nil {
-			if strings.Contains(err.Error(), "unable to upgrade connection: container not found") {
-				By(fmt.Sprintf("Successfully crashed gateway node %q", gwNode))
-			} else {
-				Expect(err).NotTo(HaveOccurred())
+			var exitErr utilexec.ExitError
+
+			if apierrors.IsNotFound(err) ||
+				apierrors.IsForbidden(err) ||
+				apierrors.IsUnauthorized(err) ||
+				apierrors.IsInvalid(err) ||
+				apierrors.IsBadRequest(err) ||
+				errors.As(err, &exitErr) {
+				Expect(err).NotTo(HaveOccurred(), "Failed to execute crash command on gateway node")
 			}
+
+			Logf("Crash command on gateway node %q returned %v; "+
+				"failover must be verified by the caller", gwNode, err)
 		}
 	}
 }
