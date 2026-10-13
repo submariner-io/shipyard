@@ -47,13 +47,10 @@ type ExecOptions struct {
 	PreserveWhitespace bool
 }
 
-// ExecWithOptions executes a command in the specified container,
-// returning stdout, stderr and error. `options` allowed for
-// additional parameters to be passed.
-func (f *Framework) ExecWithOptions(ctx context.Context, options *ExecOptions, index ClusterIndex) (string, string, error) {
-	Logf("ExecWithOptions %+v", options)
-
-	var err error
+// ExecWithOptionsOnce executes a command in the specified container once,
+// returning stdout, stderr and error.
+func (f *Framework) ExecWithOptionsOnce(ctx context.Context, options *ExecOptions, index ClusterIndex) (string, string, error) {
+	Logf("ExecWithOptionsOnce +%v", options)
 
 	const tty = false
 	req := KubeClients[index].CoreV1().RESTClient().Post().
@@ -72,28 +69,43 @@ func (f *Framework) ExecWithOptions(ctx context.Context, options *ExecOptions, i
 		TTY:       tty,
 	}, scheme.ParameterCodec)
 
-	err = req.Error()
+	err := req.Error()
 	if err != nil {
 		return "", "", err
 	}
 
 	var stdout, stderr bytes.Buffer
-
-	for attempts := 5; attempts > 0; attempts-- {
-		err = execute(ctx, "POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
-		if err == nil {
-			break
-		}
-
-		time.Sleep(time.Millisecond * 5000)
-		Logf("Retrying due to error  %+v", err)
-	}
+	err = execute(ctx, "POST", req.URL(), RestConfigs[index], options.Stdin, &stdout, &stderr, tty)
 
 	if options.PreserveWhitespace {
 		return stdout.String(), stderr.String(), err
 	}
 
 	return strings.TrimSpace(stdout.String()), strings.TrimSpace(stderr.String()), err
+}
+
+// ExecWithOptions executes a command in the specified container,
+// returning stdout, stderr and error. `options` allowed for
+// additional parameters to be passed.
+func (f *Framework) ExecWithOptions(ctx context.Context, options *ExecOptions, index ClusterIndex) (string, string, error) {
+	Logf("ExecWithOptions %+v", options)
+
+	var (
+		stdout, stderr string
+		err            error
+	)
+
+	for attempts := 5; attempts > 0; attempts-- {
+		stdout, stderr, err = f.ExecWithOptionsOnce(ctx, options, index)
+		if err == nil {
+			return stdout, stderr, nil
+		}
+
+		time.Sleep(time.Millisecond * 5000)
+		Logf("Retrying due to error  %+v", err)
+	}
+
+	return stdout, stderr, err
 }
 
 func execute(ctx context.Context,
