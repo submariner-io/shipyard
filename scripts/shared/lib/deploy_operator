@@ -43,6 +43,7 @@ function setup_broker() {
     if [[ "${SUBM_IMAGE_TAG}" != "subctl" ]] && [[ "$AIR_GAPPED" = true || "${PRELOAD_IMAGES}" =~ submariner-operator ]]; then
         extra_flags+=(--repository "${SUBM_IMAGE_REPO}" --version "${SUBM_IMAGE_TAG}")
     fi
+    [[ -z "${SUBCTL_IMAGE_VERSION}" ]] || extra_flags+=(--version "${SUBCTL_IMAGE_VERSION}")
 
     (
         # The subctl invocation here has to work with the previous release
@@ -76,6 +77,7 @@ function subctl_install_subm() {
         done
     fi
 
+    [[ -z "${SUBCTL_IMAGE_VERSION}" ]] || extra_flags+=(--version "${SUBCTL_IMAGE_VERSION}")
     [[ "$LOAD_BALANCER" = true ]] && extra_flags+=(--load-balancer)
     [[ "$AIR_GAPPED" = true ]] && extra_flags+=(--air-gapped)
     [[ "$INTRA_CLUSTER_DISABLED" = true ]] && extra_flags+=(--disable-intra-cluster-connectivity)
