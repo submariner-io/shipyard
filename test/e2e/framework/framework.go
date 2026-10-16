@@ -223,10 +223,10 @@ func BeforeSuite(ctx context.Context) {
 		beforeSuite()
 	}
 
-	initPodSecurityContext()
+	initPodSecurityContext(ctx)
 }
 
-func initPodSecurityContext() {
+func initPodSecurityContext(ctx context.Context) {
 	podSecurityContext = &corev1.SecurityContext{
 		AllowPrivilegeEscalation: new(false),
 		ReadOnlyRootFilesystem:   new(true),
@@ -239,7 +239,7 @@ func initPodSecurityContext() {
 		RunAsUser:    new(int64(10000)), // We need to set some user ID other than 0.
 	}
 
-	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
+	serverVersion, err := KubeClients[0].Discovery().ServerVersionWithContext(ctx)
 	Expect(err).To(Succeed())
 
 	major, err := strconv.Atoi(serverVersion.Major)
