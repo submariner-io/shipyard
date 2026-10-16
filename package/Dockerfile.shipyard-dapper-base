@@ -55,7 +55,7 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    gh \
                    git-core \
                    gitlint \
-                   golang \
+                   golang-1.26.9 \
                    helm3 \
                    jq \
                    kubernetes-client \
