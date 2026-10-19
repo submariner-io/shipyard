@@ -46,7 +46,8 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # - DNF cache
 # - Any unnecessary packages and executables
 RUN mkdir -p /go/bin /go/pkg /go/src && \
-    dnf -y install --nodocs --setopt=install_weak_deps=False \
+    dnf -y upgrade --security && \
+    dnf -y install --nodocs --setopt=install_weak_deps=False --refresh \
                    curl \
                    docker-buildx \
                    file \
