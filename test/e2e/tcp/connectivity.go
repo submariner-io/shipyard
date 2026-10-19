@@ -40,15 +40,15 @@ const (
 
 type ConnectivityTestParams struct {
 	Framework             *framework.Framework
+	IPFamily              k8snet.IPFamily
 	ConnectionTimeout     uint
 	ConnectionAttempts    uint
-	Networking            framework.NetworkingType
 	FromCluster           framework.ClusterIndex
 	FromClusterScheduling framework.NetworkPodScheduling
 	ToCluster             framework.ClusterIndex
 	ToClusterScheduling   framework.NetworkPodScheduling
 	ToEndpointType        EndpointType
-	IPFamily              k8snet.IPFamily
+	Networking            framework.NetworkingType
 }
 
 func (p *ConnectivityTestParams) GetIPFamily() k8snet.IPFamily {

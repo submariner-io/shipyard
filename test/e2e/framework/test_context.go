@@ -32,25 +32,25 @@ import (
 type contextArray []string
 
 type TestContextType struct {
-	ReporterConfig                    *types.ReporterConfig
+	GroupVersion                      *schema.GroupVersion
 	SuiteConfig                       *types.SuiteConfig
-	KubeConfigs                       []string // KubeConfigs provides an alternative to KubeConfig + KubeContexts
+	NumNodesInCluster                 map[ClusterIndex]int
+	ReporterConfig                    *types.ReporterConfig
 	KubeConfig                        string
+	SubmarinerNamespace               string
+	NettestImageURL                   string
+	KubeConfigs                       []string // KubeConfigs provides an alternative to KubeConfig + KubeContexts
 	KubeContexts                      contextArray
 	ClusterIDs                        []string
-	NumNodesInCluster                 map[ClusterIndex]int
-	SubmarinerNamespace               string
 	ConnectionTimeout                 uint
-	ConnectionAttempts                uint
-	OperationTimeout                  uint
 	PacketSize                        uint
+	ClientBurst                       int
+	OperationTimeout                  uint
+	ConnectionAttempts                uint
+	ClientQPS                         float32
 	SkipConnectorSrcIPCheck           bool
 	SkipIntraClusterConnectivityTests bool
 	GlobalnetEnabled                  bool
-	ClientQPS                         float32
-	ClientBurst                       int
-	GroupVersion                      *schema.GroupVersion
-	NettestImageURL                   string
 }
 
 func (contexts *contextArray) String() string {
