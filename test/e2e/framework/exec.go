@@ -34,13 +34,11 @@ import (
 
 // ExecOptions passed to ExecWithOptions.
 type ExecOptions struct {
-	Command []string
-
+	Stdin         io.Reader
 	Namespace     string
 	PodName       string
 	ContainerName string
-
-	Stdin         io.Reader
+	Command       []string
 	CaptureStdout bool
 	CaptureStderr bool
 	// If false, whitespace in std{err,out} will be removed.

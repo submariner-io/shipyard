@@ -83,33 +83,33 @@ const (
 )
 
 type NetworkPodConfig struct {
-	Type               NetworkPodType
-	Cluster            ClusterIndex
-	Scheduling         NetworkPodScheduling
-	NumOfDataBufs      uint
+	Data               string
+	ImageName          string
+	ContainerName      string
+	RemoteIP           string
+	Resources          v1.ResourceRequirements
+	Command            []string
 	ConnectionTimeout  uint
 	ConnectionAttempts uint
+	Type               NetworkPodType
+	NumOfDataBufs      uint
+	Scheduling         NetworkPodScheduling
+	Cluster            ClusterIndex
 	Port               int32
 	Networking         NetworkingType
 	IsIPv6             bool
 	WritableRootFS     bool
-	Data               string
-	RemoteIP           string
-	ContainerName      string
-	ImageName          string
-	Command            []string
-	Resources          v1.ResourceRequirements
 	// TODO: namespace, once https://github.com/submariner-io/submariner/pull/141 is merged
 }
 
 type NetworkPod struct {
+	TerminationError    error
 	Pod                 *v1.Pod
 	Config              *NetworkPodConfig
-	TerminationError    error
-	TerminationErrorMsg string
-	TerminationCode     int32
-	TerminationMessage  string
 	framework           *Framework
+	TerminationErrorMsg string
+	TerminationMessage  string
+	TerminationCode     int32
 }
 
 const (
