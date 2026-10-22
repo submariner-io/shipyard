@@ -303,7 +303,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod(ctx context.Context) {
 
 	listenerCmd := fmt.Sprintf(
 		"for i in $(seq 1 $BUFS_NUM); do echo [dataplane] listener says $SEND_STRING; done | "+
-			"nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s %s >/dev/termination-log 2>&1",
+			"nc -w $CONN_TIMEOUT -l -v -p $LISTEN_PORT -s %s 2>&1 | head -60 >/dev/termination-log",
 		listenAddress,
 	)
 
