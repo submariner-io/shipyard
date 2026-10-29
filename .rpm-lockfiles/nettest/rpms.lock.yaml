@@ -4,27 +4,27 @@ lockfileVendor: redhat
 arches:
 - arch: aarch64
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.10.aarch64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.12.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 1261542
-    checksum: sha256:efbc9905fe8c6a5e7d4472ec2c9b822e6bb843cfe4d4596f5dc45ce6f1c1bab9
+    size: 1262066
+    checksum: sha256:ad7a5d209bcb8a6f7fbeb64c6af14a87f4638c3f5a6d467c663616cedcbc7479
     name: bind-libs
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.10.noarch.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.12.noarch.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 19682
-    checksum: sha256:8e07e3e70d5aa874ba09031fd9682ce3ebd101223cd4bd8725629c866f3bd9bf
+    size: 19973
+    checksum: sha256:3e0ef34bc8a94b9af93e156bfe93eafb831573a8571618d383fde5aa479fcd7c
     name: bind-license
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.10.aarch64.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.12.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
-    size: 219351
-    checksum: sha256:44ff36ff2e6eb01fe594fcc121f16c95930e2ee883f8f81e8053d35997dade2a
+    size: 219556
+    checksum: sha256:dbc056f7fa3cdd7031d0565bbe1e4bf269aabcc4e637c41da190b5939dcf566e
     name: bind-utils
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/appstream/os/Packages/f/fstrm-0.6.1-3.el9.aarch64.rpm
     repoid: rhel-9-for-aarch64-appstream-rpms
     size: 29476
@@ -148,27 +148,27 @@ arches:
   module_metadata: []
 - arch: ppc64le
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.10.ppc64le.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.12.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-appstream-rpms
-    size: 1429554
-    checksum: sha256:cc916d78f3e0b9862b797cf7ff925c8c2d59e552ef98b02a03ea8311b4bafe81
+    size: 1430189
+    checksum: sha256:ff4cebdb59093d160ecfcad33978de55303184d418038bbf3dc9b813eb5a2d66
     name: bind-libs
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.10.noarch.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.12.noarch.rpm
     repoid: rhel-9-for-ppc64le-appstream-rpms
-    size: 19682
-    checksum: sha256:8e07e3e70d5aa874ba09031fd9682ce3ebd101223cd4bd8725629c866f3bd9bf
+    size: 19973
+    checksum: sha256:3e0ef34bc8a94b9af93e156bfe93eafb831573a8571618d383fde5aa479fcd7c
     name: bind-license
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.10.ppc64le.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.12.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-appstream-rpms
-    size: 224861
-    checksum: sha256:187657d4e02444845833c1f2b66913c95a8224d683589b74ef0147436a4b2499
+    size: 225086
+    checksum: sha256:bf3d171617104c6f1799ebbbbd2ecb3807ba7747fb406f584a2b94013e83153d
     name: bind-utils
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/appstream/os/Packages/f/fstrm-0.6.1-3.el9.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-appstream-rpms
     size: 32044
@@ -292,27 +292,27 @@ arches:
   module_metadata: []
 - arch: s390x
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.10.s390x.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.12.s390x.rpm
     repoid: rhel-9-for-s390x-appstream-rpms
-    size: 1243337
-    checksum: sha256:a2559fcd93b5ea8cafd73ffce871a238fb31bf74cb1f9ebc1049a761073b7abc
+    size: 1244435
+    checksum: sha256:e0a87c54134c31608dd3a04c5daee47c4a1845c0074ae48de3f146729a617656
     name: bind-libs
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.10.noarch.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.12.noarch.rpm
     repoid: rhel-9-for-s390x-appstream-rpms
-    size: 19682
-    checksum: sha256:8e07e3e70d5aa874ba09031fd9682ce3ebd101223cd4bd8725629c866f3bd9bf
+    size: 19973
+    checksum: sha256:3e0ef34bc8a94b9af93e156bfe93eafb831573a8571618d383fde5aa479fcd7c
     name: bind-license
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.10.s390x.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.12.s390x.rpm
     repoid: rhel-9-for-s390x-appstream-rpms
-    size: 216308
-    checksum: sha256:a764796c2850742404fddc31fcfb76a8c158f863d7e153fb6f375432f8efbcd0
+    size: 216603
+    checksum: sha256:733c584d444bdf9778c640f5628f3faedb11177970953c326253e060a3617322
     name: bind-utils
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/appstream/os/Packages/f/fstrm-0.6.1-3.el9.s390x.rpm
     repoid: rhel-9-for-s390x-appstream-rpms
     size: 29853
@@ -436,27 +436,27 @@ arches:
   module_metadata: []
 - arch: x86_64
   packages:
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.10.x86_64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-libs-9.16.23-40.el9_8.12.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 1311234
-    checksum: sha256:d1d8de4c4fbed2243e39a925ace20471a6b683eecbe23c22c7f9cdfa82cbe09b
+    size: 1312035
+    checksum: sha256:ac8f84f91c0b0be6fd2c2648989b5cd5f901cd13ac626c9d13fc0a7fc1e90c13
     name: bind-libs
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.10.noarch.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-license-9.16.23-40.el9_8.12.noarch.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 19682
-    checksum: sha256:8e07e3e70d5aa874ba09031fd9682ce3ebd101223cd4bd8725629c866f3bd9bf
+    size: 19973
+    checksum: sha256:3e0ef34bc8a94b9af93e156bfe93eafb831573a8571618d383fde5aa479fcd7c
     name: bind-license
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.10.x86_64.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/b/bind-utils-9.16.23-40.el9_8.12.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
-    size: 218544
-    checksum: sha256:be348dbe8ecd3061f4973920aaf14e4c558817385fe725ed0bfe9ca1cf4bd101
+    size: 219294
+    checksum: sha256:395d0643c86dc9c076c4860d7a1263847b4dd7b29df979c779357c80af9dfa16
     name: bind-utils
-    evr: 32:9.16.23-40.el9_8.10
-    sourcerpm: bind-9.16.23-40.el9_8.10.src.rpm
+    evr: 32:9.16.23-40.el9_8.12
+    sourcerpm: bind-9.16.23-40.el9_8.12.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/appstream/os/Packages/f/fstrm-0.6.1-3.el9.x86_64.rpm
     repoid: rhel-9-for-x86_64-appstream-rpms
     size: 30777
