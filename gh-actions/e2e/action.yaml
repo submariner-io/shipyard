@@ -54,11 +54,8 @@ runs:
         free -h
         echo "::endgroup::"
 
-    - shell: bash
-      run: |
-        echo "::group::Increase inotify settings"
-        sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
-        echo "::endgroup::"
+    - name: Prepare runner for cluster deployment
+      uses: $/gh-actions/cluster-setup
 
     - name: Install WireGuard specific modules
       shell: bash
