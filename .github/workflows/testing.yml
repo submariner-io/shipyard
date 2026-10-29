@@ -163,7 +163,11 @@ jobs:
         uses: ./gh-actions/restore-images
 
       - name: Deploy clusters and Submariner
-        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}" TIMEOUT=1m
+        uses: ./gh-actions/deploy
+        env:
+          TIMEOUT: 1m
+        with:
+          using: ${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}
 
       - name: Post mortem
         if: failure()
