@@ -1,0 +1,11 @@
+---
+name: 'Cluster Setup'
+description: 'Prepares GitHub runner for local cluster deployments'
+runs:
+  using: "composite"
+  steps:
+    - name: Increase inotify settings
+      shell: bash
+      run: |
+        echo "Before: nofile=$(ulimit -n) $(sysctl fs.inotify.max_user_watches fs.inotify.max_user_instances | tr '\n' ' ')"
+        sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
