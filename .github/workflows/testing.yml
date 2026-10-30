@@ -165,13 +165,12 @@ jobs:
       - name: Restore images from the cache
         uses: ./gh-actions/restore-images
 
-      - name: Increase inotify settings
-        run: |
-          echo "Before: nofile=$(ulimit -n) $(sysctl fs.inotify.max_user_watches fs.inotify.max_user_instances | tr '\n' ' ')"
-          sudo sysctl -w fs.inotify.max_user_watches=524288 fs.inotify.max_user_instances=512
-
       - name: Deploy clusters and Submariner
-        run: make deploy using="${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}" TIMEOUT=1m
+        uses: ./gh-actions/deploy
+        env:
+          TIMEOUT: 1m
+        with:
+          using: ${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}
 
       - name: Post mortem
         if: failure()

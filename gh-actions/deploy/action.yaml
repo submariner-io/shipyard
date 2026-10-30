@@ -1,0 +1,33 @@
+---
+name: 'Deploy Submariner'
+description: 'Deploys Submariner on clusters with proper runner setup'
+inputs:
+  k8s_version:
+    description: 'Version of Kubernetes to use for clusters'
+    required: false
+    default: ''
+  using:
+    description: 'Various options to pass via using="..."'
+    required: false
+    default: ''
+  target:
+    description: 'Make target to run (deploy or deploy-latest)'
+    required: false
+    default: 'deploy'
+runs:
+  using: "composite"
+  steps:
+    - name: Prepare runner for cluster deployment
+      uses: $/gh-actions/cluster-setup
+
+    - name: Deploy Submariner
+      shell: bash
+      env:
+        INPUT_K8S_VERSION: ${{ inputs.k8s_version }}
+        INPUT_USING: ${{ inputs.using }}
+        INPUT_TARGET: ${{ inputs.target }}
+      run: |
+        make "$INPUT_TARGET" \
+            using="$INPUT_USING" \
+            ${INPUT_K8S_VERSION:+K8S_VERSION="$INPUT_K8S_VERSION"} \
+            ${TIMEOUT:+TIMEOUT="$TIMEOUT"}
