@@ -27,5 +27,7 @@ runs:
         INPUT_USING: ${{ inputs.using }}
         INPUT_TARGET: ${{ inputs.target }}
       run: |
-        [[ -z "$INPUT_K8S_VERSION" ]] || export K8S_VERSION="$INPUT_K8S_VERSION"
-        make "$INPUT_TARGET" using="$INPUT_USING"
+        make "$INPUT_TARGET" \
+            using="$INPUT_USING" \
+            ${INPUT_K8S_VERSION:+K8S_VERSION="$INPUT_K8S_VERSION"} \
+            ${TIMEOUT:+TIMEOUT="$TIMEOUT"}
