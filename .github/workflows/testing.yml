@@ -158,9 +158,8 @@ jobs:
 
       - name: Deploy clusters and Submariner
         uses: ./gh-actions/deploy
-        env:
-          TIMEOUT: 1m
         with:
+          timeout: 1m
           using: ${{ matrix.globalnet }} ${{ matrix.deploytool }} ${{ matrix.extra-toggles }}
 
       - name: Post mortem
