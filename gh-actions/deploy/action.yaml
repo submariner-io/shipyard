@@ -14,6 +14,10 @@ inputs:
     description: 'Make target to run (deploy or deploy-latest)'
     required: false
     default: 'deploy'
+  timeout:
+    description: 'Timeout for cluster and deployment waits, passed to Make as TIMEOUT'
+    required: false
+    default: ''
 runs:
   using: "composite"
   steps:
@@ -26,8 +30,8 @@ runs:
         INPUT_K8S_VERSION: ${{ inputs.k8s_version }}
         INPUT_USING: ${{ inputs.using }}
         INPUT_TARGET: ${{ inputs.target }}
+        INPUT_TIMEOUT: ${{ inputs.timeout }}
       run: |
-        make "$INPUT_TARGET" \
-            using="$INPUT_USING" \
-            ${INPUT_K8S_VERSION:+K8S_VERSION="$INPUT_K8S_VERSION"} \
-            ${TIMEOUT:+TIMEOUT="$TIMEOUT"}
+        make "$INPUT_TARGET" using="$INPUT_USING" \
+          ${INPUT_K8S_VERSION:+K8S_VERSION="$INPUT_K8S_VERSION"} \
+          ${INPUT_TIMEOUT:+TIMEOUT="$INPUT_TIMEOUT"}
