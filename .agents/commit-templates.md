@@ -79,7 +79,7 @@ Ignore <abbreviated-package> CVEs incompatible with <branch>
 ```text
 Bump Go to <version> for stdlib CVEs
 
-Updates Go requirement from <old-version> to <new-version>
+Updates the build toolchain from <old-version> to <new-version>
 to address stdlib vulnerabilities.
 
 Fixes: <CVE-ID-1>, <CVE-ID-2>
