@@ -668,7 +668,7 @@ func (np *NetworkPod) nodeAffinity(ctx context.Context, scheduling NetworkPodSch
 			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, nonGWNodes)
 		case len(smE2eNonGWLabelledNodeList.Items) == 0:
 			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
-			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{strconv.FormatBool(true)})
 		default:
 			Failf("%q label is only present on the active GW node and not on any other nodes", TestNonGWNodeLabel)
 		}
