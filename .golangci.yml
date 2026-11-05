@@ -10,6 +10,10 @@ linters:
     errchkjson:
       check-error-free-encoding: true
       report-no-exported: true
+    goconst:
+      ignore-string-values:
+        - '^CONN_TIMEOUT$'
+        - '^submariner.io$'
     gocritic:
       disabled-checks:
         - ifElseChain
