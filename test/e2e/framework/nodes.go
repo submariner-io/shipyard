@@ -39,7 +39,7 @@ const (
 // FindGatewayNodes finds nodes in a given cluster by matching 'submariner.io/gateway' value.
 func FindGatewayNodes(ctx context.Context, cluster ClusterIndex) []v1.Node {
 	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(ctx, metav1.ListOptions{
-		LabelSelector: labels.Set{GatewayLabel: "true"}.String(),
+		LabelSelector: labels.Set{GatewayLabel: strconv.FormatBool(true)}.String(),
 	})
 	Expect(err).NotTo(HaveOccurred())
 
@@ -50,7 +50,7 @@ func FindGatewayNodes(ctx context.Context, cluster ClusterIndex) []v1.Node {
 func FindNonGatewayNodes(ctx context.Context, cluster ClusterIndex) []v1.Node {
 	nodes, err := KubeClients[cluster].CoreV1().Nodes().List(ctx, metav1.ListOptions{
 		LabelSelector: labels.NewSelector().Add(
-			NewRequirement(GatewayLabel, selection.NotEquals, []string{"true"})).String(),
+			NewRequirement(GatewayLabel, selection.NotEquals, []string{strconv.FormatBool(true)})).String(),
 	})
 	Expect(err).NotTo(HaveOccurred())
 

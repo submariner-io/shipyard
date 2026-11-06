@@ -307,11 +307,12 @@ func (np *NetworkPod) buildTCPCheckListenerPod(ctx context.Context) {
 		listenAddress,
 	)
 
+	const appName = "tcp-check-listener"
 	tcpCheckListenerPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "tcp-check-listener",
+			GenerateName: appName,
 			Labels: map[string]string{
-				TestAppLabel: "tcp-check-listener",
+				TestAppLabel: appName,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -320,7 +321,7 @@ func (np *NetworkPod) buildTCPCheckListenerPod(ctx context.Context) {
 			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
-					Name:  "tcp-check-listener",
+					Name:  appName,
 					Image: TestContext.NettestImageURL,
 					// We send the string 50 times to put more pressure on the TCP connection and avoid limited
 					// resource environments from not sending at least some data before timeout.
@@ -418,11 +419,12 @@ func (np *NetworkPod) buildTCPCheckConnectorPod(ctx context.Context) {
 // response in the pod termination log, then
 // exit with 0 status.
 func (np *NetworkPod) buildThroughputClientPod(ctx context.Context) {
+	const appName = "nettest-client-pod"
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "nettest-client-pod",
+			GenerateName: appName,
 			Labels: map[string]string{
-				TestAppLabel: "nettest-client-pod",
+				TestAppLabel: appName,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -431,7 +433,7 @@ func (np *NetworkPod) buildThroughputClientPod(ctx context.Context) {
 			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
-					Name:            "nettest-client-pod",
+					Name:            appName,
 					Image:           TestContext.NettestImageURL,
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
@@ -465,11 +467,12 @@ func (np *NetworkPod) buildThroughputClientPod(ctx context.Context) {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will start iperf3 in server mode.
 func (np *NetworkPod) buildThroughputServerPod(ctx context.Context) {
+	const appName = "nettest-server-pod"
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "nettest-server-pod",
+			GenerateName: appName,
 			Labels: map[string]string{
-				TestAppLabel: "nettest-server-pod",
+				TestAppLabel: appName,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -478,7 +481,7 @@ func (np *NetworkPod) buildThroughputServerPod(ctx context.Context) {
 			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
-					Name:            "nettest-server-pod",
+					Name:            appName,
 					Image:           TestContext.NettestImageURL,
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"sh", "-c", "iperf3 -s -p $TARGET_PORT"},
@@ -504,11 +507,12 @@ func (np *NetworkPod) buildThroughputServerPod(ctx context.Context) {
 // response in the pod termination log, then
 // exit with 0 status.
 func (np *NetworkPod) buildLatencyClientPod(ctx context.Context) {
+	const appName = "latency-client-pod"
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "latency-client-pod",
+			GenerateName: appName,
 			Labels: map[string]string{
-				TestAppLabel: "latency-client-pod",
+				TestAppLabel: appName,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -517,7 +521,7 @@ func (np *NetworkPod) buildLatencyClientPod(ctx context.Context) {
 			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
-					Name:            "latency-client-pod",
+					Name:            appName,
 					Image:           TestContext.NettestImageURL,
 					ImagePullPolicy: v1.PullAlways,
 					Command: []string{
@@ -546,11 +550,12 @@ func (np *NetworkPod) buildLatencyClientPod(ctx context.Context) {
 // create a test pod inside the current test namespace on the specified cluster.
 // The pod will start netserver (server of netperf).
 func (np *NetworkPod) buildLatencyServerPod(ctx context.Context) {
+	const appName = "latency-server-pod"
 	nettestPod := v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			GenerateName: "latency-server-pod",
+			GenerateName: appName,
 			Labels: map[string]string{
-				TestAppLabel: "latency-server-pod",
+				TestAppLabel: appName,
 			},
 		},
 		Spec: v1.PodSpec{
@@ -559,7 +564,7 @@ func (np *NetworkPod) buildLatencyServerPod(ctx context.Context) {
 			RestartPolicy:                v1.RestartPolicyNever,
 			Containers: []v1.Container{
 				{
-					Name:            "latency-server-pod",
+					Name:            appName,
 					Image:           TestContext.NettestImageURL,
 					ImagePullPolicy: v1.PullAlways,
 					Command:         []string{"netserver", "-D"},
@@ -663,7 +668,7 @@ func (np *NetworkPod) nodeAffinity(ctx context.Context, scheduling NetworkPodSch
 			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, "kubernetes.io/hostname", v1.NodeSelectorOpIn, nonGWNodes)
 		case len(smE2eNonGWLabelledNodeList.Items) == 0:
 			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpDoesNotExist, nil)
-			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{"true"})
+			nodeSelTerms = addNodeSelectorTerm(nodeSelTerms, GatewayLabel, v1.NodeSelectorOpNotIn, []string{strconv.FormatBool(true)})
 		default:
 			Failf("%q label is only present on the active GW node and not on any other nodes", TestNonGWNodeLabel)
 		}

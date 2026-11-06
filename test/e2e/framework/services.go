@@ -90,11 +90,12 @@ func (f *Framework) CreateHeadlessTCPService(ctx context.Context, cluster Cluste
 
 func (f *Framework) NewNginxServiceWithIPFamilyPolicy(ctx context.Context, cluster ClusterIndex, ipFamilyPolicy *corev1.IPFamilyPolicy,
 ) *corev1.Service {
+	const appName = "nginx-demo"
 	nginxService := corev1.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "nginx-demo",
+			Name: appName,
 			Labels: map[string]string{
-				"app": "nginx-demo",
+				"app": appName,
 			},
 		},
 		Spec: corev1.ServiceSpec{
@@ -115,7 +116,7 @@ func (f *Framework) NewNginxServiceWithIPFamilyPolicy(ctx context.Context, clust
 				},
 			},
 			Selector: map[string]string{
-				"app": "nginx-demo",
+				"app": appName,
 			},
 		},
 	}

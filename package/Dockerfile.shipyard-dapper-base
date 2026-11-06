@@ -1,4 +1,4 @@
-FROM fedora:44@sha256:43b29f65a41eb9c35e1cd5323e3bdf3b655c2357a9f4f1ff2f9c2798e5045d80
+FROM fedora:45@sha256:a7d72ba2745b100a3351087472e5ee7b2450af7cf331e7673007e3817612839c
 
 # Unless specified otherwise, compress to a medium level which gives (from experimentation) a
 # good balance between compression time and resulting image size.
@@ -14,7 +14,9 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # Component          | Usage
 # -------------------------------------------------------------
 # curl               | download other tools
+# diffutils          | cmp
 # docker-buildx      | multi-arch image construction
+# docker-cli         | Docker (for Dapper)
 # file               | file identification (in compile/test.sh)
 # findutils          | make unit (find unit test dirs)
 # gcc                | needed by `go test -race` (https://github.com/golang/go/issues/27089)
@@ -25,7 +27,6 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # jq                 | JSON processing (GitHub API)
 # kubernetes-client  | kubectl, used in e2e tests
 # make               | builds
-# moby-engine        | Docker (for Dapper)
 # moreutils          | sponge (for system tests)
 # pip                | Python package installation
 # pipx               | install jinjanator (required by OVN-K latest versions)
@@ -42,14 +43,14 @@ ENV HOST_ARCH=${DAPPER_HOST_ARCH} ARCH=${DAPPER_HOST_ARCH} PATH=/go/bin:/root/.l
 # Removals and UPX are done after all installations, since image layers are diffs.
 # /go and its subdirectories are created here so that /go can serve as
 # reference point to find files installed in this layer.
-# We remove:
-# - DNF cache
-# - Any unnecessary packages and executables
+# We remove the DNF cache.
 RUN mkdir -p /go/bin /go/pkg /go/src && \
     dnf -y upgrade --security && \
     dnf -y install --nodocs --setopt=install_weak_deps=False --refresh \
                    curl \
+                   diffutils \
                    docker-buildx \
+                   docker-cli \
                    file \
                    findutils \
                    gcc \
@@ -62,7 +63,6 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    jq \
                    kubernetes-client \
                    make \
-                   moby-engine \
                    moreutils \
                    openssl \
                    pip \
@@ -76,13 +76,8 @@ RUN mkdir -p /go/bin /go/pkg /go/src && \
                    upx \
                    yq && \
     pipx install jinjanator[yaml]==25.3.1 && \
-    rpm -e --nodeps containerd && \
-    rpm -qa "selinux*" | xargs -r rpm -e --nodeps && \
     dnf -y clean all && \
-    rm -f /usr/bin/{dockerd,lto-dump} \
-          /usr/libexec/gcc/x86_64-redhat-linux/*/lto1 && \
     if test ${UPX_LEVEL} != -0; then find /usr/bin /usr/lib/golang /usr/libexec -type f -executable -newercm /go -size +1M ! -name hyperkube \( -execdir upx ${UPX_LEVEL} {} \; -o -true \); fi && \
-    ln -f /usr/bin/kubectl /usr/bin/hyperkube && \
     ln -f /usr/bin/helm3 /usr/bin/helm
 
 COPY tools /tools
