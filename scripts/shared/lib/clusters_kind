@@ -209,8 +209,24 @@ function deploy_kind_ovn(){
     export NET_CIDR_IPV6
     export KIND_CLUSTER_NAME="${cluster}"
 
-    local ovn_flags=()
-    [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
+    local node control_planes=0 workers=0
+    for node in ${cluster_nodes[${cluster}]}; do
+        case "$node" in
+        control-plane)
+            control_planes=$((control_planes + 1))
+            ;;
+        worker)
+            workers=$((workers + 1))
+            ;;
+        esac
+    done
+
+    # OVN-Kubernetes' kind.sh always deploys a single control-plane node, only the number of workers is configurable.
+    # Fail instead of silently deploying a different topology than the one requested.
+    [[ "$control_planes" -eq 1 ]] || exit_error "OVN KIND clusters support exactly one control-plane node, ${control_planes} requested for ${cluster@Q}"
+
+    local ovn_flags=( -wk "$workers" )
+    [[ "$OVN_IC" != true ]] || ovn_flags+=( -ic -npz 1 )
     [[ "$OVN_LOCAL_GW" != true ]] || ovn_flags+=( -gm local )
 
     if [[ "$IPV6_STACK" ]]; then
