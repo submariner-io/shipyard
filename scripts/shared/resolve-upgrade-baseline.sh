@@ -26,13 +26,7 @@ elif [[ "$branch" != devel ]]; then
     fail "Unsupported base branch '$branch'; set UPGRADE_BASELINE_VERSION explicitly"
 fi
 
-tmpdir=$(mktemp -d 2>/dev/null)
-trap 'rm -rf "$tmpdir"' EXIT
-pushd "$tmpdir" >/dev/null
-git init >/dev/null
-git remote add origin https://github.com/submariner-io/releases.git
-tags=$(git ls-remote --tags origin | awk -F/ '{print $NF}')
-popd >/dev/null
+tags=$(git ls-remote --tags https://github.com/submariner-io/releases.git | awk -F/ '{print $NF}')
 
 # Compare version components numerically, independently of publication order.
 versions=$(jq -Rn '[inputs | select(test("^v(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)\\.(0|[1-9][0-9]*)$")) |

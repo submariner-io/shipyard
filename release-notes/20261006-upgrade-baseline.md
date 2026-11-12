@@ -4,7 +4,8 @@ For `devel`, it selects the highest stable release overall. Before a release bra
 it uses the preceding minor's highest stable release and reports this choice.
 
 Use `make deploy-latest UPGRADE_BASELINE_VERSION=v0.22.2` to choose an exact baseline explicitly.
-Prereleases and draft releases are excluded from automatic selection, and API failures stop the deployment.
+Automatic selection uses the stable `vX.Y.Z` tags of `submariner-io/releases`, ignoring prerelease tags,
+and tag lookup failures stop the deployment.
 
 Published baseline deployments use a separate subctl installation ahead of local builds on PATH and verify
 the installed binary, component image tags, and completed rollouts. The shared `check-deployed-version.sh`

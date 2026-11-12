@@ -18,7 +18,7 @@ cat > "$fixture/bin/git" <<'EOF'
 set -e
 [ "$1" = "ls-remote" ] || exit 0
 [ "$2" = "--tags" ] || exit 0
-[[ ! -f "$FIXTURE/api-error" ]] || exit 22
+[[ ! -f "$FIXTURE/git-error" ]] || exit 22
 cat "$FIXTURE/tags"
 EOF
 cat > "$fixture/bin/kubectl" <<'EOF'
@@ -75,11 +75,12 @@ expect_failure "$scripts/resolve-upgrade-baseline.sh" release-0.22 v0.22.2-rc1
 echo 'foo refs/tags/v0.220.1' > "$fixture/tags"
 expect_failure "$scripts/resolve-upgrade-baseline.sh" release-0.22
 
-touch "$fixture/api-error"
+echo 'foo refs/tags/v0.22.2' > "$fixture/tags"
+touch "$fixture/git-error"
 expect_failure "$scripts/resolve-upgrade-baseline.sh" release-0.22
 # An exact override must work without network access.
 expect_baseline v0.22.2 release-0.22 v0.22.2
-rm "$fixture/api-error"
+rm "$fixture/git-error"
 echo '' > "$fixture/tags"
 expect_failure "$scripts/resolve-upgrade-baseline.sh" devel
 
