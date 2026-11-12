@@ -218,6 +218,9 @@ function deploy_kind_ovn(){
         worker)
             workers=$((workers + 1))
             ;;
+        *)
+            exit_error "Unrecognized node role ${node@Q} for ${cluster@Q}, expected control-plane or worker"
+            ;;
         esac
     done
 
