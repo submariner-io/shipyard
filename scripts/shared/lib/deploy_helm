@@ -7,6 +7,19 @@ HELM_REPO_LOCATION="${HELM_REPO_LOCATION:-submariner-latest}"
 
 ### Functions ###
 
+function helm_chart_version_flags() {
+    local resolved_flags output
+    # Capture output first so a resolver failure is not lost in process substitution.
+    if ! output=$("${SCRIPTS_DIR}/resolve-helm-chart-version-flags.sh"); then
+        return 1
+    fi
+    mapfile -t resolved_flags <<< "${output}"
+    printf '%s\n' "Helm chart version flags: ${resolved_flags[*]}" >&2
+    # shellcheck disable=SC2034 # nameref fills caller's array
+    local -n _helm_chart_version_flags_out=$1
+    _helm_chart_version_flags_out=("${resolved_flags[@]}")
+}
+
 function deploytool_prereqs() {
     helm version
     helm repo add submariner-latest https://submariner-io.github.io/submariner-charts/charts
@@ -16,9 +29,11 @@ function setup_broker() {
     if kubectl get crd clusters.submariner.io > /dev/null 2>&1; then
         echo "Submariner CRDs already exist, skipping broker creation..."
     else
+        local version_flags=()
+        helm_chart_version_flags version_flags
         echo "Installing submariner broker..."
         # shellcheck disable=SC2086 # Split on purpose
-        helm install --debug --devel "${BROKER_NAMESPACE}" \
+        helm install --debug "${version_flags[@]}" "${BROKER_NAMESPACE}" \
              "${HELM_REPO_LOCATION}"/submariner-k8s-broker \
              --create-namespace \
              --kube-context "${cluster}" \
@@ -59,9 +74,12 @@ function helm_install_subm() {
             --set submariner.images.tag="${SUBM_IMAGE_TAG}")
     fi
 
+    local version_flags=()
+    helm_chart_version_flags version_flags
+
     echo "Installing Submariner..."
     # shellcheck disable=SC2086 # Split on purpose
-    helm --kube-context "${cluster}" install --debug --devel submariner-operator \
+    helm --kube-context "${cluster}" install --debug "${version_flags[@]}" submariner-operator \
         "${HELM_REPO_LOCATION}"/submariner-operator \
         --create-namespace \
         --namespace "${SUBM_NS}" \
