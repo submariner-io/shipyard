@@ -159,8 +159,24 @@ declare_kubeconfig
 # Always import nettest image on kind, to be able to test connectivity and other things
 [[ "${PROVIDER}" != 'kind' ]] || import_image "${REPO}/nettest"
 
+# Keep a published upgrade baseline ahead of any previously built subctl on PATH.
+if [[ "${RELEASED_SUBCTL}" == true ]]; then
+    export SUBCTL_IMAGE_VERSION=
+    export SUBCTL_INSTALL_DIR="${OUTPUT_DIR}/released-subctl/bin"
+    export PATH="${SUBCTL_INSTALL_DIR}:${PATH}"
+    export SUBCTL="${SUBCTL_INSTALL_DIR}/subctl"
+fi
+
 # Always get subctl since we're using moving versions, and having it in the image results in a stale cached one
 "${SCRIPTS_DIR}/get-subctl.sh"
+
+if [[ "${RELEASED_SUBCTL}" == true ]]; then
+    actual_version=$("${SUBCTL}" version)
+    actual_version=${actual_version#subctl version: }
+    [[ "${actual_version#v}" == "${SUBCTL_VERSION#v}" ]] ||
+        exit_error "Expected baseline subctl ${SUBCTL_VERSION}, got ${actual_version}"
+    echo "Using baseline subctl ${SUBCTL_VERSION} at ${SUBCTL}"
+fi
 
 load_library deploy DEPLOYTOOL
 deploytool_prereqs
@@ -191,6 +207,13 @@ run_if_defined post_deploy
 
 # Print installed versions for manual validation of CI
 subctl show versions
+if [[ "${RELEASED_SUBCTL}" == true || -n "${SUBCTL_IMAGE_VERSION}" ]]; then
+    expected_image_version=${SUBCTL_IMAGE_VERSION:-${SUBCTL_VERSION}}
+    for version_cluster in "${clusters[@]}"; do
+        [[ "${cluster_subm[$version_cluster]}" == true ]] || continue
+        "${SCRIPTS_DIR}/check-deployed-version.sh" "${expected_image_version}" "$version_cluster"
+    done
+fi
 print_clusters_message
 
 # If there are any local components, check that the deployed versions are the newly-built versions

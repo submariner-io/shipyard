@@ -16,6 +16,10 @@ CABLE_DRIVER ?= libreswan
 DEPLOYTOOL ?= operator
 IMAGE_TAG ?= local
 export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
+export RELEASED_SUBCTL SUBCTL_VERSION SUBCTL_IMAGE_VERSION
+
+# Override the published release used as the upgrade baseline, e.g. v0.22.2.
+UPGRADE_BASELINE_VERSION ?=
 
 # Specific to `e2e`
 TESTDIR ?= test/e2e
@@ -194,11 +198,13 @@ scale: deploy
 
 upgrade-e2e: deploy-latest deploy e2e
 
-# [deploy-latest] deploys the latest release
+# [deploy-latest] deploys the latest stable release for the base branch
 # This uses make deploy, but forcefully ignores images so that images
 # are *not* rebuilt (we want to deploy the published images only)
 deploy-latest:
-	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl LOCAL_COMPONENTS= using=$(using)
+	@set -e; \
+	baseline=$$("$(SCRIPTS_DIR)/resolve-upgrade-baseline.sh" "$(BASE_BRANCH)" "$(UPGRADE_BASELINE_VERSION)"); \
+	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION="$$baseline" RELEASED_SUBCTL=true SUBCTL_IMAGE_VERSION= IMAGE_TAG=subctl LOCAL_COMPONENTS= using=$(using)
 
 ##### MISC TARGETS #####
 .PHONY: backport post-mortem unit
