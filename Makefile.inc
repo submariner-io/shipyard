@@ -17,6 +17,9 @@ DEPLOYTOOL ?= operator
 IMAGE_TAG ?= local
 export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 
+# Override the published release used as the upgrade baseline, e.g. v0.23.4.
+UPGRADE_BASELINE_VERSION ?=
+
 # Specific to `e2e`
 TESTDIR ?= test/e2e
 LAZY_DEPLOY ?= true
@@ -194,11 +197,14 @@ scale: deploy
 
 upgrade-e2e: deploy-latest deploy e2e
 
-# [deploy-latest] deploys the latest release
+# [deploy-latest] deploys the latest stable release for the base branch
 # This uses make deploy, but forcefully ignores images so that images
-# are *not* rebuilt (we want to deploy the published images only)
+# are *not* rebuilt (we want to deploy the published images only).
+# On release-X.Y branches this is the highest stable vX.Y.*, not the global latest.
 deploy-latest:
-	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION=latest IMAGE_TAG=subctl LOCAL_COMPONENTS= using=$(using)
+	@set -e; \
+	baseline=$$("$(SCRIPTS_DIR)/resolve-upgrade-baseline.sh" "$(BASE_BRANCH)" "$(UPGRADE_BASELINE_VERSION)"); \
+	$(MAKE) -o images -o preload-images deploy SUBCTL_VERSION="$$baseline" IMAGE_TAG=subctl LOCAL_COMPONENTS= using=$(using)
 
 ##### MISC TARGETS #####
 .PHONY: backport post-mortem unit
