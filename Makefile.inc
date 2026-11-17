@@ -17,6 +17,10 @@ DEPLOYTOOL ?= operator
 IMAGE_TAG ?= local
 export CABLE_DRIVER DEPLOYTOOL IMAGE_TAG LIGHTHOUSE
 
+# Override the Helm chart version used by deploytool=helm (exact chart version).
+HELM_CHART_VERSION ?=
+export HELM_CHART_VERSION
+
 # Specific to `e2e`
 TESTDIR ?= test/e2e
 LAZY_DEPLOY ?= true
