@@ -232,7 +232,7 @@ function deploy_kind_ovn(){
 
     delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric "${ovn_flags[@]}" -lr -dd "${KIND_CLUSTER_NAME}.local" --disable-ovnkube-identity
 
-    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
+    [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
 function run_local_registry() {
