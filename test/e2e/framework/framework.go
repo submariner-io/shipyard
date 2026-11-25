@@ -100,24 +100,22 @@ type (
 // Framework supports common operations used by e2e tests; it will keep a client & a namespace for you.
 // Eventual goal is to merge this with integration test framework.
 type Framework struct {
-	BaseName string
-
-	// Set together with creating the ClientSet and the namespace.
-	// Guaranteed to be unique in the cluster even when running the same
-	// test multiple times in parallel.
-	UniqueName               string
-	stopped                  bool
-	SkipNamespaceCreation    bool            // Whether to skip creating a namespace
-	Namespace                string          // Every test has a namespace at least unless creation is skipped
-	namespacesToDelete       map[string]bool // Some tests have more than one.
-	NamespaceDeletionTimeout time.Duration
-	gatewayNodesToReset      map[int][]string // Store GW nodes for the final cleanup
-	ipFamilyTypes            map[ClusterIndex]IPFamilyType
-
+	namespacesToDelete  map[string]bool  // Some tests have more than one.
+	gatewayNodesToReset map[int][]string // Store GW nodes for the final cleanup
+	ipFamilyTypes       map[ClusterIndex]IPFamilyType
 	// To make sure that this framework cleans up after itself, no matter what,
 	// we install a Cleanup action before each test and clear it after.  If we
 	// should abort, the AfterSuite hook should run all Cleanup actions.
 	cleanupHandle CleanupActionHandle
+	BaseName      string
+	// Set together with creating the ClientSet and the namespace.
+	// Guaranteed to be unique in the cluster even when running the same
+	// test multiple times in parallel.
+	UniqueName               string
+	Namespace                string // Every test has a namespace at least unless creation is skipped
+	NamespaceDeletionTimeout time.Duration
+	stopped                  bool
+	SkipNamespaceCreation    bool // Whether to skip creating a namespace
 }
 
 var (
@@ -223,10 +221,10 @@ func BeforeSuite(ctx context.Context) {
 		beforeSuite()
 	}
 
-	initPodSecurityContext()
+	initPodSecurityContext(ctx)
 }
 
-func initPodSecurityContext() {
+func initPodSecurityContext(ctx context.Context) {
 	podSecurityContext = &corev1.SecurityContext{
 		AllowPrivilegeEscalation: new(false),
 		ReadOnlyRootFilesystem:   new(true),
@@ -239,7 +237,7 @@ func initPodSecurityContext() {
 		RunAsUser:    new(int64(10000)), // We need to set some user ID other than 0.
 	}
 
-	serverVersion, err := KubeClients[0].Discovery().ServerVersion()
+	serverVersion, err := KubeClients[0].Discovery().ServerVersionWithContext(ctx)
 	Expect(err).To(Succeed())
 
 	major, err := strconv.Atoi(serverVersion.Major)

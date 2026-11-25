@@ -33,8 +33,8 @@ import (
 type FailurePanic struct {
 	Message        string // The failure message passed to Fail
 	Filename       string // The filename that is the source of the failure
-	Line           int    // The line number of the filename that is the source of the failure
 	FullStackTrace string // A full stack trace starting at the source of the failure
+	Line           int    // The line number of the filename that is the source of the failure
 }
 
 const ginkgoFailurePanic = `
@@ -81,8 +81,8 @@ func Fail(message string, callerSkip ...int) {
 type SkipPanic struct {
 	Message        string // The failure message passed to Fail
 	Filename       string // The filename that is the source of the failure
-	Line           int    // The line number of the filename that is the source of the failure
 	FullStackTrace string // A full stack trace starting at the source of the failure
+	Line           int    // The line number of the filename that is the source of the failure
 }
 
 const ginkgoSkipPanic = `
