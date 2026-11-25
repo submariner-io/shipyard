@@ -67,13 +67,13 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/c/curl-7.76.1-43.el9.aarch64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/c/curl-7.76.1-44.el9_9.1.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
-    size: 303520
-    checksum: sha256:748be3c077d4df82e25020ecae823e76a6a02275cd35f840f3ab2425574e1592
+    size: 304376
+    checksum: sha256:5c2971c4d1babfa4b414db496ae0c817149b3d31fc22aa9c082122c68e1a4389
     name: curl
-    evr: 7.76.1-43.el9
-    sourcerpm: curl-7.76.1-43.el9.src.rpm
+    evr: 7.76.1-44.el9_9.1
+    sourcerpm: curl-7.76.1-44.el9_9.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/aarch64/baseos/os/Packages/i/iputils-20210202-15.el9_7.aarch64.rpm
     repoid: rhel-9-for-aarch64-baseos-rpms
     size: 178424
@@ -190,13 +190,13 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/baseos/os/Packages/c/curl-7.76.1-43.el9.ppc64le.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/baseos/os/Packages/c/curl-7.76.1-44.el9_9.1.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-baseos-rpms
-    size: 310306
-    checksum: sha256:83e78c892f51ef18096753563ee044e3aa00dbf1cfeb299e8b531a948151ba50
+    size: 311127
+    checksum: sha256:ea0fc969dbed07fe806284b63f2f21cb1dac4f0bf385ae2df041146e1a013e45
     name: curl
-    evr: 7.76.1-43.el9
-    sourcerpm: curl-7.76.1-43.el9.src.rpm
+    evr: 7.76.1-44.el9_9.1
+    sourcerpm: curl-7.76.1-44.el9_9.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/ppc64le/baseos/os/Packages/i/iputils-20210202-15.el9_7.ppc64le.rpm
     repoid: rhel-9-for-ppc64le-baseos-rpms
     size: 182991
@@ -313,13 +313,13 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/baseos/os/Packages/c/curl-7.76.1-43.el9.s390x.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/baseos/os/Packages/c/curl-7.76.1-44.el9_9.1.s390x.rpm
     repoid: rhel-9-for-s390x-baseos-rpms
-    size: 305022
-    checksum: sha256:da159834335abe3401ce83313c466e0d7f49ab550f3e8743891f1cae23a42fb1
+    size: 306125
+    checksum: sha256:730c95c221fef90e9dc356ce90229ee63013f058af78e1850058ae462727f498
     name: curl
-    evr: 7.76.1-43.el9
-    sourcerpm: curl-7.76.1-43.el9.src.rpm
+    evr: 7.76.1-44.el9_9.1
+    sourcerpm: curl-7.76.1-44.el9_9.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/s390x/baseos/os/Packages/i/iputils-20210202-15.el9_7.s390x.rpm
     repoid: rhel-9-for-s390x-baseos-rpms
     size: 177321
@@ -436,13 +436,13 @@ arches:
     name: tcpdump
     evr: 14:4.99.0-9.el9
     sourcerpm: tcpdump-4.99.0-9.el9.src.rpm
-  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/c/curl-7.76.1-43.el9.x86_64.rpm
+  - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/c/curl-7.76.1-44.el9_9.1.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
-    size: 306670
-    checksum: sha256:4541fc2ae8a59ffac4ce6f56ed65b98e8b8732b80ec8dfc7b422eec264a9d7c0
+    size: 307519
+    checksum: sha256:a02e7c3153479802dcf968039d897854f684a93b36e6e8bceb27bea111a2c65e
     name: curl
-    evr: 7.76.1-43.el9
-    sourcerpm: curl-7.76.1-43.el9.src.rpm
+    evr: 7.76.1-44.el9_9.1
+    sourcerpm: curl-7.76.1-44.el9_9.1.src.rpm
   - url: https://cdn.redhat.com/content/dist/rhel9/9/x86_64/baseos/os/Packages/i/iputils-20210202-15.el9_7.x86_64.rpm
     repoid: rhel-9-for-x86_64-baseos-rpms
     size: 177748
