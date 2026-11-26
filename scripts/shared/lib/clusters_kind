@@ -29,7 +29,11 @@ kind_k8s_versions[1.30]=1.30.13@sha256:397209b3d947d154f6641f2d0ce8d473732bd91c8
 kind_k8s_versions[1.31]=1.31.12@sha256:0f5cc49c5e73c0c2bb6e2df56e7df189240d83cf94edfa30946482eb08ec57d2
 kind_k8s_versions[1.32]=1.32.8@sha256:abd489f042d2b644e2d033f5c2d900bc707798d075e8186cb65e3f1367a9d5a1
 kind_k8s_versions[1.33]=1.33.4@sha256:25a6018e48dfcaee478f4a59af81157a437f15e6e140bf103f85a2e7cd0cbbf2
-kind_k8s_versions[1.34]=1.34.0@sha256:7416a61b42b1662ca6ca89f02028ac133a309a2a30ba309614e8ec94d976dc5a
+# kind 0.33.0 hashes
+kind_k8s_versions[1.34]=1.34.11@sha256:44e222ee2132dab25ff87301682f89eb82c7880ea3a1bf543bfe9708fd08d67d
+kind_k8s_versions[1.35]=1.35.8@sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0
+kind_k8s_versions[1.36]=1.36.4@sha256:099e049362a1526b2db71494e1947aae99bd16290d7c895f2b7ea312e3cbfaed
+kind_k8s_versions[1.37]=1.37.0@sha256:a1ed56cfb0e7b93589bdf97c8cd566405a265939e3620fc4f5de89adff580ae5
 
 ### Functions ###
 
@@ -210,7 +214,7 @@ function deploy_kind_ovn(){
     export KIND_CLUSTER_NAME="${cluster}"
 
     local ovn_flags=()
-    [[ "$OVN_IC" != true ]] || ovn_flags=( -ic -npz 1 -wk 3 )
+    [[ "$OVN_IC" != true ]] || ovn_flags=( -wk 3 )
     [[ "$OVN_LOCAL_GW" != true ]] || ovn_flags+=( -gm local )
 
     if [[ "$IPV6_STACK" ]]; then
@@ -232,7 +236,7 @@ function deploy_kind_ovn(){
 
     delete_cluster_on_fail ./ovn-kubernetes/contrib/kind.sh -ov "$OVN_IMAGE" -cn "${KIND_CLUSTER_NAME}" -ric "${ovn_flags[@]}" -lr -dd "${KIND_CLUSTER_NAME}.local" --disable-ovnkube-identity
 
-    [[ "$AIR_GAPPED" = true ]] && air_gap_iptables
+    [[ "$AIR_GAPPED" != true ]] || air_gap_iptables
 }
 
 function run_local_registry() {
@@ -308,8 +312,8 @@ function prepare_ovn() {
 
     # When updating commit, Update the OVN_SRC_IMAGE to the corressponding commit
     # Using commit with Fedora 42 (nftables 1.1.1)
-    git checkout b7ae82c95105b4a4db2e67c8fe4ed565d07c8c78
-    local OVN_SRC_IMAGE="ghcr.io/ovn-kubernetes/ovn-kubernetes/ovn-kube-fedora:master@sha256:bc854cec93537e37fdc83e3a164cb7dda794b5e12b0873a3be87fa5460a027b5"
+    git checkout b49d7d18feae15aade48288ed38f13dac356fba0
+    local OVN_SRC_IMAGE="ghcr.io/ovn-kubernetes/ovn-kubernetes/ovn-kube-fedora:master@sha256:5369b9131351b6e705a77e6742053e7ae29967305a751693bc5f76afcd410225"
 
     docker pull "${OVN_SRC_IMAGE}"
     docker tag "${OVN_SRC_IMAGE}" "${OVN_IMAGE}"
